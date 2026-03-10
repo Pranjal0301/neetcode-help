@@ -62,6 +62,16 @@
             position: relative;
             overflow: hidden;
         }
+        #hero-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .hero-badge, .hero h1, .hero p, .hero-divider, .hero-scroll {
+            z-index: 1;
+        }
         .hero::before {
             content: '';
             position: absolute;
@@ -851,6 +861,7 @@
 <body>
 
 <div class="hero">
+    <canvas id="hero-canvas"></canvas>
     <span class="hero-badge">150 Problems Covered</span>
     <h1>NeetCode 150<br>Revision Guide</h1>
     <p>Every problem solved with approach, code, dry runs & visual explanations</p>
@@ -14190,5 +14201,111 @@ loadChecked();
     </div>
 </footer>
 
+<script>
+(function() {
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const hero = canvas.parentElement;
+    let w, h, particles = [], mouse = { x: -1000, y: -1000 };
+    const PARTICLE_COUNT = 80;
+    const CONNECT_DIST = 140;
+    const MOUSE_RADIUS = 180;
+
+    function resize() {
+        w = canvas.width = hero.offsetWidth;
+        h = canvas.height = hero.offsetHeight;
+    }
+
+    function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                r: Math.random() * 2 + 1,
+                color: Math.random() > 0.7 ? '96,165,250' : '124,92,252'
+            });
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+
+            // Mouse repulsion
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS) {
+                const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 0.03;
+                p.vx += dx * force;
+                p.vy += dy * force;
+            }
+
+            // Damping
+            p.vx *= 0.99;
+            p.vy *= 0.99;
+
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Wrap around edges
+            if (p.x < 0) p.x = w;
+            if (p.x > w) p.x = 0;
+            if (p.y < 0) p.y = h;
+            if (p.y > h) p.y = 0;
+
+            // Draw particle
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + p.color + ',0.6)';
+            ctx.fill();
+
+            // Draw connections
+            for (let j = i + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const cdx = p.x - p2.x;
+                const cdy = p.y - p2.y;
+                const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+                if (cdist < CONNECT_DIST) {
+                    const alpha = (1 - cdist / CONNECT_DIST) * 0.15;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = 'rgba(124,92,252,' + alpha + ')';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    hero.addEventListener('mousemove', function(e) {
+        const rect = hero.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+    });
+
+    hero.addEventListener('mouseleave', function() {
+        mouse.x = -1000;
+        mouse.y = -1000;
+    });
+
+    window.addEventListener('resize', function() {
+        resize();
+    });
+
+    resize();
+    createParticles();
+    animate();
+})();
+</script>
 </body>
 </html>
