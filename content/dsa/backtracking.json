@@ -4,13 +4,30 @@
   "icon": "🔀",
   "order": 10,
   "concept": {
-    "heading": "Core Pattern",
-    "body": "Backtracking = DFS + undo. Make a choice, recurse, undo the choice. Template:",
-    "bullets": [],
+    "heading": "Core Concepts",
+    "body": "Backtracking is DFS over a tree of **decisions** rather than over data. At each node you make a choice, recurse, and then undo it. That undo is what lets a single mutable buffer serve every branch — without it you would copy the whole partial answer at every step.\n\nTwo questions decide the entire shape of the solution, and separating them is most of the work. **What counts as a choice?** — include or skip this element, or pick which element goes next. And **how do you avoid producing the same answer twice?**\n\nThe loop encodes both answers. A `start` index means \"only look forward from here\", which produces combinations and subsets, where order does not matter. A `used` set means \"any element not yet taken\", which produces permutations, where it does. And when the *input* contains duplicates, sorting first and skipping equal siblings at the same level suppresses duplicate *outputs*.\n\nThe last ingredient is **pruning**: abandon a branch the moment it cannot lead to a valid answer. That is usually the difference between a solution and a timeout.",
+    "bullets": [
+      "**The template is three lines:** choose, recurse, un-choose. Everything in this category is that loop with a different choice set.",
+      "**`start` index vs `used` set:** the former gives combinations (order irrelevant), the latter gives permutations (order matters). Picking the wrong one is the most common structural error.",
+      "**Duplicates in the input:** sort, then skip `nums[i] == nums[i-1]` when `i > start`. The `i > start` is essential — you are skipping equal *siblings*, not equal values everywhere.",
+      "**Prune early:** test feasibility before recursing, not after. Generate-then-filter is what makes a correct solution time out.",
+      "**Append a copy.** Pushing the buffer itself means every result aliases the same object, and they all end up empty.",
+      "**Complexity is dominated by output size.** O(N · 2^N) means 2^N answers each costing O(N) to copy out — so these bounds are not a sign you did something wrong."
+    ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# The skeleton: choose -> recurse -> un-choose.\nresult = []\npath = []\n\ndef backtrack(start):\n    result.append(path[:])          # a COPY — not `path` itself\n    for i in range(start, len(nums)):\n        path.append(nums[i])        # choose\n        backtrack(i + 1)            # recurse (i+1 = each element once)\n        path.pop()                  # un-choose\n\n# --- the three variants, which differ only in the loop ---\n\n# COMBINATIONS / SUBSETS: `start` means \"only look forward\",\n# so [1,2] and [2,1] are never both produced.\nfor i in range(start, len(nums)):\n    ...\n    backtrack(i + 1)\n\n# REUSE ALLOWED (Combination Sum): pass i, not i+1.\nfor i in range(start, len(nums)):\n    ...\n    backtrack(i)                    # the same element may be chosen again\n\n# PERMUTATIONS: no start index; every unused element is a candidate.\nfor i in range(len(nums)):\n    if used[i]:\n        continue\n    used[i] = True\n    path.append(nums[i])\n    backtrack()\n    path.pop()\n    used[i] = False\n\n# DUPLICATE INPUT: sort first, then skip equal SIBLINGS.\nnums.sort()\nfor i in range(start, len(nums)):\n    if i > start and nums[i] == nums[i - 1]:\n        continue                    # i > start = \"same level\", not \"anywhere\"\n    ...",
+    "cpp": "// The skeleton: choose -> recurse -> un-choose.\nvector<vector<int>> result;\nvector<int> path;\n\nvoid backtrack(int start) {\n    result.push_back(path);              // a COPY (push_back copies)\n    for (int i = start; i < nums.size(); i++) {\n        path.push_back(nums[i]);         // choose\n        backtrack(i + 1);                // recurse\n        path.pop_back();                 // un-choose\n    }\n}\n\n// --- the three variants ---\n\n// COMBINATIONS / SUBSETS: start means \"only look forward\".\nfor (int i = start; i < n; i++) { /* ... */ backtrack(i + 1); }\n\n// REUSE ALLOWED: pass i, not i+1.\nfor (int i = start; i < n; i++) { /* ... */ backtrack(i); }\n\n// PERMUTATIONS: no start; any unused element.\nfor (int i = 0; i < n; i++) {\n    if (used[i]) continue;\n    used[i] = true;  path.push_back(nums[i]);\n    backtrack();\n    path.pop_back(); used[i] = false;\n}\n\n// DUPLICATE INPUT: sort, then skip equal siblings.\nsort(nums.begin(), nums.end());\nfor (int i = start; i < n; i++) {\n    if (i > start && nums[i] == nums[i - 1]) continue;\n    /* ... */\n}",
+    "java": "// The skeleton: choose -> recurse -> un-choose.\nList<List<Integer>> result = new ArrayList<>();\nList<Integer> path = new ArrayList<>();\n\nvoid backtrack(int start) {\n    result.add(new ArrayList<>(path));        // a COPY — not `path`\n    for (int i = start; i < nums.length; i++) {\n        path.add(nums[i]);                    // choose\n        backtrack(i + 1);                     // recurse\n        path.remove(path.size() - 1);         // un-choose\n    }\n}\n\n// --- the three variants ---\n\n// COMBINATIONS / SUBSETS: start means \"only look forward\".\nfor (int i = start; i < n; i++) { /* ... */ backtrack(i + 1); }\n\n// REUSE ALLOWED: pass i, not i+1.\nfor (int i = start; i < n; i++) { /* ... */ backtrack(i); }\n\n// PERMUTATIONS: no start; any unused element.\nfor (int i = 0; i < n; i++) {\n    if (used[i]) continue;\n    used[i] = true;  path.add(nums[i]);\n    backtrack();\n    path.remove(path.size() - 1);  used[i] = false;\n}\n\n// DUPLICATE INPUT: sort, then skip equal siblings.\nArrays.sort(nums);\nfor (int i = start; i < n; i++) {\n    if (i > start && nums[i] == nums[i - 1]) continue;\n    /* ... */\n}",
+    "js": "// The skeleton: choose -> recurse -> un-choose.\nconst result = [];\nconst path = [];\n\nconst backtrack = (start) => {\n  result.push([...path]);              // a COPY — not `path` itself\n  for (let i = start; i < nums.length; i++) {\n    path.push(nums[i]);                // choose\n    backtrack(i + 1);                  // recurse\n    path.pop();                        // un-choose\n  }\n};\n\n// --- the three variants ---\n\n// COMBINATIONS / SUBSETS: start means \"only look forward\".\nfor (let i = start; i < n; i++) { /* ... */ backtrack(i + 1); }\n\n// REUSE ALLOWED: pass i, not i+1.\nfor (let i = start; i < n; i++) { /* ... */ backtrack(i); }\n\n// PERMUTATIONS: no start; any unused element.\nfor (let i = 0; i < n; i++) {\n  if (used[i]) continue;\n  used[i] = true;  path.push(nums[i]);\n  backtrack();\n  path.pop();      used[i] = false;\n}\n\n// DUPLICATE INPUT: sort NUMERICALLY, then skip equal siblings.\nnums.sort((a, b) => a - b);           // never forget the comparator\nfor (let i = start; i < n; i++) {\n  if (i > start && nums[i] === nums[i - 1]) continue;\n  /* ... */\n}"
+  },
+  "recognitionTriggers": [
+    "The words **all**, **every**, **enumerate**, **generate**, **list the ways** — the output is a *collection of solutions*, not a single value or count.",
+    "An answer is built as a **sequence of decisions**, and a partial answer can be judged before it is complete. That is what makes pruning possible.",
+    "Exponential output is expected and acceptable, which tells you no polynomial algorithm is being asked for.",
+    "If the question asks only for the **count** or the **best** one, stop — that is usually dynamic programming or greedy, not enumeration."
+  ],
   "problems": [
     {
       "id": "78",
@@ -26,11 +43,27 @@
         "leetcode": "https://leetcode.com/problems/subsets/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=REOH22Xwdkk"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Backtracking (Include / Skip)",
+      "patternTriggers": [
+        "Enumerate **every** subset, combination or selection — the output is a list of lists.",
+        "Each element has an independent binary decision: in or out.",
+        "Order within a result does not matter, so `[1,2]` and `[2,1]` are the same subset and must not both appear."
+      ],
       "keyInsight": "For each element, two choices: include it or skip it. Or iterate starting from index i+1 to avoid duplicates.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate every one of the 2^N bitmasks and, for each, collect the elements whose bit is set.",
+        "time": "O(N * 2^N)",
+        "space": "O(N)",
+        "whyItFails": "It does not fail — this is a genuinely good solution, often shorter than the recursion, and it is worth offering. The recursive form is preferred because it generalises: add a pruning condition or a duplicate-skip and it still works, whereas the bitmask enumeration has no natural place to put either."
+      },
+      "approach": [
+        "Keep a `path` buffer holding the subset currently being built, and a `result` list.",
+        "On entering the recursion, record a **copy** of `path` — every node of the decision tree is itself a valid subset, so there is no separate base case.",
+        "Loop `i` from `start` to the end of the array.",
+        "Append `nums[i]` to `path`, recurse with `i + 1`, then pop it back off.",
+        "Passing `i + 1` rather than `0` is what makes each element considered at most once and prevents `[2,1]` ever being generated after `[1,2]`.",
+        "Return `result` once the top-level loop finishes."
+      ],
       "code": {
         "python": "def subsets(nums):\n    result = []\n    def backtrack(start, path):\n        result.append(path[:])\n        for i in range(start, len(nums)):\n            path.append(nums[i])\n            backtrack(i + 1, path)\n            path.pop()\n    backtrack(0, [])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<vector<int>> result;\n        vector<int> cur;\n        function<void(int)> bt = [&](int i) {\n            result.push_back(cur);\n            for (int j = i; j < nums.size(); j++) {\n                cur.push_back(nums[j]);\n                bt(j + 1);\n                cur.pop_back();\n            }\n        };\n        bt(0);\n        return result;\n    }\n};",
@@ -39,15 +72,48 @@
       },
       "complexity": {
         "time": "O(N * 2^N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "There are 2^N subsets and copying each into the result costs up to O(N), which is where the N factor comes from — not from wasted work. The O(N) space is the recursion depth plus the `path` buffer; the output itself is O(N * 2^N) but that is the answer, not overhead."
       },
-      "dryRun": null,
+      "dryRun": "nums = [1, 2, 3]\n\nEvery node of the decision tree is itself a valid subset, so the record\nhappens on ENTRY — there is no separate base case.\n\n  record []\n    choose 1 (i=0), recurse from 1\n      record [1]\n        choose 2 (i=1), recurse from 2\n          record [1, 2]\n            choose 3 (i=2), recurse from 3\n              record [1, 2, 3]\n        choose 3 (i=2), recurse from 3\n          record [1, 3]\n    choose 2 (i=1), recurse from 2\n      record [2]\n        choose 3 (i=2), recurse from 3\n          record [2, 3]\n    choose 3 (i=2), recurse from 3\n      record [3]\n\n  8 subsets:  [] [1] [1,2] [1,2,3] [1,3] [2] [2,3] [3]\n\nThat is 2^3, exactly as expected — each element independently in or out.\n\nThe `start` index is what keeps it to 8. Notice that after choosing 2,\nthe loop only ever considers index 2 onwards, so [2,1] is never built.\nRecurse from 0 instead of i+1 and you would generate every ordering of\nevery subset — 3^3 paths with duplicates throughout.\n\nAnd note what the pop does: after the [1,2,3] branch finishes, `path`\nis unwound back to [1] so the sibling branch can build [1,3] on top of\nit. Without the pop, [1,3] would come out as [1,2,3,3].",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Appending `path` rather than a copy of it. Every entry in `result` then aliases the same list, and since `path` is empty when the recursion finishes, you get 2^N empty lists.",
+        "Forgetting the `path.pop()` after recursing, so choices accumulate across sibling branches.",
+        "Recursing with `start` instead of `i + 1`, which lets an element be reused and produces duplicates.",
+        "Adding a base case that only records full-length paths, which yields just the single complete set instead of all subsets."
+      ],
+      "edgeCases": [
+        "empty input -> a single result, the empty subset",
+        "a single element -> [[], [x]]",
+        "all elements distinct, which is what this problem guarantees",
+        "N around 20, where 2^N is already a million results",
+        "negative values, which change nothing here"
+      ],
+      "followUps": [
+        {
+          "q": "Do it iteratively.",
+          "a": "Start with `[[]]`, and for each element append a copy of every existing subset extended by it. The result list doubles per element. Clean, no recursion, and easy to reason about — a good alternative to offer."
+        },
+        {
+          "q": "Generate only subsets of size k.",
+          "a": "Add a base case that records when `len(path) == k`, and prune when the remaining elements cannot reach k: `if len(path) + (n - i) < k: break`. That pruning turns a 2^N walk into C(N, k) work, which matters a lot for small k."
+        },
+        {
+          "q": "What if the input has duplicates?",
+          "a": "Sort first and skip equal siblings — `if i > start and nums[i] == nums[i-1]: continue`. That is Subsets II, and it is the single most reusable trick in this category."
+        },
+        {
+          "q": "Why is the complexity not O(2^N)?",
+          "a": "Because producing a result is not free. 2^N subsets averaging N/2 elements each means O(N · 2^N) characters written. Quoting O(2^N) silently assumes copying is O(1), which it is not."
+        }
+      ],
+      "related": [
+        "subsets-ii",
+        "combination-sum",
+        "permutations"
+      ],
+      "core": true
     },
     {
       "id": "39",
@@ -63,25 +129,79 @@
         "leetcode": "https://leetcode.com/problems/combination-sum/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=GBKI9VSKdGg"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Backtracking with Reuse",
+      "patternTriggers": [
+        "Elements may be chosen **more than once**, so the recursion passes `i` rather than `i + 1`.",
+        "There is a target to hit, which gives you a natural pruning condition — stop as soon as the running sum exceeds it.",
+        "Combinations, not permutations: `[2,2,3]` and `[2,3,2]` are the same answer."
+      ],
       "keyInsight": "Same as subsets but can reuse elements (start from i, not i+1). Stop when sum > target.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Enumerate every multiset of candidates up to the target length and keep those summing to the target.",
+        "time": "far worse than the pruned version, and it generates permutations of the same combination",
+        "space": "O(target)",
+        "whyItFails": "Two distinct wastes. It explores branches whose sum has already overshot the target, and because it has no forward-only constraint it produces `[2,3]` and `[3,2]` separately, then has to deduplicate. The `start` index removes the second problem and the sum check removes the first."
+      },
+      "approach": [
+        "Recurse with a `start` index and a `remaining` amount, beginning at the full target.",
+        "If `remaining` is exactly 0, record a copy of the path — a valid combination.",
+        "If `remaining` is negative, return immediately: this branch can never recover, since all candidates are positive.",
+        "Loop `i` from `start` to the end.",
+        "Append `candidates[i]`, recurse with the **same** `i` so the element can be reused, and subtract it from `remaining`.",
+        "Pop the element back off before trying the next `i`.",
+        "Sorting the candidates first lets you `break` instead of `continue` once `candidates[i]` exceeds `remaining`, pruning all larger candidates at once."
+      ],
       "code": {
         "python": "def combinationSum(candidates, target):\n    result = []\n    def backtrack(start, path, total):\n        if total == target:\n            result.append(path[:])\n            return\n        for i in range(start, len(candidates)):\n            if total + candidates[i] > target:\n                continue\n            path.append(candidates[i])\n            backtrack(i, path, total + candidates[i])  # i, not i+1 (reuse!)\n            path.pop()\n    backtrack(0, [], 0)\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        vector<vector<int>> result;\n        vector<int> cur;\n        function<void(int, int)> bt = [&](int i, int remain) {\n            if (remain == 0) { result.push_back(cur); return; }\n            if (remain < 0 || i >= candidates.size()) return;\n            cur.push_back(candidates[i]);\n            bt(i, remain - candidates[i]);\n            cur.pop_back();\n            bt(i + 1, remain);\n        };\n        bt(0, target);\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        List<List<Integer>> result = new ArrayList<>();\n        backtrack(candidates, target, 0, new ArrayList<>(), result);\n        return result;\n    }\n    void backtrack(int[] cands, int remain, int i, List<Integer> cur, List<List<Integer>> result) {\n        if (remain == 0) { result.add(new ArrayList<>(cur)); return; }\n        if (remain < 0 || i >= cands.length) return;\n        cur.add(cands[i]);\n        backtrack(cands, remain - cands[i], i, cur, result);\n        cur.remove(cur.size() - 1);\n        backtrack(cands, remain, i + 1, cur, result);\n    }\n}",
         "js": "var combinationSum = function(candidates, target) {\n    const result = [];\n    const bt = (i, remain, cur) => {\n        if (remain === 0) { result.push([...cur]); return; }\n        if (remain < 0 || i >= candidates.length) return;\n        cur.push(candidates[i]);\n        bt(i, remain - candidates[i], cur);\n        cur.pop();\n        bt(i + 1, remain, cur);\n    };\n    bt(0, target, []);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^(T/M))",
+        "space": "O(T/M)",
+        "note": "T is the target and M the smallest candidate, so T/M bounds how deep the recursion can go — the longest possible combination. Each level branches up to N ways. The recursion depth, and therefore the stack and the path buffer, is O(T/M)."
+      },
+      "dryRun": "candidates = [2, 3, 6, 7] (sorted), target = 7\n\nRecursion passes i, NOT i+1, so an element may be reused.\n\n  take 2, remaining 5, recurse from i=0\n    take 2, remaining 3, recurse from i=0\n      take 2, remaining 1, recurse from i=0\n        2 > 1  ->  break (sorted, so every later candidate also overshoots)\n      take 3, remaining 0           ->  RECORD [2, 2, 3]\n      6 > 3  ->  break\n    take 3, remaining 2, recurse from i=1\n      3 > 2  ->  break\n    6 > 5  ->  break\n  take 3, remaining 4, recurse from i=1\n    take 3, remaining 1, recurse from i=1\n      3 > 1  ->  break\n    6 > 4  ->  break\n  take 6, remaining 1, recurse from i=2\n    6 > 1  ->  break\n  take 7, remaining 0               ->  RECORD [7]\n\n  result: [[2, 2, 3], [7]]\n\nTwo mechanisms are doing all the work here.\n\n  Recursing from i (not i+1) is what lets 2 be taken three times in a\n  row. Change it to i+1 and [2,2,3] becomes unreachable.\n\n  Recursing from i (not 0) is what stops [3,2,2] being produced as a\n  separate answer. Once you have moved past index 0, you never look\n  back at it.\n\nAnd because the candidates are sorted, every overshoot is a `break`\nrather than a `continue` — the whole remainder of that level is\ndismissed at once. On unsorted input you would have to keep checking.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Passing `i + 1` instead of `i`, which forbids reuse and silently solves Combination Sum II instead.",
+        "Passing 0 instead of `start`, which permits revisiting earlier candidates and produces every permutation of each combination.",
+        "Checking `remaining == 0` only after the loop, so valid answers at the exact target are missed.",
+        "Assuming the candidates are sorted when they may not be — sort explicitly if you intend to `break` on overshoot.",
+        "Not handling the possibility of a candidate equal to 0, which would recurse forever. The problem forbids it, but it is worth saying so."
+      ],
+      "edgeCases": [
+        "no combination reaches the target -> empty result",
+        "a single candidate that divides the target exactly, e.g. [2] with target 8",
+        "a candidate larger than the target, which is pruned immediately",
+        "target 0 -> one result, the empty combination (confirm the convention)",
+        "candidates that are all larger than the target -> empty result"
+      ],
+      "followUps": [
+        {
+          "q": "What if each number may be used only once?",
+          "a": "Pass `i + 1`, and if the input contains duplicates also sort and skip equal siblings. That is Combination Sum II — the two problems differ by one character plus the duplicate guard."
+        },
+        {
+          "q": "What if you only need the **number** of combinations?",
+          "a": "Then stop enumerating: this becomes a counting DP over the target, O(N · T) time. Coin Change II is exactly that problem. Enumeration is only justified when the combinations themselves are the output."
+        },
+        {
+          "q": "What if order mattered — [2,3] and [3,2] counted separately?",
+          "a": "Drop the `start` index and loop from 0 every time. For counting rather than listing, that is the Combination Sum IV DP, where the loop order over coins and target is what distinguishes permutations from combinations."
+        },
+        {
+          "q": "Why can you break rather than continue once a candidate overshoots?",
+          "a": "Only if the candidates are sorted: every later candidate is at least as large, so it also overshoots. On unsorted input you must `continue`, and the pruning is much weaker — which is a good reason to sort first."
+        }
+      ],
+      "related": [
+        "combination-sum-ii",
+        "subsets",
+        "coin-change-ii"
+      ],
+      "core": true
     },
     {
       "id": "46",
@@ -97,25 +217,77 @@
         "leetcode": "https://leetcode.com/problems/permutations/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=s7AvT7cGdSo"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Backtracking with Used Set",
+      "patternTriggers": [
+        "**Order matters** — `[1,2,3]` and `[3,2,1]` are different answers, so there is no forward-only `start` index.",
+        "Every element must appear exactly once, so the state you carry is which elements are already taken.",
+        "The words *permutation*, *arrangement*, *all orderings*."
+      ],
       "keyInsight": "Unlike subsets, order matters. Track used elements. At each position, try all unused elements.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate all N^N sequences of indices and keep those that use each index exactly once.",
+        "time": "O(N^N)",
+        "space": "O(N)",
+        "whyItFails": "For N = 8 that is 16 million candidates of which only 40,320 are valid — the rest are built in full and discarded. Tracking which elements are used prunes the invalid branches at the moment they become invalid, so every leaf reached is an answer."
+      },
+      "approach": [
+        "Keep a `path` buffer and a `used` array of booleans, one per input element.",
+        "If `path` has reached the input's length, record a copy — a complete permutation.",
+        "Otherwise loop `i` over **every** index, not from a `start` index.",
+        "Skip any `i` that is already marked used.",
+        "Mark `i` used, append `nums[i]`, recurse, then undo both — pop the value and clear the flag.",
+        "Return the collected results."
+      ],
       "code": {
         "python": "def permute(nums):\n    result = []\n    def backtrack(path):\n        if len(path) == len(nums):\n            result.append(path[:])\n            return\n        for num in nums:\n            if num not in path:\n                path.append(num)\n                backtrack(path)\n                path.pop()\n    backtrack([])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        vector<vector<int>> result;\n        function<void(int)> bt = [&](int start) {\n            if (start == nums.size()) { result.push_back(nums); return; }\n            for (int i = start; i < nums.size(); i++) {\n                swap(nums[start], nums[i]);\n                bt(start + 1);\n                swap(nums[start], nums[i]);\n            }\n        };\n        bt(0);\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<List<Integer>> permute(int[] nums) {\n        List<List<Integer>> result = new ArrayList<>();\n        backtrack(nums, 0, result);\n        return result;\n    }\n    void backtrack(int[] nums, int start, List<List<Integer>> result) {\n        if (start == nums.length) {\n            List<Integer> perm = new ArrayList<>();\n            for (int n : nums) perm.add(n);\n            result.add(perm);\n            return;\n        }\n        for (int i = start; i < nums.length; i++) {\n            int tmp = nums[start]; nums[start] = nums[i]; nums[i] = tmp;\n            backtrack(nums, start + 1, result);\n            tmp = nums[start]; nums[start] = nums[i]; nums[i] = tmp;\n        }\n    }\n}",
         "js": "var permute = function(nums) {\n    const result = [];\n    const bt = (start) => {\n        if (start === nums.length) { result.push([...nums]); return; }\n        for (let i = start; i < nums.length; i++) {\n            [nums[start], nums[i]] = [nums[i], nums[start]];\n            bt(start + 1);\n            [nums[start], nums[i]] = [nums[i], nums[start]];\n        }\n    };\n    bt(0);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * N!)",
+        "space": "O(N)",
+        "note": "There are N! permutations and copying each costs O(N). The `used` array and the recursion depth are both O(N). Note the contrast with subsets: the branching factor shrinks by one at each level here (N, then N-1, …), which is what gives a factorial rather than a power of two."
+      },
+      "dryRun": "nums = [1, 2, 3]\n\nNo `start` index. At every level, any element not yet used is a\ncandidate — which is what makes order matter.\n\n  depth 0  path []        available [1, 2, 3]\n    depth 1  path [1]     available [2, 3]\n      depth 2  path [1,2] available [3]   -> complete [1, 2, 3]\n      depth 2  path [1,3] available [2]   -> complete [1, 3, 2]\n    depth 1  path [2]     available [1, 3]\n      depth 2  path [2,1] available [3]   -> complete [2, 1, 3]\n      depth 2  path [2,3] available [1]   -> complete [2, 3, 1]\n    depth 1  path [3]     available [1, 2]\n      depth 2  path [3,1] available [2]   -> complete [3, 1, 2]\n      depth 2  path [3,2] available [1]   -> complete [3, 2, 1]\n\n  6 permutations, which is 3!\n\nWatch the `available` column shrink: 3 choices, then 2, then 1. That\nshrinking IS the pruning — it is why this is 3! = 6 and not 3^3 = 27.\nThe brute force of \"try every index at every position\" would build all\n27 sequences and discard the 21 that reuse an element.\n\nBoth undos matter on the way out: pop the value AND clear used[i].\nLeave the flag set and the sibling branch starting with 2 would believe\n1 is still taken, and you would get 1 permutation instead of 6.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using a `start` index out of habit. That produces combinations, so you would get only the single sorted arrangement.",
+        "Forgetting to clear `used[i]` on the way out, which makes later sibling branches believe elements are still taken and yields far too few results.",
+        "Appending the buffer instead of a copy, so every result is the same (eventually empty) list.",
+        "Using a set of *values* rather than indices to track usage. With duplicate values that wrongly suppresses legitimate permutations — and duplicates need the sorted-sibling-skip instead."
+      ],
+      "edgeCases": [
+        "empty input -> a single result, the empty permutation",
+        "a single element -> [[x]]",
+        "two elements -> two results",
+        "duplicate values, which this problem excludes but Permutations II does not",
+        "N around 9 or 10, where N! starts to dominate the runtime"
+      ],
+      "followUps": [
+        {
+          "q": "What if the input contains duplicates?",
+          "a": "Sort, then at each level skip `nums[i] == nums[i-1]` when `used[i-1]` is false — meaning the identical earlier element is available but was not chosen, so choosing this one would repeat a branch. That condition is fiddlier than the subsets version and worth writing out carefully."
+        },
+        {
+          "q": "Can you permute in place without a `used` array?",
+          "a": "Yes — swap `nums[start]` with each `nums[i]` for `i >= start`, recurse on `start + 1`, then swap back. O(1) extra space beyond the output. It does not preserve lexicographic order, and with duplicates the skip condition becomes harder, so the `used` version is usually the better interview answer."
+        },
+        {
+          "q": "Generate only the **next** permutation in lexicographic order.",
+          "a": "That is a different, O(N) problem: find the rightmost ascent, swap it with the smallest larger element to its right, and reverse the suffix. No enumeration at all — worth recognising, because iterating next-permutation N! times is how you enumerate without recursion."
+        },
+        {
+          "q": "Why does this branch N, N-1, N-2 … rather than always N?",
+          "a": "Because each level removes one element from the candidate pool. That shrinking is precisely the pruning the brute force lacks, and it is the difference between N^N and N!."
+        }
+      ],
+      "related": [
+        "subsets",
+        "letter-combinations-of-a-phone-number",
+        "n-queens"
+      ],
+      "core": true
     },
     {
       "id": "90",
@@ -132,25 +304,77 @@
         "leetcode": "https://leetcode.com/problems/subsets-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Vn2v6ajA7U0"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Backtracking + Duplicate Skip",
+      "patternTriggers": [
+        "The **input** contains duplicates and the **output** must not.",
+        "Sorting brings equal values adjacent, which turns \"have I already tried this value here?\" into a check against the immediate neighbour.",
+        "The words *may contain duplicates*, *return the unique*, *no two subsets the same*."
+      ],
       "keyInsight": "Sort first, then skip duplicates at the same level: if nums[i] == nums[i-1] and i > start, skip.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate all 2^N subsets as in Subsets, then deduplicate by sorting each one and putting it into a set.",
+        "time": "O(N * 2^N) plus the deduplication",
+        "space": "O(N * 2^N)",
+        "whyItFails": "It works and is a reasonable fallback, but it generates every duplicate before discarding it — and it needs O(N · 2^N) extra space for the set. Skipping equal siblings prevents duplicates from ever being created, so no deduplication pass is needed at all."
+      },
+      "approach": [
+        "Sort the input so equal values sit next to each other. This step is what makes everything else work.",
+        "Run the standard subsets recursion with a `start` index, recording a copy of the path on entry.",
+        "Inside the loop, skip index `i` when `i > start` **and** `nums[i] == nums[i-1]`.",
+        "The `i > start` guard is the crux: at the first position of this level (`i == start`) the value must be tried, and only *repeats within the same level* are skipped.",
+        "Append, recurse with `i + 1`, then pop as usual.",
+        "Return the results, which now contain no duplicates by construction."
+      ],
       "code": {
         "python": "def subsetsWithDup(nums):\n    nums.sort()\n    result = []\n    def backtrack(start, path):\n        result.append(path[:])\n        for i in range(start, len(nums)):\n            if i > start and nums[i] == nums[i-1]:\n                continue  # skip duplicate at same level\n            path.append(nums[i])\n            backtrack(i + 1, path)\n            path.pop()\n    backtrack(0, [])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> subsetsWithDup(vector<int>& nums) {\n        sort(nums.begin(), nums.end());\n        vector<vector<int>> result;\n        vector<int> cur;\n        function<void(int)> bt = [&](int i) {\n            result.push_back(cur);\n            for (int j = i; j < nums.size(); j++) {\n                if (j > i && nums[j] == nums[j-1]) continue;\n                cur.push_back(nums[j]);\n                bt(j + 1);\n                cur.pop_back();\n            }\n        };\n        bt(0);\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<List<Integer>> subsetsWithDup(int[] nums) {\n        Arrays.sort(nums);\n        List<List<Integer>> result = new ArrayList<>();\n        backtrack(nums, 0, new ArrayList<>(), result);\n        return result;\n    }\n    void backtrack(int[] nums, int i, List<Integer> cur, List<List<Integer>> result) {\n        result.add(new ArrayList<>(cur));\n        for (int j = i; j < nums.length; j++) {\n            if (j > i && nums[j] == nums[j-1]) continue;\n            cur.add(nums[j]);\n            backtrack(nums, j + 1, cur, result);\n            cur.remove(cur.size() - 1);\n        }\n    }\n}",
         "js": "var subsetsWithDup = function(nums) {\n    nums.sort((a, b) => a - b);\n    const result = [];\n    const bt = (i, cur) => {\n        result.push([...cur]);\n        for (let j = i; j < nums.length; j++) {\n            if (j > i && nums[j] === nums[j-1]) continue;\n            cur.push(nums[j]);\n            bt(j + 1, cur);\n            cur.pop();\n        }\n    };\n    bt(0, []);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * 2^N)",
+        "space": "O(N)",
+        "note": "The bound is the same as Subsets because that is the worst case — all elements distinct. With duplicates the actual number of results is smaller and the skip prunes whole subtrees, so it is strictly faster in practice. The O(N log N) sort is dominated."
+      },
+      "dryRun": "nums = [1, 2, 2] (already sorted — sorting first is mandatory)\n\nSkip index i when  i > start AND nums[i] == nums[i-1].\n\n  record []                                      start = 0\n    choose nums[0]=1 -> recurse from 1\n      record [1]                                  start = 1\n        choose nums[1]=2 -> recurse from 2\n          record [1, 2]                           start = 2\n            choose nums[2]=2 -> recurse from 3\n              record [1, 2, 2]\n        SKIP i=2:  nums[2]=2 == nums[1]=2, and i(2) > start(1)\n    choose nums[1]=2 -> recurse from 2\n      record [2]                                  start = 2\n        choose nums[2]=2 -> recurse from 3\n          record [2, 2]\n    SKIP i=2:  nums[2]=2 == nums[1]=2, and i(2) > start(0)\n\n  6 unique subsets:  [] [1] [1,2] [1,2,2] [2] [2,2]\n\nWithout the skip you would get 8 — the plain Subsets count — with [2]\nand [1,2] each appearing twice, because the two 2s are different\n*elements* producing identical *subsets*.\n\nNow look at why the guard is `i > start` and not `i > 0`.\n\n  At the level where start = 1, index 1 IS taken (producing [1,2]) and\n  index 2 is skipped. Good — those would be the same subset.\n\n  But at the level where start = 2, index 2 is taken, producing [2,2].\n  Here i == start, so the skip does not fire. With `i > 0` it would\n  have fired, and [1,2,2] and [2,2] would both be lost.\n\nThe rule is \"skip equal SIBLINGS\", not \"skip equal values anywhere\".",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting the sort. Equal values are then not adjacent, so the neighbour check catches nothing and duplicates appear.",
+        "Writing the condition as `i > 0` instead of `i > start`. That skips the value even when it is the first choice at this level, losing legitimate subsets like `[2,2]`.",
+        "Skipping based on \"this value appears earlier anywhere\" rather than \"as an immediate sibling\", which over-prunes in the same way.",
+        "In JavaScript, sorting without a numeric comparator, so `[10, 9, 9]` sorts as `[10, 9, 9]` and the adjacency assumption breaks."
+      ],
+      "edgeCases": [
+        "all elements identical, e.g. [2,2,2] -> [[], [2], [2,2], [2,2,2]]",
+        "no duplicates at all, which must reduce to plain Subsets",
+        "a single element",
+        "duplicates separated in the original input, e.g. [1,2,1] -> must be sorted first",
+        "empty input -> one empty subset"
+      ],
+      "followUps": [
+        {
+          "q": "Explain exactly why `i > start` is the right guard.",
+          "a": "Think of one invocation as choosing what goes at this position. `i == start` is the first candidate for this position and must always be tried. For `i > start`, if `nums[i] == nums[i-1]` then the identical value was already tried at this same position in a previous iteration, so this branch would generate an identical subtree. Skipping it removes the duplicate without losing anything."
+        },
+        {
+          "q": "How does this differ from the duplicate rule for permutations?",
+          "a": "Subsets use a `start` index, so the comparison is against the previous *loop iteration*. Permutations have no start index, so the rule becomes `nums[i] == nums[i-1] && !used[i-1]` — skip if the identical earlier element is free but unchosen. Same idea, different bookkeeping, and this is where people mix them up."
+        },
+        {
+          "q": "Could you use a counting approach instead?",
+          "a": "Yes, and it is arguably cleaner: count each distinct value, then for each value decide how many copies to take, from 0 up to its count. No skip condition needed, and it generalises naturally to multisets."
+        },
+        {
+          "q": "What if you only needed the count of unique subsets?",
+          "a": "Multiply `(count + 1)` over the distinct values — no enumeration. For [2,2,3] that is 3 x 2 = 6. Recognising when the count has a closed form saves an exponential walk."
+        }
+      ],
+      "related": [
+        "subsets",
+        "combination-sum-ii",
+        "permutations"
+      ],
+      "core": true
     },
     {
       "id": "40",
@@ -167,25 +391,79 @@
         "leetcode": "https://leetcode.com/problems/combination-sum-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=rSA3t6BDDwg"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Backtracking + Duplicate Skip",
+      "patternTriggers": [
+        "A target to reach, each element usable **once**, and duplicates present in the input.",
+        "It is the intersection of two earlier problems: the `i + 1` of single use, plus the sorted sibling-skip for duplicates.",
+        "The target gives a pruning condition, and sorting makes that pruning a `break` rather than a `continue`."
+      ],
       "keyInsight": "Like Combination Sum but each number used once (i+1) + skip duplicates (sort + skip same level).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Enumerate all subsets, keep those summing to the target, then deduplicate with a set.",
+        "time": "O(N * 2^N) plus deduplication",
+        "space": "O(N * 2^N)",
+        "whyItFails": "It explores branches that have already overshot the target and generates duplicate combinations before discarding them. Both are avoidable: the sum check prunes the first, and the sibling-skip prevents the second from ever being created."
+      },
+      "approach": [
+        "Sort the candidates, enabling both the duplicate skip and the early `break`.",
+        "Recurse with a `start` index and a `remaining` amount.",
+        "If `remaining` is 0, record a copy of the path.",
+        "Loop `i` from `start`. If `candidates[i] > remaining`, `break` — every later candidate is at least as large, so the whole rest of this level is hopeless.",
+        "Skip index `i` when `i > start` and `candidates[i] == candidates[i-1]`, to suppress duplicate combinations.",
+        "Append, recurse with `i + 1` and `remaining - candidates[i]`, then pop.",
+        "Return the results."
+      ],
       "code": {
         "python": "def combinationSum2(candidates, target):\n    candidates.sort()\n    result = []\n    def backtrack(start, path, total):\n        if total == target:\n            result.append(path[:])\n            return\n        for i in range(start, len(candidates)):\n            if total + candidates[i] > target: break\n            if i > start and candidates[i] == candidates[i-1]: continue\n            path.append(candidates[i])\n            backtrack(i + 1, path, total + candidates[i])\n            path.pop()\n    backtrack(0, [], 0)\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {\n        sort(candidates.begin(), candidates.end());\n        vector<vector<int>> result;\n        vector<int> cur;\n        function<void(int, int)> bt = [&](int i, int remain) {\n            if (remain == 0) { result.push_back(cur); return; }\n            for (int j = i; j < candidates.size() && candidates[j] <= remain; j++) {\n                if (j > i && candidates[j] == candidates[j-1]) continue;\n                cur.push_back(candidates[j]);\n                bt(j + 1, remain - candidates[j]);\n                cur.pop_back();\n            }\n        };\n        bt(0, target);\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<List<Integer>> combinationSum2(int[] candidates, int target) {\n        Arrays.sort(candidates);\n        List<List<Integer>> result = new ArrayList<>();\n        backtrack(candidates, target, 0, new ArrayList<>(), result);\n        return result;\n    }\n    void backtrack(int[] cands, int remain, int i, List<Integer> cur, List<List<Integer>> result) {\n        if (remain == 0) { result.add(new ArrayList<>(cur)); return; }\n        for (int j = i; j < cands.length && cands[j] <= remain; j++) {\n            if (j > i && cands[j] == cands[j-1]) continue;\n            cur.add(cands[j]);\n            backtrack(cands, remain - cands[j], j + 1, cur, result);\n            cur.remove(cur.size() - 1);\n        }\n    }\n}",
         "js": "var combinationSum2 = function(candidates, target) {\n    candidates.sort((a, b) => a - b);\n    const result = [];\n    const bt = (i, remain, cur) => {\n        if (remain === 0) { result.push([...cur]); return; }\n        for (let j = i; j < candidates.length && candidates[j] <= remain; j++) {\n            if (j > i && candidates[j] === candidates[j-1]) continue;\n            cur.push(candidates[j]);\n            bt(j + 1, remain - candidates[j], cur);\n            cur.pop();\n        }\n    };\n    bt(0, target, []);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "note": "Each element is either taken or not, bounding the search at 2^N, with up to O(N) to copy each result. In practice the sum-based `break` and the duplicate skip prune so aggressively that the explored tree is far smaller — which is the whole point of sorting first."
+      },
+      "dryRun": "candidates = [10,1,2,7,6,1,5], target = 8\nsorted:      [1, 1, 2, 5, 6, 7, 10]\n\nThree mechanisms at once: i+1 (each element once), the sorted break\n(overshoot), and the sibling skip (duplicate inputs).\n\n  take c[0]=1, rem 7, from i=1\n    take c[1]=1, rem 6, from i=2\n      take c[2]=2, rem 4, from i=3\n        5 > 4  -> break\n      take c[4]=6, rem 0                 ->  RECORD [1, 1, 6]\n      7 > 6  -> break\n    take c[2]=2, rem 5, from i=3\n      take c[3]=5, rem 0                 ->  RECORD [1, 2, 5]\n      6 > 5  -> break\n    take c[3]=5, rem 2, from i=4\n      6 > 2  -> break\n    take c[4]=6, rem 1, from i=5\n      7 > 1  -> break\n    take c[5]=7, rem 0                   ->  RECORD [1, 7]\n    10 > 7 -> break\n  SKIP i=1:  c[1]=1 == c[0]=1, and i(1) > start(0)\n  take c[2]=2, rem 6, from i=3\n    take c[3]=5, rem 1, from i=4\n      6 > 1  -> break\n    take c[4]=6, rem 0                   ->  RECORD [2, 6]\n    7 > 6  -> break\n  ... remaining branches all break on overshoot\n\n  result: [[1,1,6], [1,2,5], [1,7], [2,6]]\n\nThe interesting line is the SKIP at the top level. Both 1s are in the\ninput, and [1,1,6] legitimately uses both — taken at successive levels,\nwhere i == start each time. What must not happen is starting a second\ntop-level branch with the *other* 1, because it would regenerate\n[1,6] ... and every other subtree identically.\n\nSo the same pair of 1s is usable together and unusable as alternatives.\nThat is exactly the distinction `i > start` captures.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Passing `i` instead of `i + 1`, which allows reuse and solves Combination Sum instead.",
+        "Applying the duplicate skip with `i > 0` rather than `i > start`, which loses valid combinations that legitimately contain the value twice from two different positions.",
+        "Using `continue` instead of `break` on overshoot after sorting, which still works but throws away most of the pruning.",
+        "Forgetting to sort, which breaks both the skip and the break.",
+        "Recording results only at a leaf rather than whenever `remaining` hits 0 — the target can be met before the array is exhausted."
+      ],
+      "edgeCases": [
+        "no combination reaches the target -> empty result",
+        "all candidates identical, e.g. [2,2,2] with target 4 -> exactly one result [2,2]",
+        "a candidate equal to the target -> a single-element combination",
+        "every candidate larger than the target -> empty result, caught by the first break",
+        "duplicates that must be used together, e.g. [1,1] with target 2"
+      ],
+      "followUps": [
+        {
+          "q": "Why does this need both `i + 1` and the duplicate skip?",
+          "a": "They solve different problems. `i + 1` stops the *same element* being reused. The skip stops two *distinct elements with equal value* from generating the same combination twice. Remove either and you get a wrong answer in a different way — a useful thing to be able to say precisely."
+        },
+        {
+          "q": "How would you handle it without sorting?",
+          "a": "Count the distinct values, then at each level decide how many copies of the current value to take. No sibling-skip needed, no sort required, and it avoids the subtle `i > start` condition entirely. Slightly more code, considerably easier to argue correct."
+        },
+        {
+          "q": "What if the candidates could be negative?",
+          "a": "All the pruning collapses — a negative candidate means an overshoot can be recovered, so `break` and the early return on a negative remainder both become invalid. You would need a bound on the number of elements instead, and the problem becomes much harder."
+        },
+        {
+          "q": "Just the count of valid combinations?",
+          "a": "A DP over (index, remaining) — O(N · target) — which is enormously faster than enumeration. Worth asking whether the combinations themselves are needed before writing a backtracking solution at all."
+        }
+      ],
+      "related": [
+        "combination-sum",
+        "subsets-ii",
+        "partition-equal-subset-sum"
+      ],
+      "core": true
     },
     {
       "id": "79",
@@ -202,25 +480,80 @@
         "leetcode": "https://leetcode.com/problems/word-search/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=pfiQ_PS1g8E"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Grid Backtracking",
+      "patternTriggers": [
+        "A path through a grid where cells may not be revisited **within that path**, but may be reused by other paths.",
+        "The candidate set at each step is the four neighbours, and validity is checkable one step at a time.",
+        "The words *adjacent*, *sequentially adjacent cells*, *path in a grid*."
+      ],
+      "keyInsight": "DFS from every cell, matching one character per step, and **mark the current cell as visited before recursing and unmark it after**. That unmark is what makes this backtracking rather than flood fill: a cell used by one path must be available to a different path that starts elsewhere. The usual trick is to overwrite the cell with a sentinel character and restore it on the way out, which needs no extra visited structure at all.",
+      "bruteForce": {
+        "idea": "Enumerate every path of the word's length through the grid and check whether any spells the word.",
+        "time": "O(M * N * 4^L)",
+        "space": "O(L)",
+        "whyItFails": "It builds each path to full length before testing it. Comparing the character at every step instead abandons a branch as soon as it diverges from the word, which eliminates almost all of that tree — the first character alone rules out most starting cells."
+      },
+      "approach": [
+        "For every cell of the grid, start a DFS carrying the index into the word.",
+        "If the index has reached the word's length, the whole word has been matched — return true.",
+        "Return false if the position is off the grid, or the cell's character does not match `word[index]`.",
+        "Mark the cell visited by overwriting it with a sentinel such as `#`.",
+        "Recurse into the four neighbours with `index + 1`; if any returns true, propagate it.",
+        "Restore the original character before returning, so other paths can use this cell.",
+        "Return true if any starting cell succeeds."
+      ],
       "code": {
         "python": "def exist(board, word):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, i):\n        if i == len(word): return True\n        if r<0 or r>=rows or c<0 or c>=cols or board[r][c]!=word[i]:\n            return False\n        board[r][c] = '#'  # mark visited\n        found = any(dfs(r+dr,c+dc,i+1) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)])\n        board[r][c] = word[i]  # unmark\n        return found\n    return any(dfs(r,c,0) for r in range(rows) for c in range(cols))",
         "cpp": "class Solution {\npublic:\n    bool exist(vector<vector<char>>& board, string word) {\n        int m = board.size(), n = board[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (dfs(board, word, i, j, 0)) return true;\n        return false;\n    }\n    bool dfs(vector<vector<char>>& board, string& word, int i, int j, int k) {\n        if (k == word.size()) return true;\n        if (i < 0 || j < 0 || i >= board.size() || j >= board[0].size() || board[i][j] != word[k]) return false;\n        char tmp = board[i][j]; board[i][j] = '#';\n        bool found = dfs(board, word, i+1, j, k+1) || dfs(board, word, i-1, j, k+1)\n                  || dfs(board, word, i, j+1, k+1) || dfs(board, word, i, j-1, k+1);\n        board[i][j] = tmp;\n        return found;\n    }\n};",
         "java": "class Solution {\n    public boolean exist(char[][] board, String word) {\n        for (int i = 0; i < board.length; i++)\n            for (int j = 0; j < board[0].length; j++)\n                if (dfs(board, word, i, j, 0)) return true;\n        return false;\n    }\n    boolean dfs(char[][] board, String word, int i, int j, int k) {\n        if (k == word.length()) return true;\n        if (i < 0 || j < 0 || i >= board.length || j >= board[0].length || board[i][j] != word.charAt(k)) return false;\n        char tmp = board[i][j]; board[i][j] = '#';\n        boolean found = dfs(board, word, i+1, j, k+1) || dfs(board, word, i-1, j, k+1)\n                     || dfs(board, word, i, j+1, k+1) || dfs(board, word, i, j-1, k+1);\n        board[i][j] = tmp;\n        return found;\n    }\n}",
         "js": "var exist = function(board, word) {\n    const m = board.length, n = board[0].length;\n    const dfs = (i, j, k) => {\n        if (k === word.length) return true;\n        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] !== word[k]) return false;\n        const tmp = board[i][j]; board[i][j] = '#';\n        const found = dfs(i+1,j,k+1) || dfs(i-1,j,k+1) || dfs(i,j+1,k+1) || dfs(i,j-1,k+1);\n        board[i][j] = tmp;\n        return found;\n    };\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (dfs(i, j, 0)) return true;\n    return false;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N * 3^L)",
+        "space": "O(L)",
+        "note": "L is the word length. Each of the M·N start cells branches four ways initially and three thereafter, since one neighbour is always the cell you came from. Space is the recursion depth, O(L) — the sentinel trick means no separate visited grid, though it does mutate the input temporarily."
+      },
+      "dryRun": "board:    A B C E          word = \"SEE\"\n          S F C S\n          A D E E\n\nTry every cell as a start, but reject non-matching ones in one\ncomparison:\n\n  (0,0)='A'  != 'S'  -> skip\n  (0,1)='B'  != 'S'  -> skip\n  (0,2)='C'  != 'S'  -> skip\n  (0,3)='E'  != 'S'  -> skip\n\n  (1,0)='S'  matches word[0]  -> mark '#', descend\n      neighbours are 'F', 'A', 'A' and the visited cell — none is 'E'\n      all four exhausted  -> restore 'S', return false\n\n  (1,1)='F'  != 'S'  -> skip\n  (1,2)='C'  != 'S'  -> skip\n\n  (1,3)='S'  matches word[0]  -> mark '#', descend\n      (2,3)='E' matches word[1]  -> mark '#', descend\n          (2,2)='E' matches word[2]  -> mark '#', descend\n              index 3 == len(\"SEE\")  ->  TRUE\n\n  result: true, via (1,3) -> (2,3) -> (2,2)\n\nThe restore after the failed start at (1,0) is the part that must not\nbe skipped. That cell is not on the answer path, but if it were left as\n'#' the grid would be corrupted for every later attempt — and more\nimportantly, you would have mutated the caller's input.\n\nNote also how cheap the rejected starts are: one character comparison\neach, no recursion. Eight of the twelve cells are dismissed that way.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not restoring the cell after recursing. The grid is then permanently scarred and later starting cells fail — and if you mutate the caller's input without restoring it, that is a bug even when the answer happens to be right.",
+        "Checking bounds after indexing rather than before, which reads out of range.",
+        "Comparing the character after marking the cell visited, so the sentinel never matches.",
+        "Returning the result of the first neighbour only, instead of trying all four and succeeding if any does.",
+        "Mutating the input permanently when the caller may still need it — if that matters, use a separate visited set instead and say why."
+      ],
+      "edgeCases": [
+        "a single-character word",
+        "a word longer than the number of cells -> false",
+        "a word whose first character is absent from the grid -> false after one check per cell",
+        "a 1x1 grid",
+        "a word requiring the same letter twice from adjacent cells, which must come from two different cells",
+        "a grid of a single repeated letter with a long word of that letter — the pathological case"
+      ],
+      "followUps": [
+        {
+          "q": "What if you must find many words at once?",
+          "a": "Build a trie of all the words and walk it alongside the grid DFS, abandoning a branch the moment the trie has no matching child. That is Word Search II, and it is dramatically faster than running this once per word because shared prefixes are explored once."
+        },
+        {
+          "q": "Can you prune before even starting?",
+          "a": "Yes. Count the grid's letter frequencies and compare with the word's — if the word needs three 'e's and the grid has two, return false immediately. Also, if the word's last character is rarer than its first, search for the reversed word instead; both tricks are cheap and sometimes decisive."
+        },
+        {
+          "q": "Why 3^L rather than 4^L?",
+          "a": "After the first move, one of the four neighbours is the cell you just came from and is currently marked visited, so only three are candidates. The first step has all four, giving 4 · 3^(L-1)."
+        },
+        {
+          "q": "What if diagonal moves were allowed?",
+          "a": "The branching factor rises to 8 (7 after the first step), so the bound becomes O(M · N · 7^L). The code changes only in the list of offsets, which is a good sign the direction set was factored out properly."
+        }
+      ],
+      "related": [
+        "word-search-ii",
+        "number-of-islands",
+        "n-queens"
+      ],
+      "core": true
     },
     {
       "id": "131",
@@ -237,25 +570,78 @@
         "leetcode": "https://leetcode.com/problems/palindrome-partitioning/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=3jvWodd7ht0"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Backtracking over Cut Points",
+      "patternTriggers": [
+        "Split a sequence into contiguous pieces, where each piece must satisfy a property.",
+        "The choice at each step is the length of the next piece, so the loop ranges over end positions.",
+        "The words *partition*, *split into*, *all ways to break up*."
+      ],
+      "keyInsight": "The decision at each step is **where to make the next cut**. Standing at position `start`, try every end position; if `s[start..end]` is a palindrome, take that piece and recurse from `end + 1`. The palindrome test is the pruning — an invalid prefix is abandoned immediately rather than discovered after the whole string has been split. Because every cut point is either used or not, there are 2^(N-1) possible partitions, which is why the bound is exponential.",
+      "bruteForce": {
+        "idea": "Generate all 2^(N-1) ways to place cuts, then check each resulting partition to see whether every piece is a palindrome.",
+        "time": "O(N * 2^N)",
+        "space": "O(N)",
+        "whyItFails": "It commits to a full set of cuts before testing any piece. Testing each piece as it is cut abandons the branch at the first non-palindrome, which removes most of the tree — and the pieces that are tested get reused across many partitions."
+      },
+      "approach": [
+        "Recurse with a `start` position, beginning at 0.",
+        "If `start` has reached the end of the string, the whole string is partitioned — record a copy of the path.",
+        "Loop `end` from `start` to the last index.",
+        "Test whether `s[start..end]` is a palindrome; if not, skip this `end`.",
+        "Append that substring to the path, recurse from `end + 1`, then pop it off.",
+        "Return the collected partitions."
+      ],
       "code": {
         "python": "def partition(s):\n    result = []\n    def backtrack(start, path):\n        if start == len(s):\n            result.append(path[:])\n            return\n        for end in range(start, len(s)):\n            if s[start:end+1] == s[start:end+1][::-1]:\n                path.append(s[start:end+1])\n                backtrack(end + 1, path)\n                path.pop()\n    backtrack(0, [])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        vector<vector<string>> result;\n        vector<string> cur;\n        function<void(int)> bt = [&](int start) {\n            if (start == s.size()) { result.push_back(cur); return; }\n            for (int end = start; end < s.size(); end++) {\n                if (isPalin(s, start, end)) {\n                    cur.push_back(s.substr(start, end - start + 1));\n                    bt(end + 1);\n                    cur.pop_back();\n                }\n            }\n        };\n        bt(0);\n        return result;\n    }\n    bool isPalin(string& s, int l, int r) {\n        while (l < r) if (s[l++] != s[r--]) return false;\n        return true;\n    }\n};",
         "java": "class Solution {\n    public List<List<String>> partition(String s) {\n        List<List<String>> result = new ArrayList<>();\n        backtrack(s, 0, new ArrayList<>(), result);\n        return result;\n    }\n    void backtrack(String s, int start, List<String> cur, List<List<String>> result) {\n        if (start == s.length()) { result.add(new ArrayList<>(cur)); return; }\n        for (int end = start; end < s.length(); end++) {\n            if (isPalin(s, start, end)) {\n                cur.add(s.substring(start, end + 1));\n                backtrack(s, end + 1, cur, result);\n                cur.remove(cur.size() - 1);\n            }\n        }\n    }\n    boolean isPalin(String s, int l, int r) {\n        while (l < r) if (s.charAt(l++) != s.charAt(r--)) return false;\n        return true;\n    }\n}",
         "js": "var partition = function(s) {\n    const result = [];\n    const isPalin = (l, r) => { while (l < r) if (s[l++] !== s[r--]) return false; return true; };\n    const bt = (start, cur) => {\n        if (start === s.length) { result.push([...cur]); return; }\n        for (let end = start; end < s.length; end++) {\n            if (isPalin(start, end)) {\n                cur.push(s.substring(start, end + 1));\n                bt(end + 1, cur);\n                cur.pop();\n            }\n        }\n    };\n    bt(0, []);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * 2^N)",
+        "space": "O(N)",
+        "note": "There are 2^(N-1) cut placements, and producing each partition costs O(N) to copy. The naive palindrome test adds a factor of N per check, which precomputing removes — see the follow-up. Space is the recursion depth plus the path."
+      },
+      "dryRun": "s = \"aab\"\n\nThe choice at each level is where to cut. Test each candidate piece\nBEFORE recursing — that test is the pruning.\n\n  start = 0\n    end=0  piece \"a\"    palindrome  -> cut, continue from 1\n      start = 1\n        end=1  piece \"a\"   palindrome  -> cut, continue from 2\n          start = 2\n            end=2  piece \"b\"  palindrome  -> cut, continue from 3\n              start == 3 == len(s)   ->  RECORD [\"a\", \"a\", \"b\"]\n        end=2  piece \"ab\"  NOT a palindrome  -> prune\n    end=1  piece \"aa\"   palindrome  -> cut, continue from 2\n      start = 2\n        end=2  piece \"b\"   palindrome  -> cut, continue from 3\n          start == 3   ->  RECORD [\"aa\", \"b\"]\n    end=2  piece \"aab\"  NOT a palindrome  -> prune\n\n  result: [[\"a\", \"a\", \"b\"], [\"aa\", \"b\"]]\n\nThere are 2^(3-1) = 4 possible cut placements for a 3-character string;\ntwo of them were pruned before being completed. On longer strings that\npruning is the difference between running and timing out.\n\nThe substring bounds are the easy thing to get wrong. The piece is\ns[start..end] INCLUSIVE, so the next level starts at end+1. Recursing\nfrom `end` would reuse that character in two pieces.\n\nNote \"a\" is tested for palindromicity three separate times across this\ntiny trace. On a long string the same substrings are re-tested\nthousands of times, which is what the precomputed isPal table fixes.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Checking the palindrome property after recursing instead of before, which loses all the pruning.",
+        "Off-by-one on the substring bounds: `s[start..end]` must be inclusive of `end`, so the recursion continues from `end + 1`.",
+        "Recursing from `end` rather than `end + 1`, which reuses a character in two pieces.",
+        "Appending the path buffer rather than a copy.",
+        "Re-testing the same substring for palindromicity thousands of times, when the results can be precomputed once."
+      ],
+      "edgeCases": [
+        "a single character -> one partition, [[c]]",
+        "an empty string -> one partition, the empty list",
+        "all characters identical, e.g. \"aaa\", which yields every possible cut placement",
+        "no multi-character palindrome, e.g. \"abc\" -> only the all-singletons partition",
+        "the entire string already a palindrome, which adds a one-piece partition"
+      ],
+      "followUps": [
+        {
+          "q": "Remove the repeated palindrome checks.",
+          "a": "Precompute a table `isPal[i][j]` with DP in O(N^2): a substring is a palindrome when its ends match and the interior is one. Then each check is O(1) and the total drops to O(2^N) plus the O(N) copies. This is the optimisation worth volunteering."
+        },
+        {
+          "q": "Find the **minimum** number of cuts instead of all partitions.",
+          "a": "Then stop enumerating — it is a DP over positions: `dp[i]` is the fewest cuts for the prefix ending at i, computed in O(N^2) with the same palindrome table. Palindrome Partitioning II. Asking whether the partitions themselves are needed is the right first question."
+        },
+        {
+          "q": "What if the pieces had to satisfy a different property?",
+          "a": "Only the test changes. The cut-point structure is the reusable part — the same shape solves Word Break (every piece in a dictionary) and Restore IP Addresses (every piece a valid octet)."
+        },
+        {
+          "q": "Why 2^(N-1) and not 2^N?",
+          "a": "There are N-1 gaps between N characters, and each gap either holds a cut or does not. The ends are not choices, which is why the exponent is one less than the string length."
+        }
+      ],
+      "related": [
+        "word-break",
+        "longest-palindromic-substring",
+        "palindromic-substrings"
+      ],
+      "core": true
     },
     {
       "id": "17",
@@ -271,25 +657,78 @@
         "leetcode": "https://leetcode.com/problems/letter-combinations-of-a-phone-number/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=0snEunUacZY"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Cartesian Product Backtracking",
+      "patternTriggers": [
+        "Each position has its own independent set of options, and you need every combination across positions.",
+        "The output size is the product of the option counts — no constraints couple the positions.",
+        "The words *all combinations*, *every possible*, *cartesian product*, and anything keypad or dial shaped."
+      ],
+      "keyInsight": "This is a **Cartesian product**: each digit contributes an independent choice from its own small set, and every combination of those choices is an answer. There is no pruning and nothing can fail — every leaf of the recursion is a valid result, which makes it the simplest shape in the category and a good one to learn the template on. The only real decisions are the digit-to-letters mapping and remembering that an empty input produces an empty list, not a list containing the empty string.",
+      "bruteForce": {
+        "idea": "Nested loops, one per digit.",
+        "time": "O(N * 4^N)",
+        "space": "O(N)",
+        "whyItFails": "It is not slower — it is the same work. It simply cannot be written, because the number of loops depends on the input length. Recursion is how you write a variable number of nested loops, which is the honest reason to reach for it here."
+      },
+      "approach": [
+        "Build a map from digit character to its letters, with 7 and 9 having four letters and the rest three.",
+        "Return an empty list immediately if the input is empty — there are no combinations of nothing.",
+        "Recurse with an index into the digit string and a `path` buffer.",
+        "If the index has reached the end, record a copy of the path joined into a string.",
+        "Otherwise loop over the letters for the current digit.",
+        "Append the letter, recurse with `index + 1`, then pop it off.",
+        "Return the results."
+      ],
       "code": {
         "python": "def letterCombinations(digits):\n    if not digits: return []\n    phone = {\"2\":\"abc\",\"3\":\"def\",\"4\":\"ghi\",\"5\":\"jkl\",\n             \"6\":\"mno\",\"7\":\"pqrs\",\"8\":\"tuv\",\"9\":\"wxyz\"}\n    result = []\n    def backtrack(i, path):\n        if i == len(digits):\n            result.append(\"\".join(path))\n            return\n        for c in phone[digits[i]]:\n            path.append(c)\n            backtrack(i + 1, path)\n            path.pop()\n    backtrack(0, [])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<string> letterCombinations(string digits) {\n        if (digits.empty()) return {};\n        string map[] = {\"\",\"\",\"abc\",\"def\",\"ghi\",\"jkl\",\"mno\",\"pqrs\",\"tuv\",\"wxyz\"};\n        vector<string> result;\n        function<void(int, string&)> bt = [&](int i, string& cur) {\n            if (i == digits.size()) { result.push_back(cur); return; }\n            for (char c : map[digits[i] - '0']) {\n                cur += c; bt(i + 1, cur); cur.pop_back();\n            }\n        };\n        string s;\n        bt(0, s);\n        return result;\n    }\n};",
         "java": "class Solution {\n    String[] map = {\"\",\"\",\"abc\",\"def\",\"ghi\",\"jkl\",\"mno\",\"pqrs\",\"tuv\",\"wxyz\"};\n    public List<String> letterCombinations(String digits) {\n        if (digits.isEmpty()) return new ArrayList<>();\n        List<String> result = new ArrayList<>();\n        backtrack(digits, 0, new StringBuilder(), result);\n        return result;\n    }\n    void backtrack(String digits, int i, StringBuilder sb, List<String> result) {\n        if (i == digits.length()) { result.add(sb.toString()); return; }\n        for (char c : map[digits.charAt(i) - '0'].toCharArray()) {\n            sb.append(c); backtrack(digits, i + 1, sb, result); sb.deleteCharAt(sb.length() - 1);\n        }\n    }\n}",
         "js": "var letterCombinations = function(digits) {\n    if (!digits.length) return [];\n    const map = ['','','abc','def','ghi','jkl','mno','pqrs','tuv','wxyz'];\n    const result = [];\n    const bt = (i, cur) => {\n        if (i === digits.length) { result.push(cur); return; }\n        for (const c of map[digits[i]]) bt(i + 1, cur + c);\n    };\n    bt(0, '');\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * 4^N)",
+        "space": "O(N)",
+        "note": "Each digit contributes 3 or 4 letters, so there are at most 4^N results, each costing O(N) to assemble. The recursion depth and path buffer are O(N); the output itself is O(N · 4^N), which is simply the size of the answer."
+      },
+      "dryRun": "digits = \"23\",  with 2 -> \"abc\" and 3 -> \"def\"\n\nNothing can fail here — every leaf is an answer.\n\n  digit '2' offers a, b, c\n    choose 'a'\n      digit '3' offers d, e, f\n        -> \"ad\"\n        -> \"ae\"\n        -> \"af\"\n    choose 'b'\n      digit '3' offers d, e, f\n        -> \"bd\"\n        -> \"be\"\n        -> \"bf\"\n    choose 'c'\n      digit '3' offers d, e, f\n        -> \"cd\"\n        -> \"ce\"\n        -> \"cf\"\n\n  9 results:  ad ae af bd be bf cd ce cf\n\n3 letters x 3 letters = 9, the product of the per-digit option counts.\nThat is why this is a Cartesian product rather than a search: the\npositions are completely independent, so the output size is a product\nand no branch is ever abandoned.\n\nHad the digits been \"79\", each offering four letters, the result would\nbe 4 x 4 = 16 — the only thing that changes is the option counts.\n\nThe empty input is the one case worth checking against the spec: there\nis arguably one combination of zero digits (the empty string), but the\nproblem wants [] rather than [\"\"].",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning `[\"\"]` for empty input instead of `[]`. There is one combination of zero digits in the mathematical sense, but the problem asks for an empty list — check the expected output.",
+        "Getting the letter mapping wrong. 7 is pqrs and 9 is wxyz, each four letters; forgetting that gives subtly wrong results for those digits only.",
+        "Building the string by concatenation at every level in a language with immutable strings, which is O(N^2) per result. Use a buffer and join once.",
+        "Appending the mutable buffer rather than a joined copy."
+      ],
+      "edgeCases": [
+        "empty input -> [] (not [\"\"])",
+        "a single digit -> its 3 or 4 letters",
+        "digits containing 7 or 9, which have four letters each",
+        "digits 1 or 0, which have no letters — confirm whether they can appear",
+        "a long input, where 4^N is the limiting factor"
+      ],
+      "followUps": [
+        {
+          "q": "Do it iteratively.",
+          "a": "Start with a list holding the empty string, and for each digit replace the list with every existing prefix extended by every letter of that digit. A BFS-style build-up, no recursion, and often clearer for a pure Cartesian product."
+        },
+        {
+          "q": "What if you needed only the kth combination, not all of them?",
+          "a": "Treat k as a mixed-radix number: divide and modulo through the per-digit option counts to pick each letter directly. O(N), no enumeration — the same technique that gives the kth permutation."
+        },
+        {
+          "q": "How would real predictive text work?",
+          "a": "You would not enumerate. Store the dictionary in a trie keyed by digit sequence, so a keypress walks one level and the candidate words are the subtree below — which is why T9 could suggest words instantly on 1990s hardware."
+        },
+        {
+          "q": "Why is this the easiest problem in the category?",
+          "a": "Because nothing can fail. There is no constraint to check, no duplicate to suppress, and no branch to prune, so every leaf is an answer. That makes it the right place to get the choose / recurse / un-choose reflex right before adding constraints."
+        }
+      ],
+      "related": [
+        "subsets",
+        "permutations",
+        "generate-parentheses"
+      ],
+      "core": true
     },
     {
       "id": "51",
@@ -305,25 +744,140 @@
         "leetcode": "https://leetcode.com/problems/n-queens/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Ph95IHmRp5M"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Constraint Backtracking",
+      "patternTriggers": [
+        "Place items subject to constraints that can be checked **incrementally**, rejecting a placement before going deeper.",
+        "The problem decomposes by row, column or position, so exactly one choice is made per level.",
+        "The constraint can be summarised in O(1) state — here three sets, rather than rescanning the board."
+      ],
       "keyInsight": "Place queens row by row. Track attacked columns, positive diagonals (r+c), negative diagonals (r-c) using sets.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every way of placing N queens on N² squares and validate each complete arrangement.",
+        "time": "C(N², N), which for N = 8 is about 4.4 billion",
+        "space": "O(N)",
+        "whyItFails": "Astronomically wasteful, and it ignores two free facts. Exactly one queen occupies each row, which collapses the choice to N per row rather than N². And a conflict can be detected the moment a queen is placed, so invalid arrangements never need to be completed."
+      },
+      "approach": [
+        "Place exactly one queen per row, recursing row by row — this alone reduces the search from N² choices to N.",
+        "Keep three sets: occupied columns, occupied *positive* diagonals keyed by `row + col`, and occupied *negative* diagonals keyed by `row - col`.",
+        "Those keys are the trick: every square on one anti-diagonal shares the same `row + col`, and every square on one main diagonal shares the same `row - col`.",
+        "If the row index equals N, every queen is placed — record the board.",
+        "Otherwise try each column in this row, skipping any whose column or either diagonal is already occupied.",
+        "Add the three keys, recurse into the next row, then remove them again.",
+        "Return all boards found."
+      ],
       "code": {
         "python": "def solveNQueens(n):\n    result = []\n    cols, pos_diag, neg_diag = set(), set(), set()\n    board = [[\".\"]*n for _ in range(n)]\n\n    def backtrack(row):\n        if row == n:\n            result.append([\"\".join(r) for r in board])\n            return\n        for col in range(n):\n            if col in cols or (row+col) in pos_diag or (row-col) in neg_diag:\n                continue\n            cols.add(col); pos_diag.add(row+col); neg_diag.add(row-col)\n            board[row][col] = \"Q\"\n            backtrack(row + 1)\n            cols.discard(col); pos_diag.discard(row+col); neg_diag.discard(row-col)\n            board[row][col] = \".\"\n    backtrack(0)\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<string>> solveNQueens(int n) {\n        vector<vector<string>> result;\n        vector<string> board(n, string(n, '.'));\n        unordered_set<int> cols, diag1, diag2;\n        function<void(int)> bt = [&](int row) {\n            if (row == n) { result.push_back(board); return; }\n            for (int col = 0; col < n; col++) {\n                if (cols.count(col) || diag1.count(row-col) || diag2.count(row+col)) continue;\n                board[row][col] = 'Q';\n                cols.insert(col); diag1.insert(row-col); diag2.insert(row+col);\n                bt(row + 1);\n                board[row][col] = '.';\n                cols.erase(col); diag1.erase(row-col); diag2.erase(row+col);\n            }\n        };\n        bt(0);\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<List<String>> solveNQueens(int n) {\n        List<List<String>> result = new ArrayList<>();\n        char[][] board = new char[n][n];\n        for (char[] row : board) Arrays.fill(row, '.');\n        Set<Integer> cols = new HashSet<>(), d1 = new HashSet<>(), d2 = new HashSet<>();\n        backtrack(board, 0, cols, d1, d2, result);\n        return result;\n    }\n    void backtrack(char[][] board, int row, Set<Integer> cols, Set<Integer> d1, Set<Integer> d2, List<List<String>> result) {\n        if (row == board.length) {\n            List<String> copy = new ArrayList<>();\n            for (char[] r : board) copy.add(new String(r));\n            result.add(copy);\n            return;\n        }\n        for (int col = 0; col < board.length; col++) {\n            if (cols.contains(col) || d1.contains(row-col) || d2.contains(row+col)) continue;\n            board[row][col] = 'Q';\n            cols.add(col); d1.add(row-col); d2.add(row+col);\n            backtrack(board, row+1, cols, d1, d2, result);\n            board[row][col] = '.';\n            cols.remove(col); d1.remove(row-col); d2.remove(row+col);\n        }\n    }\n}",
         "js": "var solveNQueens = function(n) {\n    const result = [], board = Array.from({length: n}, () => '.'.repeat(n));\n    const cols = new Set(), d1 = new Set(), d2 = new Set();\n    const bt = (row) => {\n        if (row === n) { result.push([...board]); return; }\n        for (let col = 0; col < n; col++) {\n            if (cols.has(col) || d1.has(row-col) || d2.has(row+col)) continue;\n            board[row] = board[row].substring(0,col) + 'Q' + board[row].substring(col+1);\n            cols.add(col); d1.add(row-col); d2.add(row+col);\n            bt(row + 1);\n            board[row] = board[row].substring(0,col) + '.' + board[row].substring(col+1);\n            cols.delete(col); d1.delete(row-col); d2.delete(row+col);\n        }\n    };\n    bt(0);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(N!) as an upper bound",
+        "space": "O(N)",
+        "note": "Row 0 has N choices, row 1 at most N-1 (one column is taken), and so on — hence the factorial bound. The diagonal constraints prune far more than that, so the real explored tree is much smaller: for N = 8 there are 92 solutions out of a 40,320-leaf factorial tree. Space is the three sets plus the recursion, all O(N)."
+      },
+      "dryRun": "N = 4.  One queen per row, so the choice at each level is a column.\nThree sets track what is attacked: columns, row+col, row-col.\n\nThe search finds exactly two solutions, given as the column chosen in\neach row:\n\n  solution A:  [1, 3, 0, 2]        solution B:  [2, 0, 3, 1]\n\n       c0 c1 c2 c3                      c0 c1 c2 c3\n  r0    .  Q  .  .                 r0    .  .  Q  .\n  r1    .  .  .  Q                 r1    Q  .  .  .\n  r2    Q  .  .  .                 r2    .  .  .  Q\n  r3    .  .  Q  .                 r3    .  Q  .  .\n\nVerify the diagonal keys on solution A, reading (row, col) as\n(0,1) (1,3) (2,0) (3,2):\n\n  columns   =  1,  3,  0,  2      all distinct  ok\n  row + col =  1,  4,  2,  5      all distinct  ok\n  row - col = -1, -2,  2,  1      all distinct  ok\n\nThree sets of four distinct keys — no two queens share a column or\neither diagonal direction. Rows need no check at all, because placing\none queen per row makes a row conflict impossible by construction.\n\nAnd on solution B, (0,2) (1,0) (2,3) (3,1):\n\n  columns   =  2,  0,  3,  1\n  row + col =  2,  1,  5,  4\n  row - col = -2,  1, -1,  2      all distinct in each set\n\nWhy those two expressions: stepping down-right adds 1 to both row and\ncol, so row - col is unchanged along that diagonal. Stepping down-left\nadds 1 to row and subtracts 1 from col, so row + col is unchanged\nthere. Two diagonal directions, two invariants, two sets.\n\nThe factorial bound is loose here. Row 0 has 4 choices and row 1 at\nmost 3, giving a 4! = 24-leaf tree — but the diagonal constraints cut\nit to just 2 solutions. For N = 8 it is 92 solutions out of 40,320.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2",
+            "c3"
+          ],
+          "cells": [
+            [
+              null,
+              "Q",
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              "Q"
+            ],
+            [
+              "Q",
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              "Q",
+              null
+            ]
+          ],
+          "highlight": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              2
+            ]
+          ]
+        },
+        "caption": "One of the two solutions for N = 4. Check the diagonal keys: row+col gives 1, 4, 2, 5 and row-col gives -1, -2, 2, 1 — all distinct within each set, which is exactly the no-shared-diagonal condition."
+      },
+      "pitfalls": [
+        "Scanning the board to validate each placement instead of maintaining the three sets. That is O(N) per check and obscures the real insight.",
+        "Getting the diagonal keys wrong. It must be `row + col` for one direction and `row - col` for the other; using `col - row` is equivalent but must be consistent, and using the same expression for both collapses two constraints into one.",
+        "Forgetting to remove the keys when backtracking, which makes later branches believe squares are attacked.",
+        "Also checking rows, which is unnecessary — placing one queen per row makes row conflicts impossible by construction.",
+        "Building the output board strings before knowing the arrangement is complete, which wastes work on branches that fail."
+      ],
+      "edgeCases": [
+        "N = 1 -> one solution",
+        "N = 2 and N = 3 -> no solutions at all, which the code must handle by returning an empty list",
+        "N = 4 -> exactly two solutions",
+        "N = 8 -> 92 solutions, the classic case",
+        "larger N, where the solution count grows fast and the runtime with it"
+      ],
+      "followUps": [
+        {
+          "q": "What if you only need the **number** of solutions?",
+          "a": "That is N-Queens II, and it is the same search without building the boards — just increment a counter. The real speedup there is a bitmask representation: three integers instead of three sets, with the available columns computed by bitwise operations. Dramatically faster constants, same complexity."
+        },
+        {
+          "q": "Can you exploit symmetry?",
+          "a": "Yes. Solutions come in mirror and rotation pairs, so you can search only the first half of the columns in row 0 and reflect the results, roughly halving the work. It is the standard optimisation for counting at larger N."
+        },
+        {
+          "q": "Why `row + col` and `row - col`?",
+          "a": "Moving one step down-right increases both row and col, so `row - col` is invariant along that diagonal. Moving down-left increases row and decreases col, so `row + col` is invariant there. Two invariants, two diagonal directions — which is why exactly two sets are needed."
+        },
+        {
+          "q": "How does this generalise?",
+          "a": "It is a constraint satisfaction problem, and the same machinery solves Sudoku: one choice per empty cell, with row, column and box constraints maintained incrementally. Real CSP solvers add heuristics — choose the most constrained position next, and propagate constraints forward — which cut the search far more than plain backtracking."
+        }
+      ],
+      "related": [
+        "valid-sudoku",
+        "word-search",
+        "permutations"
+      ],
+      "core": true
     }
   ]
 }
