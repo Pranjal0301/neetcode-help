@@ -3,9 +3,32 @@
   "title": "Greedy",
   "icon": "🎯",
   "order": 15,
-  "concept": null,
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "concept": {
+    "heading": "Core Concepts",
+    "body": "Greedy means making the locally best choice and never reconsidering it. When it works it is the fastest technique available — usually one pass and O(1) space. When it does not, it fails **silently**, returning a plausible wrong answer on inputs you did not test. So the real skill here is not spotting greedy, it is **justifying** it.\n\nTwo properties have to hold. The **greedy choice property**: a locally optimal choice is part of *some* globally optimal solution. And **optimal substructure**: once you make that choice, what remains is the same kind of problem, so the rule can be applied again.\n\nThe standard way to establish the first is an **exchange argument**. Suppose some optimal solution differs from the greedy one, and look at the first point where they diverge. Show that you can swap the optimal solution's choice for the greedy one without making it worse. If every such swap is safe, greedy reaches an optimum. If you cannot build that argument, you probably need dynamic programming.\n\nThe practical test is adversarial: spend a minute actively trying to break your rule. Coin Change with coins [1, 3, 4] and amount 6 is the canonical greedy failure — largest-first gives three coins where two suffice. If you cannot find a counterexample and you can sketch an exchange argument, greedy is probably right.\n\nMany problems here are DP whose table collapses because only one choice is ever worth making. Kadane's algorithm for Maximum Subarray is exactly that: the DP recurrence is `max(num, cur + num)`, and because it only ever reads one previous value it becomes a single variable.",
+    "bullets": [
+      "**Justify, do not guess.** Have either an exchange argument or a stated invariant before you trust a greedy rule. \"It passed the examples\" is not a justification.",
+      "**Sorting is the usual enabling step.** By end time for scheduling, by start for sweeping, by size for covering. Choosing the key *is* solving the problem.",
+      "**A running invariant replaces the table.** \"The farthest index reachable so far\", \"the earliest ending active interval\", \"the range of possible open-bracket counts\" — each is one or two variables doing a DP's work.",
+      "**Reset rather than backtrack.** Several problems here (Gas Station, Kadane's) work by abandoning a prefix entirely the moment it becomes unhelpful, because a prefix that has gone negative can never help a later suffix.",
+      "**Clamp instead of branching.** Valid Parenthesis String tracks a range and clamps the low end at zero; Kadane's clamps a running sum. Clamping is often how a greedy avoids enumerating cases.",
+      "**If you cannot prove it and cannot break it,** say so out loud and offer the DP as the safe alternative. That is a better answer than a confident wrong one."
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": {
+    "python": "# --- Running invariant: one variable replaces a DP table ---\n# Kadane's: extend the current run, or start fresh here.\nbest = cur = nums[0]\nfor x in nums[1:]:\n    cur = max(x, cur + x)      # clamping: a negative prefix is abandoned\n    best = max(best, cur)\nreturn best\n\n# --- Reachability frontier: how far can I get? ---\nfarthest = 0\nfor i, jump in enumerate(nums):\n    if i > farthest:\n        return False           # this index is unreachable, so stop\n    farthest = max(farthest, i + jump)\nreturn True\n\n# --- Sort by END time: fit the most non-overlapping items ---\n# The exchange argument: the item that frees up soonest leaves the most\n# room for everything after it, so taking it is never worse.\nitems.sort(key=lambda it: it[1])\ncount, last_end = 0, float('-inf')\nfor start, end in items:\n    if start >= last_end:      # does it fit after the last one kept?\n        count += 1\n        last_end = end\n\n# --- Reset on failure: abandon a prefix that cannot help ---\ntotal = tank = 0\nstart = 0\nfor i, net in enumerate(gain):\n    total += net\n    tank += net\n    if tank < 0:               # everything from `start` to i fails\n        start = i + 1          # so restart after i\n        tank = 0\nreturn start if total >= 0 else -1\n\n# --- Track a RANGE when a choice is ambiguous ---\nlo = hi = 0                    # possible counts of unmatched '('\nfor ch in s:\n    lo += 1 if ch == '(' else -1\n    hi += 1 if ch != ')' else -1\n    if hi < 0:\n        return False           # even the best case went negative\n    lo = max(lo, 0)            # clamp: you would never choose to go below 0\nreturn lo == 0",
+    "cpp": "// --- Running invariant: Kadane's ---\nint best = nums[0], cur = nums[0];\nfor (int i = 1; i < nums.size(); i++) {\n    cur = max(nums[i], cur + nums[i]);   // abandon a negative prefix\n    best = max(best, cur);\n}\nreturn best;\n\n// --- Reachability frontier ---\nint farthest = 0;\nfor (int i = 0; i < nums.size(); i++) {\n    if (i > farthest) return false;      // unreachable index\n    farthest = max(farthest, i + nums[i]);\n}\nreturn true;\n\n// --- Sort by END time: activity selection ---\nsort(items.begin(), items.end(),\n     [](auto& a, auto& b) { return a[1] < b[1]; });\nint count = 0, lastEnd = INT_MIN;\nfor (auto& it : items)\n    if (it[0] >= lastEnd) { count++; lastEnd = it[1]; }\n\n// --- Reset on failure ---\nint total = 0, tank = 0, start = 0;\nfor (int i = 0; i < n; i++) {\n    total += net[i];\n    tank  += net[i];\n    if (tank < 0) { start = i + 1; tank = 0; }\n}\nreturn total >= 0 ? start : -1;\n\n// --- Track a RANGE when a choice is ambiguous ---\nint lo = 0, hi = 0;\nfor (char ch : s) {\n    lo += (ch == '(') ? 1 : -1;\n    hi += (ch != ')') ? 1 : -1;\n    if (hi < 0) return false;\n    lo = max(lo, 0);                     // clamp\n}\nreturn lo == 0;",
+    "java": "// --- Running invariant: Kadane's ---\nint best = nums[0], cur = nums[0];\nfor (int i = 1; i < nums.length; i++) {\n    cur = Math.max(nums[i], cur + nums[i]);   // abandon a negative prefix\n    best = Math.max(best, cur);\n}\nreturn best;\n\n// --- Reachability frontier ---\nint farthest = 0;\nfor (int i = 0; i < nums.length; i++) {\n    if (i > farthest) return false;           // unreachable index\n    farthest = Math.max(farthest, i + nums[i]);\n}\nreturn true;\n\n// --- Sort by END time: activity selection ---\nArrays.sort(items, (a, b) -> Integer.compare(a[1], b[1]));\nint count = 0, lastEnd = Integer.MIN_VALUE;\nfor (int[] it : items)\n    if (it[0] >= lastEnd) { count++; lastEnd = it[1]; }\n\n// --- Reset on failure ---\nint total = 0, tank = 0, start = 0;\nfor (int i = 0; i < n; i++) {\n    total += net[i];\n    tank  += net[i];\n    if (tank < 0) { start = i + 1; tank = 0; }\n}\nreturn total >= 0 ? start : -1;\n\n// --- Track a RANGE when a choice is ambiguous ---\nint lo = 0, hi = 0;\nfor (char ch : s.toCharArray()) {\n    lo += (ch == '(') ? 1 : -1;\n    hi += (ch != ')') ? 1 : -1;\n    if (hi < 0) return false;\n    lo = Math.max(lo, 0);                     // clamp\n}\nreturn lo == 0;",
+    "js": "// --- Running invariant: Kadane's ---\nlet best = nums[0], cur = nums[0];\nfor (let i = 1; i < nums.length; i++) {\n  cur = Math.max(nums[i], cur + nums[i]);   // abandon a negative prefix\n  best = Math.max(best, cur);\n}\nreturn best;\n\n// --- Reachability frontier ---\nlet farthest = 0;\nfor (let i = 0; i < nums.length; i++) {\n  if (i > farthest) return false;           // unreachable index\n  farthest = Math.max(farthest, i + nums[i]);\n}\nreturn true;\n\n// --- Sort by END time: activity selection ---\nitems.sort((a, b) => a[1] - b[1]);          // numeric comparator, always\nlet count = 0, lastEnd = -Infinity;\nfor (const [start, end] of items)\n  if (start >= lastEnd) { count++; lastEnd = end; }\n\n// --- Reset on failure ---\nlet total = 0, tank = 0, start = 0;\nfor (let i = 0; i < n; i++) {\n  total += net[i];\n  tank  += net[i];\n  if (tank < 0) { start = i + 1; tank = 0; }\n}\nreturn total >= 0 ? start : -1;\n\n// --- Track a RANGE when a choice is ambiguous ---\nlet lo = 0, hi = 0;\nfor (const ch of s) {\n  lo += ch === '(' ? 1 : -1;\n  hi += ch !== ')' ? 1 : -1;\n  if (hi < 0) return false;\n  lo = Math.max(lo, 0);                     // clamp\n}\nreturn lo === 0;"
+  },
+  "recognitionTriggers": [
+    "*Minimum number of* or *maximum number of* something, where a simple local rule looks like it might work — then try to break it before trusting it.",
+    "**Intervals and scheduling.** Sort by end time and take greedily; this is activity selection, and the exchange argument for it is short and worth knowing.",
+    "*Can you reach*, *is it possible to get to* — track a **reachability frontier** rather than exploring paths.",
+    "After sorting, each element's decision becomes independent of the others. That independence is usually what makes greedy safe.",
+    "A DP recurrence that only ever reads one previous state. The table collapses to a variable, and what is left looks greedy — Kadane's algorithm is the clearest example."
+  ],
   "problems": [
     {
       "id": "53",
@@ -23,25 +46,78 @@
         "leetcode": "https://leetcode.com/problems/maximum-subarray/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=5WZl3MMT0Eg"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": "**Key Insight (Kadane's):** At each position: either extend current subarray or start fresh. cur_sum = max(num, cur_sum + num).",
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Kadane's Algorithm",
+      "patternTriggers": [
+        "A **contiguous** subarray with a maximum or minimum total — contiguity is what rules out sorting or picking elements freely.",
+        "Each position's answer depends only on the previous position's, so a single running value suffices.",
+        "The words *maximum subarray*, *largest sum*, *best contiguous run*."
+      ],
+      "keyInsight": "At each position there are only two possibilities: extend the subarray ending at the previous position, or start a fresh one here. So `cur = max(num, cur + num)`. The reason the second option is ever better is that a **negative running sum is pure liability** — whatever comes next is strictly better off without it — so the moment the running total would drag the next element down, you abandon the entire prefix. That clamping is what collapses a DP table into one variable.",
+      "bruteForce": {
+        "idea": "Compute the sum of every subarray and keep the largest.",
+        "time": "O(N^2) with running sums, O(N^3) if each is summed from scratch",
+        "space": "O(1)",
+        "whyItFails": "It recomputes overlapping sums, and it misses the structural fact that makes this linear: the best subarray ending at position i either includes the best one ending at i-1, or starts at i. There is no third option, so there is nothing to search."
+      },
+      "approach": [
+        "Track two values: `cur`, the largest sum of a subarray ending exactly at the current index, and `best`, the largest seen anywhere.",
+        "Initialise both to the first element — not to 0, which would be wrong for an all-negative array.",
+        "For each subsequent element, set `cur = max(num, cur + num)`.",
+        "Taking `num` alone means abandoning the previous run, which is right exactly when `cur` was negative.",
+        "Update `best` with `cur` after each step.",
+        "Return `best`. The state is \"ending at i\", so the answer is the running maximum rather than the final `cur`."
+      ],
       "code": {
         "python": "def maxSubArray(nums):\n    cur_sum = max_sum = nums[0]\n    for num in nums[1:]:\n        cur_sum = max(num, cur_sum + num)\n        max_sum = max(max_sum, cur_sum)\n    return max_sum",
         "cpp": "class Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        int cur = 0, maxSum = nums[0];\n        for (int n : nums) { cur = max(n, cur + n); maxSum = max(maxSum, cur); }\n        return maxSum;\n    }\n};",
         "java": "class Solution {\n    public int maxSubArray(int[] nums) {\n        int cur = 0, maxSum = nums[0];\n        for (int n : nums) { cur = Math.max(n, cur + n); maxSum = Math.max(maxSum, cur); }\n        return maxSum;\n    }\n}",
         "js": "var maxSubArray = function(nums) {\n    let cur = 0, maxSum = nums[0];\n    for (const n of nums) { cur = Math.max(n, cur + n); maxSum = Math.max(maxSum, cur); }\n    return maxSum;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with two variables. Formally this is the DP `dp[i] = max(nums[i], dp[i-1] + nums[i])` with the table collapsed, which is why the problem sits on the boundary between greedy and DP — and why both labels are defensible."
+      },
+      "dryRun": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]\n\nAt each element: extend the current run, or start fresh here.\n\n    x     extend  fresh   choice        cur   best\n    -                                    -2    -2\n     1      -1      1     start fresh     1     1\n    -3      -2     -3     extend         -2     1\n     4       2      4     start fresh     4     4\n    -1       3     -1     extend          3     4\n     2       5      2     extend          5     5\n     1       6      1     extend          6     6\n    -5       1     -5     extend          1     6\n     4       5      4     extend          5     6\n\n  answer = 6,  the subarray [4, -1, 2, 1]\n\nThe two \"start fresh\" rows are the whole algorithm. At x = 1 the\nrunning sum was -2, so carrying it forward would give -1 — worse than\nthe 1 on its own. A negative prefix is pure liability, so it is\nabandoned entirely.\n\nNotice the answer does not extend to the end: best stays at 6 while cur\nfinishes at 5. The state is \"ending at i\", so the running maximum is\nrequired — returning cur would answer 5.\n\n\nThe all-negative case, which is why the initial value matters:\n\n  nums = [-3, -1, -2]\n\n    x     extend  fresh   choice        cur   best\n    -                                    -3    -3\n    -1      -4     -1     start fresh    -1    -1\n    -2      -3     -2     start fresh    -2    -1\n\n  answer = -1\n\nInitialising best to 0 would answer 0 here, which is wrong — the\nproblem requires a non-empty subarray, and every one of them is\nnegative.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Initialising `best` to 0. On an all-negative array like [-3, -1, -2] the answer is -1, and a zero initial value wins incorrectly. The problem requires a non-empty subarray.",
+        "Returning `cur` instead of `best`. The optimal subarray need not reach the end of the array.",
+        "Writing `cur = max(cur + num, 0)` as the clamp. That is the right idea for the *reset*, but it loses the ability to return a negative answer — compare against `num` instead.",
+        "Trying to use two pointers or a sliding window. Negative values mean shrinking from the left can help, so the window is not monotone and the technique does not apply."
+      ],
+      "edgeCases": [
+        "a single element, possibly negative",
+        "all negatives -> the largest single element",
+        "all positives -> the whole array",
+        "[-2, 1, -3, 4, -1, 2, 1, -5, 4] -> 6, from [4, -1, 2, 1]",
+        "zeros mixed in, which neither help nor hurt",
+        "a large negative between two large positives, where including it may still be worth it"
+      ],
+      "followUps": [
+        {
+          "q": "Return the subarray's indices, not just the sum.",
+          "a": "Track a tentative start that resets whenever you abandon the prefix, and record the start and end whenever `best` improves. The subtlety is capturing the start at the moment of improvement rather than afterwards."
+        },
+        {
+          "q": "What if the array were circular?",
+          "a": "The answer is either an ordinary subarray, or the complement of the *minimum* subarray — so run Kadane's twice, once for the max and once for the min, and take `max(normalMax, total - normalMin)`. One guard: if every element is negative, the complement is empty, so fall back to the normal maximum."
+        },
+        {
+          "q": "Maximum product instead of sum?",
+          "a": "Now the state must carry the minimum too, because two negatives multiply to a positive and the worst running value can become the best. That is Maximum Product Subarray, and it is the clearest demonstration that an incomplete state is what makes a recurrence awkward."
+        },
+        {
+          "q": "Is this greedy or DP?",
+          "a": "Both descriptions are fair. The recurrence is DP; the collapsed form looks greedy because only one choice is ever worth making at each step. Being able to say that — and to write the DP recurrence that justifies the greedy rule — is a stronger answer than picking a label."
+        }
+      ],
+      "related": [
+        "maximum-product-subarray",
+        "house-robber",
+        "best-time-to-buy-and-sell-stock"
+      ],
+      "core": true
     },
     {
       "id": "55",
@@ -57,25 +133,80 @@
         "leetcode": "https://leetcode.com/problems/jump-game/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Yan0cv2cLy8"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy Reachability",
+      "patternTriggers": [
+        "*Can you reach* the end, a target, a state — feasibility rather than a count or a cost.",
+        "You never need to know *which* path works, only whether one exists, which is what licenses collapsing all paths into one frontier.",
+        "The words *can you reach*, *is it possible*, *jump*, *steps forward*."
+      ],
       "keyInsight": "Track the farthest index reachable. If current index > farthest, we're stuck.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "DFS or BFS over every sequence of jumps, or a DP where `dp[i]` is whether index i is reachable.",
+        "time": "exponential for the search, O(N^2) for the DP",
+        "space": "O(N)",
+        "whyItFails": "The DP is correct but does more than needed: it records *which* indices are reachable when all that matters is **how far** you can get. Since reachability here is contiguous — if you can reach index i you can reach everything before it — the whole set compresses to a single number."
+      },
+      "approach": [
+        "Track `farthest`, the greatest index reachable using the elements examined so far.",
+        "Walk the array from left to right.",
+        "Before using index i, check whether `i > farthest`. If so, index i is unreachable and no later index can be reached either — return false.",
+        "Otherwise update `farthest` to `max(farthest, i + nums[i])`.",
+        "If the loop completes, every index was reachable, including the last — return true.",
+        "You can also return true early once `farthest` reaches or passes the last index."
+      ],
       "code": {
         "python": "def canJump(nums):\n    farthest = 0\n    for i in range(len(nums)):\n        if i > farthest: return False\n        farthest = max(farthest, i + nums[i])\n    return True",
         "cpp": "class Solution {\npublic:\n    bool canJump(vector<int>& nums) {\n        int maxReach = 0;\n        for (int i = 0; i <= maxReach && i < nums.size(); i++)\n            maxReach = max(maxReach, i + nums[i]);\n        return maxReach >= nums.size() - 1;\n    }\n};",
         "java": "class Solution {\n    public boolean canJump(int[] nums) {\n        int maxReach = 0;\n        for (int i = 0; i <= maxReach && i < nums.length; i++)\n            maxReach = Math.max(maxReach, i + nums[i]);\n        return maxReach >= nums.length - 1;\n    }\n}",
         "js": "var canJump = function(nums) {\n    let maxReach = 0;\n    for (let i = 0; i <= maxReach && i < nums.length; i++)\n        maxReach = Math.max(maxReach, i + nums[i]);\n    return maxReach >= nums.length - 1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with one variable. The compression works because the reachable set is always a contiguous prefix: from any reachable index you may jump any distance up to its value, including 1, so nothing is skipped. That contiguity is the invariant the whole solution rests on."
+      },
+      "dryRun": "nums = [2, 3, 1, 1, 4].   Track only how far you can reach.\n\n    i=0  jump 2  ->  reach 0+2 = 2    farthest 0 -> 2\n    i=1  jump 3  ->  reach 1+3 = 4    farthest 2 -> 4\n    i=2  jump 1  ->  reach 2+1 = 3    farthest stays 4\n    i=3  jump 1  ->  reach 3+1 = 4    farthest stays 4\n    i=4  jump 4  ->  reach 4+4 = 8    farthest stays... 8\n\n  every index was reachable  ->  true\n\nAt no point did i exceed farthest, which is the only failure condition.\n\n\nThe failing case:  nums = [3, 2, 1, 0, 4]\n\n    i=0  jump 3  ->  reach 3            farthest 0 -> 3\n    i=1  jump 2  ->  reach 3            farthest stays 3\n    i=2  jump 1  ->  reach 3            farthest stays 3\n    i=3  jump 0  ->  reach 3            farthest stays 3\n    i=4          ->  4 > farthest 3     UNREACHABLE  ->  false\n\nThe 0 at index 3 is a wall. Nothing earlier reaches past index 3, so\nindex 4 can never be entered.\n\nWhy a single number captures everything: from any reachable index you\nmay take ANY number of steps up to its value, including one. So if\nindex i is reachable, every index before it is too — the reachable set\nis always a contiguous prefix, and a prefix is fully described by its\nright end.\n\nThat is also why a jump of 0 is not automatically fatal. [2, 0, 1] is\nfine, because index 0 reaches index 2 directly and the 0 is simply\nstepped over.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Checking `i > farthest` after updating `farthest` with index i, which lets an unreachable index contribute its jump.",
+        "Assuming you must use each jump fully. A jump of value 3 permits 1, 2 or 3 steps, which is exactly why the reachable set stays contiguous.",
+        "Comparing against `nums.length` instead of `nums.length - 1`, so the answer is off by one on arrays ending in 0.",
+        "Treating a 0 as an immediate failure. A 0 at the last index is fine, and a 0 earlier is fine if something jumps over it.",
+        "Building the DP and claiming O(N) time without noticing the inner loop makes it quadratic."
+      ],
+      "edgeCases": [
+        "a single element -> true, you are already at the end",
+        "[0] -> true",
+        "[0, 1] -> false, stuck at index 0",
+        "[2, 3, 1, 1, 4] -> true",
+        "[3, 2, 1, 0, 4] -> false, the 0 at index 3 cannot be jumped over",
+        "a large first jump covering the whole array",
+        "all ones"
+      ],
+      "followUps": [
+        {
+          "q": "What is the minimum number of jumps?",
+          "a": "A different greedy: track the end of the current jump's range and the farthest reachable overall, incrementing a counter each time you exhaust the current range. That is Jump Game II, O(N), and it is essentially BFS over layers with the queue collapsed into two variables."
+        },
+        {
+          "q": "What if you could also jump backwards?",
+          "a": "The reachable set stops being a contiguous prefix, so the compression breaks and you need a real BFS or union-find over indices. The contiguity is doing a lot of work, and seeing what happens when it is removed is the best way to appreciate it."
+        },
+        {
+          "q": "Why is a single number enough?",
+          "a": "Because from any reachable index you may take any number of steps up to its value — including one — so if index i is reachable, so is every index before it. The reachable set is therefore always a prefix, and a prefix is described entirely by its right end."
+        },
+        {
+          "q": "What if jumps had costs and you wanted the cheapest route?",
+          "a": "Greedy no longer applies, because a longer jump is not automatically better. It becomes a shortest-path problem on a DAG, solvable with DP in O(N^2) or faster with a monotonic deque if the costs have structure."
+        }
+      ],
+      "related": [
+        "jump-game-ii",
+        "climbing-stairs",
+        "gas-station"
+      ],
+      "core": true
     },
     {
       "id": "45",
@@ -91,25 +222,80 @@
         "leetcode": "https://leetcode.com/problems/jump-game-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=dJ7sWiOoK7g"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy BFS Layers",
+      "patternTriggers": [
+        "The **minimum number of steps** rather than feasibility — so it is a shortest-path question on an implicit graph.",
+        "All steps cost the same, which makes it BFS — and the layers happen to be contiguous index ranges, so the queue collapses to two numbers.",
+        "The words *minimum jumps*, *fewest steps*, *least number of moves*."
+      ],
       "keyInsight": "BFS-like. Track current jump's farthest reach. When you hit the boundary, you must jump (increment count) and extend boundary.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "BFS over indices, or a DP where `dp[i]` is the fewest jumps to reach index i.",
+        "time": "O(N^2) for the DP, O(N^2) worst case for a naive BFS that rescans ranges",
+        "space": "O(N)",
+        "whyItFails": "Both are correct and the DP is a perfectly reasonable answer. The improvement comes from noticing that each BFS layer is a *contiguous range* of indices, so instead of a queue you only need that range's boundaries — which is two variables and one pass."
+      },
+      "approach": [
+        "Think of it as BFS: layer 0 is index 0, layer 1 is everything reachable in one jump, and so on.",
+        "Track `currentEnd`, the last index of the current layer, and `farthest`, the greatest index reachable from anywhere in it.",
+        "Sweep i from 0 to n-2 — the last index needs no jump from it.",
+        "At each i, extend `farthest` to `max(farthest, i + nums[i])`.",
+        "When i reaches `currentEnd`, the current layer is exhausted: increment the jump count and set `currentEnd = farthest`.",
+        "That increment is the moment you commit to one more jump, which is why the count equals the number of layers crossed.",
+        "Return the count."
+      ],
       "code": {
         "python": "def jump(nums):\n    jumps = end = farthest = 0\n    for i in range(len(nums) - 1):\n        farthest = max(farthest, i + nums[i])\n        if i == end:\n            jumps += 1\n            end = farthest\n    return jumps",
         "cpp": "class Solution {\npublic:\n    int jump(vector<int>& nums) {\n        int jumps = 0, curEnd = 0, farthest = 0;\n        for (int i = 0; i < nums.size() - 1; i++) {\n            farthest = max(farthest, i + nums[i]);\n            if (i == curEnd) { jumps++; curEnd = farthest; }\n        }\n        return jumps;\n    }\n};",
         "java": "class Solution {\n    public int jump(int[] nums) {\n        int jumps = 0, curEnd = 0, farthest = 0;\n        for (int i = 0; i < nums.length - 1; i++) {\n            farthest = Math.max(farthest, i + nums[i]);\n            if (i == curEnd) { jumps++; curEnd = farthest; }\n        }\n        return jumps;\n    }\n}",
         "js": "var jump = function(nums) {\n    let jumps = 0, curEnd = 0, farthest = 0;\n    for (let i = 0; i < nums.length - 1; i++) {\n        farthest = Math.max(farthest, i + nums[i]);\n        if (i === curEnd) { jumps++; curEnd = farthest; }\n    }\n    return jumps;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass, two variables. It is BFS with the queue replaced by range boundaries, valid because each layer is a contiguous span of indices. The problem guarantees the end is reachable, so there is no failure case to handle — otherwise you would also need the Jump Game check."
+      },
+      "dryRun": "nums = [2, 3, 1, 1, 4].   BFS layers with the queue collapsed into two\nvariables: curEnd (the last index of this layer) and farthest (the best\nreach from anywhere in it).\n\nSweep i from 0 to n-2 — no jump is needed from the final index.\n\n    i=0  reach 2   farthest=2   i == curEnd(0)  ->  jump #1, curEnd = 2\n    i=1  reach 4   farthest=4\n    i=2  reach 3   farthest=4   i == curEnd(2)  ->  jump #2, curEnd = 4\n    i=3  reach 4   farthest=4\n\n  answer = 2\n\nThe layers are: {0} then {1, 2} then {3, 4}. The jump counter ticks\nexactly when a layer is exhausted, so it counts layers crossed.\n\nNotice i=1 sets farthest to 4 but no jump is counted there — the layer\n{1, 2} is not finished until i reaches 2. The next layer's reach is the\nbest over the WHOLE current layer, not just the index where it ends.\nUsing i + nums[i] instead of farthest when extending curEnd is the\ncommon bug, and it would answer 3 here.\n\n\nA longer example:  nums = [1, 2, 1, 1, 1]\n\n    i=0  reach 1   farthest=1   i == curEnd(0)  ->  jump #1, curEnd = 1\n    i=1  reach 3   farthest=3   i == curEnd(1)  ->  jump #2, curEnd = 3\n    i=2  reach 3   farthest=3\n    i=3  reach 4   farthest=4   i == curEnd(3)  ->  jump #3, curEnd = 4\n\n  answer = 3\n\nAlso note why greedily taking the largest available jump is wrong: it\nconfuses jump length with onward reach. The layer rule never chooses at\nall — it considers every index in the layer and takes the best overall\nreach, which is why it cannot be fooled.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Looping to n-1 inclusive, which can add a spurious final jump when `currentEnd` lands exactly on the last index.",
+        "Incrementing the counter on every index rather than only when the layer boundary is reached.",
+        "Setting `currentEnd = i + nums[i]` instead of `farthest`. The next layer's reach is the best over the *whole* current layer, not just the index where it ended.",
+        "Assuming the end is always reachable when the problem does not guarantee it — then you must also detect `i > farthest`.",
+        "Trying to greedily take the largest jump available at each step. That is a different and incorrect rule: the best single jump may land somewhere with poor onward reach."
+      ],
+      "edgeCases": [
+        "a single element -> 0 jumps",
+        "[2, 3, 1, 1, 4] -> 2",
+        "all ones -> n-1 jumps",
+        "a first element large enough to reach the end -> 1",
+        "[1, 2, 1, 1, 1] -> 3",
+        "zeros that must be jumped over"
+      ],
+      "followUps": [
+        {
+          "q": "Why is taking the largest available jump wrong?",
+          "a": "Because jump length and onward reach are different things. From index 0 of [3, 1, 1, 1, 10] the largest jump lands on index 3, whose reach is poor, while landing on a nearer index with a bigger value could be better. The layer-based rule avoids choosing at all — it considers every index in the layer and takes the best overall reach."
+        },
+        {
+          "q": "Show that this really is BFS.",
+          "a": "Layer k is the set of indices reachable in exactly k jumps. Because every index in layer k can jump any distance up to its value, the union of their reaches is a contiguous range starting right after layer k — so layer k+1 is `(currentEnd, farthest]`. Storing a contiguous range needs only its endpoints, which is the whole optimisation."
+        },
+        {
+          "q": "What if you also needed the actual jump positions?",
+          "a": "Record, for each layer, which index achieved `farthest`, then trace back from the end. O(N) extra space, and it is the standard way to recover a path from any layered BFS."
+        },
+        {
+          "q": "How does this relate to Jump Game?",
+          "a": "Jump Game asks feasibility and needs only `farthest`. This asks for a count and needs the extra `currentEnd` to know when a layer ends. The same frontier idea, with one more variable to count the layers."
+        }
+      ],
+      "related": [
+        "jump-game",
+        "climbing-stairs",
+        "min-cost-climbing-stairs"
+      ],
+      "core": true
     },
     {
       "id": "134",
@@ -125,25 +311,80 @@
         "leetcode": "https://leetcode.com/problems/gas-station/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=lJwbPZGo05A"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy with Reset",
+      "patternTriggers": [
+        "A circular route where you must choose a **starting point**, and a running total must never go negative.",
+        "A failed prefix can be discarded entirely rather than partially retried — the signal for a reset-based greedy.",
+        "The words *circular*, *start at any station*, *complete the circuit*."
+      ],
       "keyInsight": "If total gas >= total cost, solution exists. If tank goes negative at i, start from i+1 (everything before fails).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try each station as the start and simulate the whole circuit from it.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "Each simulation re-walks stations that earlier attempts already proved unusable. The insight that removes the outer loop: if the tank goes negative somewhere between `start` and index i, then **no** station in that range can be the answer — so you skip all of them at once and restart at i+1."
+      },
+      "approach": [
+        "First decide feasibility: if the total gas is less than the total cost, no start works — return -1. Otherwise a valid start is guaranteed to exist.",
+        "Then find it in one pass. Track `tank`, the running surplus since the candidate start, and `start`, the current candidate.",
+        "For each station, add `gas[i] - cost[i]` to both the overall total and the running tank.",
+        "If `tank` goes negative, the candidate start fails — and so does every station between it and here.",
+        "So set `start = i + 1` and reset `tank` to 0.",
+        "After the pass, `start` is the answer, valid because the totals guarantee a solution exists.",
+        "Return `start`."
+      ],
       "code": {
         "python": "def canCompleteCircuit(gas, cost):\n    if sum(gas) < sum(cost): return -1\n    tank = start = 0\n    for i in range(len(gas)):\n        tank += gas[i] - cost[i]\n        if tank < 0:\n            tank = 0\n            start = i + 1\n    return start",
         "cpp": "class Solution {\npublic:\n    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {\n        int total = 0, tank = 0, start = 0;\n        for (int i = 0; i < gas.size(); i++) {\n            int diff = gas[i] - cost[i];\n            total += diff; tank += diff;\n            if (tank < 0) { start = i + 1; tank = 0; }\n        }\n        return total >= 0 ? start : -1;\n    }\n};",
         "java": "class Solution {\n    public int canCompleteCircuit(int[] gas, int[] cost) {\n        int total = 0, tank = 0, start = 0;\n        for (int i = 0; i < gas.length; i++) {\n            int diff = gas[i] - cost[i];\n            total += diff; tank += diff;\n            if (tank < 0) { start = i + 1; tank = 0; }\n        }\n        return total >= 0 ? start : -1;\n    }\n}",
         "js": "var canCompleteCircuit = function(gas, cost) {\n    let total = 0, tank = 0, start = 0;\n    for (let i = 0; i < gas.length; i++) {\n        const diff = gas[i] - cost[i];\n        total += diff; tank += diff;\n        if (tank < 0) { start = i + 1; tank = 0; }\n    }\n    return total >= 0 ? start : -1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "A single pass computing both the global total and the running tank. The global total is what makes one pass sufficient — it answers \"does a solution exist\" independently, so the running scan only has to *locate* it rather than also verify it wraps around."
+      },
+      "dryRun": "gas  = [1, 2, 3, 4, 5]\ncost = [3, 4, 5, 1, 2]\nnet  = [-2, -2, -2, 3, 3]\n\nTrack the overall total (does a solution exist?) and a running tank\nsince the current candidate start.\n\n    i=0  net -2   tank -2 -> negative, discard start 0, restart at 1\n    i=1  net -2   tank -2 -> negative, discard start 1, restart at 2\n    i=2  net -2   tank -2 -> negative, discard start 2, restart at 3\n    i=3  net  3   tank  3\n    i=4  net  3   tank  6\n\n    total = -2-2-2+3+3 = 0,  which is >= 0  ->  a solution exists\n\n  answer = 3\n\nStarting at station 3: tank goes 3, then 6, then wrapping round\n6-2 = 4, then 2, then 0 — never negative. It works.\n\nThe key move is at each reset. When the tank goes negative at index i,\nevery station from the old start through i is eliminated at once, not\njust the start. Why: each intermediate prefix was non-negative, so the\nremainder from any j in that range to i is at most the whole range's\nsum, which is negative. So starting at j fails too, by index i at the\nlatest.\n\nThat is what makes one pass enough — each station is eliminated once\nand never reconsidered.\n\n\nThe infeasible case:\n\n  gas  = [2, 3, 4]\n  cost = [3, 4, 3]\n  net  = [-1, -1, 1]\n\n    total = -1  ->  less than 0, so no start can work  ->  -1\n\nNote the scan still produced start = 2, and it is wrong. The single-pass\nlogic only *locates* a solution; the total is what *proves* one exists.\nSkip the total check and you return a confident wrong answer.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting the total check and trying to verify the wraparound by simulating from the found start. That works but costs a second pass, and more importantly the single-pass logic is only *correct* because the total guarantees a solution.",
+        "Resetting `start` to i rather than i+1. Station i is where the tank went negative, so it cannot be a valid start either.",
+        "Forgetting to reset `tank` to 0 after moving the candidate.",
+        "Resetting the running total as well as the tank. The total must accumulate over the whole array to answer the feasibility question.",
+        "Trying to handle the circularity by duplicating the array. It works but is unnecessary — the reset argument already covers the wraparound."
+      ],
+      "edgeCases": [
+        "a single station where gas equals cost -> 0",
+        "total gas less than total cost -> -1",
+        "the answer being station 0",
+        "the answer being the last station",
+        "all stations having exactly equal gas and cost -> any start works, conventionally 0",
+        "one station with a huge surplus and the rest in deficit"
+      ],
+      "followUps": [
+        {
+          "q": "Prove that skipping the whole failed range is safe.",
+          "a": "Suppose starting at `start` the tank first goes negative at index i. For any j strictly between them, the partial sum from `start` to j-1 was non-negative, so the sum from j to i is at most the sum from `start` to i — which is negative. So starting at j also fails before reaching i. Every station in the range is eliminated at once, which is why one pass suffices."
+        },
+        {
+          "q": "Why does a non-negative total guarantee a solution exists?",
+          "a": "Take the station after the point of minimum cumulative surplus. Starting there, every partial sum is the cumulative total minus that minimum, hence non-negative throughout — so the circuit completes. This is also the alternative one-pass solution: find the minimum prefix and return the index after it."
+        },
+        {
+          "q": "What if you wanted every valid starting station?",
+          "a": "The reset-based greedy finds one. For all of them, compute the prefix sums of the net gains and return every index where the rotated prefix stays non-negative — effectively every position achieving the minimum. O(N) still, but it needs the prefix array rather than two variables."
+        },
+        {
+          "q": "How does this relate to Maximum Subarray?",
+          "a": "Both abandon a prefix the moment it becomes a liability, for the same reason: a negative running total can only hurt what follows. Kadane's resets the sum; this resets the start index. The shared idea is that a failed prefix carries no information worth keeping."
+        }
+      ],
+      "related": [
+        "maximum-subarray",
+        "jump-game",
+        "merge-triplets-to-form-target-triplet"
+      ],
+      "core": true
     },
     {
       "id": "846",
@@ -160,24 +401,79 @@
         "leetcode": "https://leetcode.com/problems/hand-of-straights/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=amnrMCVd2YI"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Greedy from Smallest",
+      "patternTriggers": [
+        "Partition a multiset into groups of a **fixed shape** — consecutive runs, equal sizes, specific patterns.",
+        "One element's placement is **forced**, which eliminates the choice that would otherwise require search.",
+        "The words *consecutive*, *groups of size k*, *hand of straights*, *divide into sets*."
+      ],
+      "keyInsight": "The **smallest remaining card has no choice**: nothing smaller exists to sit below it, so whatever group it belongs to must start with it. That removes all the ambiguity — repeatedly take the smallest remaining value, demand the next `groupSize - 1` consecutive values exist, and consume one of each. Each step is forced, so there is nothing to search and no backtracking. A counter plus either a sorted key list or a min-heap is all the machinery needed.",
+      "bruteForce": {
+        "idea": "Try every way of partitioning the cards into groups of the required size and check whether any works.",
+        "time": "exponential",
+        "space": "O(N)",
+        "whyItFails": "It searches a space that has no branching in it. Because the smallest remaining card must begin a group, every decision is determined — so the correct algorithm makes forced moves until it either finishes or gets stuck, with no enumeration at all."
+      },
+      "approach": [
+        "Return false immediately if the number of cards is not divisible by the group size.",
+        "Count how many of each value there are.",
+        "Repeatedly take the smallest value with a non-zero count — using a sorted list of keys, or a min-heap.",
+        "That value must start a group, so for each of the next `groupSize - 1` consecutive values, require a count of at least the count of the starting value.",
+        "Decrement each of those counts by the starting value's count, consuming whole groups at once rather than one at a time.",
+        "If any required consecutive value is missing or has too small a count, return false.",
+        "If every card is consumed, return true."
+      ],
       "code": {
         "python": "def isNStraightHand(hand, groupSize):\n    if len(hand) % groupSize: return False\n    count = Counter(hand)\n    for card in sorted(count):\n        if count[card] > 0:\n            need = count[card]\n            for i in range(groupSize):\n                if count[card + i] < need: return False\n                count[card + i] -= need\n    return True",
         "cpp": "class Solution {\npublic:\n    bool isNStraightHand(vector<int>& hand, int groupSize) {\n        if (hand.size() % groupSize) return false;\n        map<int, int> count;\n        for (int h : hand) count[h]++;\n        for (auto& [card, cnt] : count) {\n            if (cnt > 0)\n                for (int i = 0; i < groupSize; i++) {\n                    count[card + i] -= cnt;\n                    if (count[card + i] < 0) return false;\n                }\n        }\n        return true;\n    }\n};",
         "java": "class Solution {\n    public boolean isNStraightHand(int[] hand, int groupSize) {\n        if (hand.length % groupSize != 0) return false;\n        TreeMap<Integer, Integer> count = new TreeMap<>();\n        for (int h : hand) count.merge(h, 1, Integer::sum);\n        while (!count.isEmpty()) {\n            int first = count.firstKey();\n            for (int i = 0; i < groupSize; i++) {\n                if (!count.containsKey(first + i)) return false;\n                count.merge(first + i, -1, Integer::sum);\n                if (count.get(first + i) == 0) count.remove(first + i);\n            }\n        }\n        return true;\n    }\n}",
         "js": "var isNStraightHand = function(hand, groupSize) {\n    if (hand.length % groupSize) return false;\n    const count = new Map();\n    for (const h of hand) count.set(h, (count.get(h) || 0) + 1);\n    const sorted = [...count.keys()].sort((a,b) => a - b);\n    for (const card of sorted) {\n        const cnt = count.get(card);\n        if (cnt > 0)\n            for (let i = 0; i < groupSize; i++) {\n                const c = count.get(card + i) || 0;\n                if (c < cnt) return false;\n                count.set(card + i, c - cnt);\n            }\n    }\n    return true;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N log N + N * groupSize)",
+        "space": "O(N)",
+        "note": "Sorting or heapifying the distinct values costs O(N log N); the group-forming loop touches each value once per group it participates in. Consuming all copies of the smallest value at once — rather than one group per iteration — is what keeps the second term from becoming quadratic."
+      },
+      "dryRun": "hand = [1, 2, 3, 6, 2, 3, 4, 7, 8], groupSize = 3\n\n  9 cards, divisible by 3 — so a partition is at least conceivable.\n  counts: {1:1, 2:2, 3:2, 4:1, 6:1, 7:1, 8:1}\n\nRepeatedly take the smallest remaining value; it has no choice but to\nstart a group.\n\n    smallest = 1, count 1  ->  form 1 group starting at 1\n                               need 1 each of 1, 2, 3 — all present\n      remaining: {2:1, 3:1, 4:1, 6:1, 7:1, 8:1}\n\n    smallest = 2, count 1  ->  form 1 group starting at 2\n                               need 1 each of 2, 3, 4 — all present\n      remaining: {6:1, 7:1, 8:1}\n\n    smallest = 6, count 1  ->  form 1 group starting at 6\n                               need 1 each of 6, 7, 8 — all present\n      remaining: {}\n\n  every card consumed  ->  true,  the groups [1,2,3] [2,3,4] [6,7,8]\n\nEvery step was forced. The smallest remaining card has nothing smaller\navailable to sit beneath it in a consecutive run, so it must be the\nbottom of its group — there is no choice to search over, and no\nbacktracking.\n\nNote the counts are decremented by the *count of the starting value*,\nnot by one. If there were three 1s, all three groups starting at 1 are\nformed in a single step, which is what keeps this from degenerating on\ninputs with many duplicates.\n\n\nThe quick rejection:\n\n  hand = [1, 2, 3, 4, 5], groupSize = 4\n    5 cards is not divisible by 4  ->  false, before any work",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Forgetting the divisibility check, which is cheap and rules out many inputs immediately.",
+        "Processing one group per iteration instead of consuming all copies of the current smallest value together. Correct, but slower on inputs with many duplicates.",
+        "Removing a value from the map but leaving a zero count behind, so the \"smallest remaining\" lookup returns a value with nothing left.",
+        "Starting from the largest card instead of the smallest. The argument is symmetric — the largest also has no choice — but you must then build groups *downward*, and mixing the two directions is a common slip.",
+        "Assuming the cards arrive sorted."
+      ],
+      "edgeCases": [
+        "groupSize of 1 -> always true",
+        "card count not divisible by groupSize -> false",
+        "groupSize equal to the number of cards -> true only if they form one consecutive run",
+        "duplicates, e.g. [1,1,2,2,3,3] with groupSize 3 -> true, two groups",
+        "[1,2,3,4,5] with groupSize 4 -> false",
+        "a gap in the middle of the values"
+      ],
+      "followUps": [
+        {
+          "q": "Why must the smallest card start a group?",
+          "a": "A group is a run of consecutive values, so every card in it except the lowest has a smaller card in the same group. The globally smallest remaining card has no smaller card available anywhere, so it cannot be anything but the bottom of its group. That is the exchange argument, and it is short enough to give verbatim."
+        },
+        {
+          "q": "Could you work from the largest card instead?",
+          "a": "Yes, symmetrically — the largest remaining card must *end* a group, so you build downward. Equivalent in every respect; the only risk is accidentally mixing the two directions in one implementation."
+        },
+        {
+          "q": "What if groups had to be equal values rather than consecutive?",
+          "a": "Then it is simply a divisibility check on each count: every value's count must be divisible by the group size. Much easier, and a useful contrast — it is the *consecutive* requirement that couples the counts together and makes the ordering matter."
+        },
+        {
+          "q": "How would you handle a very large value range?",
+          "a": "The counter is keyed by value, so a sparse range costs nothing extra — but the consecutive-value lookups must handle gaps. A hash map with explicit presence checks is better than an array indexed by value once the range is much larger than the card count."
+        }
+      ],
+      "related": [
+        "task-scheduler",
+        "top-k-frequent-elements",
+        "partition-labels"
+      ],
       "core": false
     },
     {
@@ -194,24 +490,79 @@
         "leetcode": "https://leetcode.com/problems/merge-triplets-to-form-target-triplet/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=kShkQLQZ9K4"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Greedy Component-wise",
+      "patternTriggers": [
+        "An operation that combines elements **component-wise and monotonically** — a max, a min, a bitwise OR.",
+        "Monotonicity means a bad contribution can never be undone, so elements are either usable or permanently disqualified.",
+        "The words *merge*, *form the target*, *any number of operations*."
+      ],
+      "keyInsight": "Because the merge takes a **component-wise maximum**, the three positions never interact — merging can only raise a component, never lower it. So a triplet is safe to use only if **none** of its components exceeds the target's, and among the safe triplets you want each component to reach the target's value at least once. Collect which components you have matched exactly across all safe triplets; if all three are covered, merging exactly those triplets produces the target. There is nothing to search, because using more safe triplets never hurts.",
+      "bruteForce": {
+        "idea": "Try every subset of triplets, merge each, and check whether any produces the target.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponential, and the search is pointless. Since the merge is a component-wise maximum, including a triplet whose every component is within the target can never push you past it — so using *all* safe triplets is at least as good as any subset. One linear pass decides it."
+      },
+      "approach": [
+        "Observe that merging takes the maximum in each position independently, so the three components are completely decoupled.",
+        "A triplet is **usable** only if every one of its components is less than or equal to the corresponding target component — otherwise merging it overshoots, irreversibly.",
+        "Walk the triplets once. Skip any that is not usable.",
+        "For each usable triplet, note which of its components exactly equals the target's.",
+        "Keep a set (or three booleans) of components matched so far.",
+        "If all three components get matched by some usable triplet, return true; otherwise false.",
+        "No subset selection is needed, because merging every usable triplet is always safe."
+      ],
       "code": {
         "python": "def mergeTriplets(triplets, target):\n    good = set()\n    for t in triplets:\n        if t[0]<=target[0] and t[1]<=target[1] and t[2]<=target[2]:\n            for i in range(3):\n                if t[i] == target[i]: good.add(i)\n    return len(good) == 3",
         "cpp": "class Solution {\npublic:\n    bool mergeTriplets(vector<vector<int>>& triplets, vector<int>& target) {\n        bool a = false, b = false, c = false;\n        for (auto& t : triplets) {\n            if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n                if (t[0] == target[0]) a = true;\n                if (t[1] == target[1]) b = true;\n                if (t[2] == target[2]) c = true;\n            }\n        }\n        return a && b && c;\n    }\n};",
         "java": "class Solution {\n    public boolean mergeTriplets(int[][] triplets, int[] target) {\n        boolean a = false, b = false, c = false;\n        for (int[] t : triplets) {\n            if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n                if (t[0] == target[0]) a = true;\n                if (t[1] == target[1]) b = true;\n                if (t[2] == target[2]) c = true;\n            }\n        }\n        return a && b && c;\n    }\n}",
         "js": "var mergeTriplets = function(triplets, target) {\n    let a = false, b = false, c = false;\n    for (const t of triplets) {\n        if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n            if (t[0] === target[0]) a = true;\n            if (t[1] === target[1]) b = true;\n            if (t[2] === target[2]) c = true;\n        }\n    }\n    return a && b && c;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with three booleans. The decoupling is what makes it linear: because the merge is component-wise, you never have to reason about combinations of triplets, only about which single triplets can contribute each component."
+      },
+      "dryRun": "triplets = [[2,5,3], [1,8,4], [1,7,5]],  target = [2,7,5]\n\nThe merge takes a component-wise MAXIMUM, so a component can only ever\nrise. A triplet is usable only if it is within the target in ALL three\npositions — otherwise merging it overshoots irreversibly.\n\n    [2,5,3]   all components <= target  ->  usable\n              matches target at component 0 (2 == 2)\n              covered: {0}\n\n    [1,8,4]   component 1 is 8 > 7      ->  UNUSABLE\n              merging it would set component 1 to 8 forever\n\n    [1,7,5]   all components <= target  ->  usable\n              matches at component 1 (7 == 7) and component 2 (5 == 5)\n              covered: {0, 1, 2}\n\n  all three components covered  ->  true\n\nMerging the two usable triplets: max([2,5,3], [1,7,5]) = [2,7,5], which\nis the target exactly.\n\nNo subset search was needed. Because every usable triplet is within the\ntarget everywhere, including more of them can only move components\ntowards the target, never past it — so using all of them is always at\nleast as good as any subset.\n\nNote [2,5,3] contributes only component 0 and [1,7,5] only components\n1 and 2. No single triplet matches all three, which is the whole point\nof being allowed to merge.\n\n\nThe failing case:\n\n  triplets = [[3,4,5], [4,5,6]],  target = [3,2,5]\n\n    [3,4,5]   component 1 is 4 > 2        ->  unusable\n    [4,5,6]   components 0, 1, 2 all over ->  unusable\n\n  no usable triplet at all  ->  false\n\nComponent 1 of the target is 2, and every triplet exceeds it there, so\nthat component can never be reached.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Checking only the component you care about. A triplet usable for component 0 must still be within the target on components 1 and 2, because merging it raises all three at once.",
+        "Requiring a single triplet to match all three components. Different triplets may supply different components, which is the whole point of merging.",
+        "Using a triplet that exceeds the target in some component. The maximum is irreversible — there is no operation that brings a component back down.",
+        "Tracking which triplets were used rather than which components were matched. The triplets do not matter; only the coverage does.",
+        "Trying to be clever about the order of merges. A maximum is associative and commutative, so order is irrelevant."
+      ],
+      "edgeCases": [
+        "a triplet exactly equal to the target -> true",
+        "no usable triplet at all -> false",
+        "one component never reachable -> false",
+        "all triplets usable but none matching a component -> false",
+        "a single triplet",
+        "a triplet that is usable but contributes no exact match — harmless, and must not be treated as failure"
+      ],
+      "followUps": [
+        {
+          "q": "Why is it safe to use every usable triplet?",
+          "a": "Because a usable triplet is within the target in every component, so merging it can only move components *towards* the target, never past it. Adding more usable triplets therefore never hurts, which removes the subset-selection problem entirely — and that is why this is O(N) rather than exponential."
+        },
+        {
+          "q": "What if the operation were a component-wise minimum?",
+          "a": "The argument mirrors: a triplet is usable only if every component is at least the target's, and you need each component to hit the target exactly. The monotonic direction flips but the structure is identical."
+        },
+        {
+          "q": "What if it were a sum rather than a maximum?",
+          "a": "Everything breaks. Sums are not idempotent, so using a triplet twice changes the result and components stop being independent — you would be back to a subset-sum style search in each coordinate. The idempotence of max is doing a lot of quiet work here."
+        },
+        {
+          "q": "Where else does component-wise monotonic reasoning appear?",
+          "a": "Bitwise OR problems (a bit once set cannot be cleared), feature-flag or capability merging, and version-vector reconciliation in distributed systems. The common shape is an operation that only ever moves state in one direction."
+        }
+      ],
+      "related": [
+        "gas-station",
+        "jump-game",
+        "maximum-subarray"
+      ],
       "core": false
     },
     {
@@ -229,25 +580,79 @@
         "leetcode": "https://leetcode.com/problems/partition-labels/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=B7m8UmZE-vw"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy Last Occurrence",
+      "patternTriggers": [
+        "Partition a sequence into the **maximum number** of pieces subject to a containment rule.",
+        "A piece's required extent is computable in advance — here, the last occurrence of every character it contains.",
+        "The words *partition labels*, *as many parts as possible*, *each letter appears in at most one part*."
+      ],
       "keyInsight": "For each char, find its LAST occurrence. Extend current partition to include last occurrence of every char within it.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every set of cut positions and check whether each resulting piece satisfies the rule, keeping the partition with the most pieces.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponentially many cut placements, and no search is needed. Once you know each character's last occurrence, the current piece's end is forced: it must extend at least to the last occurrence of every character seen so far. Cutting at the earliest legal point maximises the piece count."
+      },
+      "approach": [
+        "First pass: record the **last** index at which each character appears.",
+        "Second pass: walk the string tracking `end`, the farthest last-occurrence among the characters in the current piece.",
+        "At each index i, extend `end` to `max(end, lastOccurrence[s[i]])`.",
+        "When i reaches `end`, every character inside this piece has all its occurrences inside it — so cut here.",
+        "Record the piece's length, and start the next piece at i+1.",
+        "Cutting at the earliest legal index is what maximises the number of pieces, since a longer piece could always have been split there instead."
+      ],
       "code": {
         "python": "def partitionLabels(s):\n    last = {c: i for i, c in enumerate(s)}\n    result, start, end = [], 0, 0\n    for i, c in enumerate(s):\n        end = max(end, last[c])\n        if i == end:\n            result.append(end - start + 1)\n            start = i + 1\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> partitionLabels(string s) {\n        int last[26] = {};\n        for (int i = 0; i < s.size(); i++) last[s[i]-'a'] = i;\n        vector<int> result;\n        int start = 0, end = 0;\n        for (int i = 0; i < s.size(); i++) {\n            end = max(end, last[s[i]-'a']);\n            if (i == end) { result.push_back(end - start + 1); start = i + 1; }\n        }\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<Integer> partitionLabels(String s) {\n        int[] last = new int[26];\n        for (int i = 0; i < s.length(); i++) last[s.charAt(i)-'a'] = i;\n        List<Integer> result = new ArrayList<>();\n        int start = 0, end = 0;\n        for (int i = 0; i < s.length(); i++) {\n            end = Math.max(end, last[s.charAt(i)-'a']);\n            if (i == end) { result.add(end - start + 1); start = i + 1; }\n        }\n        return result;\n    }\n}",
         "js": "var partitionLabels = function(s) {\n    const last = {};\n    for (let i = 0; i < s.length; i++) last[s[i]] = i;\n    const result = [];\n    let start = 0, end = 0;\n    for (let i = 0; i < s.length; i++) {\n        end = Math.max(end, last[s[i]]);\n        if (i === end) { result.push(end - start + 1); start = i + 1; }\n    }\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "Two passes over the string, with a fixed 26-entry table for the last occurrences — so the space does not grow with N. The greedy is optimal because the cut point is forced: there is no choice to make, only a condition to detect."
+      },
+      "dryRun": "s = \"ababcbacadefegdehijhklij\"\n\nFirst pass — the LAST index of each character:\n\n  a:8  b:5  c:7  d:14  e:15  f:11  g:13\n  h:19  i:22  j:23  k:20  l:21\n\nSecond pass — extend `end` to cover every character seen, and cut when\ni reaches it.\n\n    i=0   char 'a', last at 8    ->  end 0 -> 8\n    i=8   i == end               ->  CUT, piece length 9\n\n    i=9   char 'd', last at 14   ->  end 8 -> 14\n    i=10  char 'e', last at 15   ->  end 14 -> 15\n    i=15  i == end               ->  CUT, piece length 7\n\n    i=16  char 'h', last at 19   ->  end 15 -> 19\n    i=17  char 'i', last at 22   ->  end 19 -> 22\n    i=18  char 'j', last at 23   ->  end 22 -> 23\n    i=23  i == end               ->  CUT, piece length 8\n\n  answer = [9, 7, 8]\n\nThe first piece is \"ababcbaca\" — nine characters. It has to reach index\n8 because that is where the last 'a' lives, and every b and c happen to\nfall inside that span, so no further extension is needed.\n\nThe third piece shows the extension chaining: 'h' pushes end to 19,\nbut then 'i' at index 17 pushes it to 22 and 'j' to 23. Each new\ncharacter can extend the piece further, which is why the condition is\nthe running maximum over all characters in the piece and not just the\ncurrent one.\n\nCutting at the earliest legal index is what maximises the piece count:\nany longer piece could have been split here instead, so the greedy is\nnever worse.\n\nEquivalently, each character spans the interval from its first to its\nlast occurrence, and the pieces are exactly the merged groups of those\n26 intervals — this is Merge Intervals in disguise.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using the first occurrence rather than the last. The piece must contain *every* occurrence of each of its characters, so the last one is what binds.",
+        "Cutting as soon as a character's own last occurrence is reached, rather than the maximum over all characters in the piece. One character's run may be entirely inside another's.",
+        "Computing the piece lengths off by one. The length is `i - start + 1`, with `start` updated to `i + 1` after each cut.",
+        "Trying to do it in one pass. The last occurrences must all be known before the partitioning begins.",
+        "Assuming the alphabet is lowercase-only when the problem does not say so."
+      ],
+      "edgeCases": [
+        "a single character -> one piece of length 1",
+        "all characters distinct -> every character is its own piece",
+        "all characters identical -> one piece",
+        "\"ababcbacadefegdehijhklij\" -> [9, 7, 8]",
+        "a character appearing only at the very start and the very end, forcing one piece",
+        "an empty string -> no pieces"
+      ],
+      "followUps": [
+        {
+          "q": "Why does cutting at the earliest legal point maximise the count?",
+          "a": "Suppose an optimal partition's first piece ends later than the earliest legal cut. Splitting it at that earlier point yields a valid partition with at least as many pieces, since both halves still satisfy the rule. So the greedy choice is never worse — a one-line exchange argument."
+        },
+        {
+          "q": "How does this relate to Merge Intervals?",
+          "a": "Each character defines the interval from its first to its last occurrence, and a piece is exactly a connected group of overlapping intervals. Running Merge Intervals on those 26 intervals gives the same answer — which is a nice way to see that the greedy is really interval merging in disguise."
+        },
+        {
+          "q": "What if you wanted the minimum number of pieces instead?",
+          "a": "Trivially one — the whole string always satisfies the rule. That the question only makes sense in the maximising direction is worth noticing, and it is a quick sanity check on whether you have understood the constraint."
+        },
+        {
+          "q": "What if a character were allowed to appear in up to k pieces?",
+          "a": "The forced-cut argument collapses, because you now have genuine choices about where to split a character's run. It becomes a DP over positions with a count per character, which is substantially harder — and a good illustration of how much the \"at most one part\" rule buys."
+        }
+      ],
+      "related": [
+        "merge-intervals",
+        "non-overlapping-intervals",
+        "hand-of-straights"
+      ],
+      "core": true
     },
     {
       "id": "678",
@@ -264,25 +669,83 @@
         "leetcode": "https://leetcode.com/problems/valid-parenthesis-string/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=QhPdNS143Qg"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy Range Tracking",
+      "patternTriggers": [
+        "A wildcard or ambiguous element whose interpretation cannot be fixed locally.",
+        "Instead of branching on every choice, track the **range of possible values** the state could take — a low and a high.",
+        "The words *'*' can be treated as*, *valid parenthesis string*, *wildcard*."
+      ],
       "keyInsight": "Track min and max possible open count. '*' can be '(', ')' or empty. Valid if min ever drops below 0, clamp to 0. At end, min must be 0.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try all three interpretations of every '*' and check whether any assignment yields a valid string.",
+        "time": "O(3^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponential in the number of wildcards. But the only thing that matters about a prefix is how many unmatched '(' it could have — and that set of possibilities is always a contiguous **interval**, so two numbers describe it completely. Tracking the interval replaces the entire search."
+      },
+      "approach": [
+        "Track `lo` and `hi`: the minimum and maximum possible number of unmatched open brackets, over every interpretation of the wildcards so far.",
+        "On '(' both increase by 1. On ')' both decrease by 1.",
+        "On '*' the range widens: `lo` decreases by 1 (treating it as ')') and `hi` increases by 1 (treating it as '(').",
+        "If `hi` ever goes negative, even the most generous interpretation has too many closing brackets — return false immediately.",
+        "Clamp `lo` at 0. A negative minimum is meaningless, because you would simply not choose the interpretation that produced it.",
+        "At the end, return whether `lo` is 0 — meaning some interpretation leaves no unmatched open brackets.",
+        "The clamp is what keeps the range honest; without it `lo` drifts below zero and the final check fails on valid strings."
+      ],
       "code": {
         "python": "def checkValidString(s):\n    lo = hi = 0  # range of possible open parens\n    for c in s:\n        if c == '(': lo += 1; hi += 1\n        elif c == ')': lo -= 1; hi -= 1\n        else: lo -= 1; hi += 1  # * can be (, ), or \"\"\n        if hi < 0: return False\n        lo = max(lo, 0)\n    return lo == 0",
         "cpp": "class Solution {\npublic:\n    bool checkValidString(string s) {\n        int lo = 0, hi = 0;\n        for (char c : s) {\n            lo += c == '(' ? 1 : -1;\n            hi += c != ')' ? 1 : -1;\n            if (hi < 0) return false;\n            lo = max(lo, 0);\n        }\n        return lo == 0;\n    }\n};",
         "java": "class Solution {\n    public boolean checkValidString(String s) {\n        int lo = 0, hi = 0;\n        for (char c : s.toCharArray()) {\n            lo += c == '(' ? 1 : -1;\n            hi += c != ')' ? 1 : -1;\n            if (hi < 0) return false;\n            lo = Math.max(lo, 0);\n        }\n        return lo == 0;\n    }\n}",
         "js": "var checkValidString = function(s) {\n    let lo = 0, hi = 0;\n    for (const c of s) {\n        lo += c === '(' ? 1 : -1;\n        hi += c !== ')' ? 1 : -1;\n        if (hi < 0) return false;\n        lo = Math.max(lo, 0);\n    }\n    return lo === 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with two integers, replacing a 3^N search. The method works because the set of achievable open-counts is always a contiguous interval — every value between the extremes is realisable by swapping one wildcard's interpretation at a time, which is why two bounds lose no information."
+      },
+      "dryRun": "Track lo and hi: the minimum and maximum possible number of unmatched\n'(' over every interpretation of the wildcards so far.\n\n  s = \"(*)\"\n    '('   lo=1  hi=1\n    '*'   lo=0  hi=2        the range widens: ')' or '(' or empty\n    ')'   lo=0  hi=1        lo would be -1, clamped to 0\n  end: lo == 0  ->  true\n\n  s = \"(*))\"\n    '('   lo=1  hi=1\n    '*'   lo=0  hi=2\n    ')'   lo=0  hi=1        clamped from -1\n    ')'   lo=0  hi=0        clamped from -1\n  end: lo == 0  ->  true        the '*' is read as '('\n\n  s = \")(\"\n    ')'   lo=-1 hi=-1       hi < 0 -> even the most generous reading has\n                            too many closers  ->  false immediately\n\n  s = \"((*\"\n    '('   lo=1  hi=1\n    '('   lo=2  hi=2\n    '*'   lo=1  hi=3\n  end: lo == 1, not 0  ->  false\n\n    Two opens and only one wildcard to close them. hi reached 3, so some\n    interpretation has three unmatched opens — but no interpretation\n    reaches zero, which is what lo records.\n\n  s = \"((***\"\n    '('   lo=1  hi=1\n    '('   lo=2  hi=2\n    '*'   lo=1  hi=3\n    '*'   lo=0  hi=4\n    '*'   lo=0  hi=5        clamped from -1\n  end: lo == 0  ->  TRUE\n\n    Two of the three stars close the two opens and the third is empty.\n    Three wildcards are enough; two were not.\n\nThe two conditions are asymmetric, which is the thing to get right.\n`hi < 0` is **fatal** — no interpretation can recover. `lo < 0` is\n**harmless** and gets clamped, because lo means \"the minimum over\ninterpretations you would actually choose\", and you would never pick\none that drives the count below zero.\n\nDrop the clamp and lo drifts negative, so the final `lo == 0` test\nfails on strings like \"(*)\" that are plainly valid.\n\nThis greedy was cross-checked against a brute-force search over all\nthree interpretations of every wildcard, and agrees on every case\nabove plus \"(((((\" (false), \"(*\" (true), \"**((\" (false), \")*(\" (false)\nand \"(((**\" (false).",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not clamping `lo` at zero. It then goes negative and the final `lo == 0` test fails on strings that are genuinely valid.",
+        "Checking `lo < 0` as a failure condition. A negative minimum is fine — it just means some interpretations are bad and you would not pick them. Only `hi < 0` is fatal.",
+        "Using a single counter with a range, or a stack of wildcard positions, and trying to patch up mismatches afterwards. The two-counter method is both simpler and easier to justify.",
+        "Returning `hi == 0` at the end. You want *some* valid interpretation, which is `lo == 0` after clamping.",
+        "Treating '*' as only '(' or only ')', forgetting it may also be empty — though the range formulation covers the empty case automatically, since the interval between the two extremes includes \"no change\"."
+      ],
+      "edgeCases": [
+        "an empty string -> true",
+        "\"*\" -> true, treated as empty",
+        "\"(*)\" -> true",
+        "\"(*))\" -> true, the wildcard read as '('",
+        "\")(\" -> false, caught by hi going negative at the first character",
+        "\"((*\" -> false, two opens and only one wildcard to close them",
+        "\"((***\" -> TRUE, three wildcards suffice where two did not",
+        "all wildcards -> true",
+        "\"(((((\" -> false, lo can never reach 0"
+      ],
+      "followUps": [
+        {
+          "q": "Why is the set of possible open-counts always an interval?",
+          "a": "Take any two valid interpretations with different open-counts. Changing one wildcard's interpretation at a time moves the count by one step, so every intermediate value is achievable along the way. A set closed under single steps between its extremes is exactly an interval — which is why two bounds are lossless."
+        },
+        {
+          "q": "Why is clamping lo at zero correct rather than a hack?",
+          "a": "`lo` is the minimum over interpretations you would actually choose. An interpretation driving the count below zero is already invalid and would never be selected, so excluding it is not an approximation — it is the definition of the quantity you want."
+        },
+        {
+          "q": "Could you solve it with two stacks?",
+          "a": "Yes — one stack of '(' positions and one of '*' positions, matching ')' against open brackets first and wildcards second, then pairing leftover brackets with later wildcards. Correct and O(N), but it needs O(N) space and a careful ordering argument. The two-counter version is the cleaner answer."
+        },
+        {
+          "q": "How does this generalise?",
+          "a": "Any time a local choice is ambiguous but the reachable state set stays an interval, track the bounds instead of branching. The same idea appears in reachability under uncertainty and in interval arithmetic — and it is the lightweight alternative to a DP over (position, count)."
+        }
+      ],
+      "related": [
+        "valid-parentheses",
+        "generate-parentheses",
+        "longest-palindromic-substring"
+      ],
+      "core": true
     }
   ]
 }
