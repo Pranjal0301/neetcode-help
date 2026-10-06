@@ -4,17 +4,31 @@
   "icon": "📊",
   "order": 13,
   "concept": {
-    "heading": "Core Pattern",
-    "body": "**DP = optimal substructure + overlapping subproblems.** Define state, recurrence, base case. Bottom-up (tabulation) or top-down (memoization).",
+    "heading": "Core Concepts",
+    "body": "Dynamic programming needs two things to be true and then always follows the same method.\n\n**Optimal substructure**: the answer to a problem is built from answers to smaller versions of *the same* problem. **Overlapping subproblems**: those smaller versions repeat, so caching pays for itself. Without the second property, plain recursion is already fine — that is divide and conquer, not DP.\n\nThe method is four questions, in this order. **What is the state?** Say what `dp[i]` means in a sentence you could speak aloud. **What is the recurrence?** How does `dp[i]` follow from smaller states? **What are the base cases?** **In what order does the table fill** so that every dependency is ready before it is needed?\n\nGetting the state definition right is most of the work. If the recurrence comes out awkward, the state is usually wrong — the tell is needing information the state does not carry. Maximum Product Subarray is the clearest example: tracking only the maximum fails, because a large negative can become the best answer after multiplying by another negative, so the state has to carry the minimum too.\n\nOne distinction causes more bugs than any other: `dp[i]` meaning **\"ending exactly at i\"** is a different state from **\"considering the first i elements\"**. With the first, the answer is usually the maximum over all `dp[i]`; with the second, it is `dp[n]`. Mixing them silently produces wrong answers.",
     "bullets": [
-      "**State:** What info do I need at position i?",
-      "**Transition:** How does dp[i] depend on previous states?",
-      "**Base case:** What's dp[0] or dp[1]?"
+      "**Define the state in words before writing any code.** \"dp[i] = the fewest coins that make amount i\" is the work; the recurrence then almost writes itself.",
+      "**Top-down vs bottom-up:** memoised recursion mirrors the recurrence directly and only computes states you need; tabulation is iterative, avoids stack depth, and makes space optimisation obvious. Both are correct — say which you are choosing.",
+      "**Space optimisation:** if `dp[i]` depends only on the previous k states, keep k variables instead of an array. Most problems here collapse to O(1).",
+      "**\"Ending at i\" vs \"first i elements\":** the former needs a running maximum over the whole table; the latter answers at `dp[n]`. Know which you defined.",
+      "**Initialise with the identity of your combining operation:** 0 for a sum, 1 for a product, infinity for a minimum, negative infinity for a maximum. A wrong base case is the second most common bug after a wrong state.",
+      "**DP is enumeration collapsed.** Backtracking lists every solution; DP keeps only the best or the count. If the question asks for *all* solutions, you want backtracking instead."
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# --- 1. Top-down: memoised recursion. Mirrors the recurrence directly. ---\nfrom functools import cache\n\n@cache\ndef solve(i):\n    if i >= n:                       # base case\n        return 0\n    # try every choice available at i and combine\n    return min(cost[i] + solve(i + 1), cost[i] + solve(i + 2))\n\n# --- 2. Bottom-up: tabulation. Iterative, no stack depth limit. ---\ndp = [0] * (n + 1)                   # dp[i] = answer for state i\ndp[0] = base_case\nfor i in range(1, n + 1):            # an order where dependencies are ready\n    dp[i] = combine(dp[i - 1], dp[i - 2])\nreturn dp[n]\n\n# --- 3. Space-optimised: only the last two states are ever read. ---\nprev2, prev1 = base0, base1\nfor i in range(2, n + 1):\n    prev2, prev1 = prev1, combine(prev1, prev2)\nreturn prev1\n\n# --- The two state shapes, and where the answer lives ---\n\n# \"ending exactly at i\"  ->  the answer is the best over ALL i\nbest = float('-inf')\nfor i in range(n):\n    dp[i] = max(nums[i], dp[i - 1] + nums[i])   # extend, or start fresh here\n    best = max(best, dp[i])\n\n# \"considering the first i elements\"  ->  the answer is dp[n]\nfor i in range(1, n + 1):\n    dp[i] = max(dp[i - 1], dp[i - 2] + nums[i - 1])\nreturn dp[n]",
+    "cpp": "// --- 1. Top-down: memoised recursion. ---\nvector<int> memo;                    // sized n+1, filled with a sentinel\nint solve(int i) {\n    if (i >= n) return 0;            // base case\n    if (memo[i] != -1) return memo[i];\n    return memo[i] = min(cost[i] + solve(i + 1), cost[i] + solve(i + 2));\n}\n\n// --- 2. Bottom-up: tabulation. ---\nvector<int> dp(n + 1, 0);            // dp[i] = answer for state i\ndp[0] = baseCase;\nfor (int i = 1; i <= n; i++)         // dependencies ready before use\n    dp[i] = combine(dp[i - 1], dp[i - 2]);\nreturn dp[n];\n\n// --- 3. Space-optimised: only the last two states are read. ---\nint prev2 = base0, prev1 = base1;\nfor (int i = 2; i <= n; i++) {\n    int cur = combine(prev1, prev2);\n    prev2 = prev1;\n    prev1 = cur;\n}\nreturn prev1;\n\n// --- The two state shapes ---\n\n// \"ending exactly at i\"  ->  answer is the best over ALL i\nint best = INT_MIN, cur = 0;\nfor (int i = 0; i < n; i++) {\n    cur = max(nums[i], cur + nums[i]);          // extend, or start fresh\n    best = max(best, cur);\n}\n\n// \"considering the first i elements\"  ->  answer is dp[n]",
+    "java": "// --- 1. Top-down: memoised recursion. ---\nint[] memo;                          // sized n+1, filled with -1\nint solve(int i) {\n    if (i >= n) return 0;            // base case\n    if (memo[i] != -1) return memo[i];\n    return memo[i] = Math.min(cost[i] + solve(i + 1),\n                              cost[i] + solve(i + 2));\n}\n\n// --- 2. Bottom-up: tabulation. ---\nint[] dp = new int[n + 1];           // dp[i] = answer for state i\ndp[0] = baseCase;\nfor (int i = 1; i <= n; i++)         // dependencies ready before use\n    dp[i] = combine(dp[i - 1], dp[i - 2]);\nreturn dp[n];\n\n// --- 3. Space-optimised: only the last two states are read. ---\nint prev2 = base0, prev1 = base1;\nfor (int i = 2; i <= n; i++) {\n    int cur = combine(prev1, prev2);\n    prev2 = prev1;\n    prev1 = cur;\n}\nreturn prev1;\n\n// --- The two state shapes ---\n\n// \"ending exactly at i\"  ->  answer is the best over ALL i\nint best = Integer.MIN_VALUE, cur = 0;\nfor (int i = 0; i < n; i++) {\n    cur = Math.max(nums[i], cur + nums[i]);     // extend, or start fresh\n    best = Math.max(best, cur);\n}\n\n// \"considering the first i elements\"  ->  answer is dp[n]",
+    "js": "// --- 1. Top-down: memoised recursion. ---\nconst memo = new Map();\nconst solve = (i) => {\n  if (i >= n) return 0;              // base case\n  if (memo.has(i)) return memo.get(i);\n  const best = Math.min(cost[i] + solve(i + 1), cost[i] + solve(i + 2));\n  memo.set(i, best);\n  return best;\n};\n\n// --- 2. Bottom-up: tabulation. ---\nconst dp = new Array(n + 1).fill(0); // dp[i] = answer for state i\ndp[0] = baseCase;\nfor (let i = 1; i <= n; i++)         // dependencies ready before use\n  dp[i] = combine(dp[i - 1], dp[i - 2]);\nreturn dp[n];\n\n// --- 3. Space-optimised: only the last two states are read. ---\nlet prev2 = base0, prev1 = base1;\nfor (let i = 2; i <= n; i++) {\n  [prev2, prev1] = [prev1, combine(prev1, prev2)];\n}\nreturn prev1;\n\n// --- The two state shapes ---\n\n// \"ending exactly at i\"  ->  answer is the best over ALL i\nlet best = -Infinity, cur = 0;\nfor (let i = 0; i < n; i++) {\n  cur = Math.max(nums[i], cur + nums[i]);       // extend, or start fresh\n  best = Math.max(best, cur);\n}\n\n// \"considering the first i elements\"  ->  answer is dp[n]"
+  },
+  "recognitionTriggers": [
+    "**Count the number of ways**, or find the **minimum / maximum** of something built up one decision at a time.",
+    "A recursive brute force would re-solve the same subproblem many times — write the recursion first, notice the repetition, then add a cache. That is the honest route to most DP solutions.",
+    "*Can you reach / can you make / is it possible* — a **boolean** DP table.",
+    "The problem asks for the **best** or the **count**, not for the solutions themselves. If it wants every solution enumerated, that is backtracking.",
+    "A greedy choice is tempting but demonstrably wrong on some input. That failure is often what pushes a problem from greedy into DP — Coin Change with coins [1, 3, 4] and amount 6 is the standard example."
+  ],
   "problems": [
     {
       "id": "70",
@@ -30,25 +44,78 @@
         "leetcode": "https://leetcode.com/problems/climbing-stairs/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Y0lT9Fck7qI"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP (Fibonacci)",
+      "patternTriggers": [
+        "**Count the ways** to reach a position, where each position is reachable from a fixed small set of earlier ones.",
+        "The number of ways to reach step i is the sum of the ways to reach the steps you can jump from — the additive structure is the giveaway.",
+        "This is the simplest DP there is, which makes it the right place to get the four questions (state, recurrence, base case, order) into muscle memory."
+      ],
       "keyInsight": "dp[i] = dp[i-1] + dp[i-2]. Same as Fibonacci. Can optimize to O(1) space with two variables.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse: from step i you may climb 1 or 2, so `ways(i) = ways(i-1) + ways(i-2)`, with no caching.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "The recursion tree re-solves the same step over and over — `ways(5)` computes `ways(3)` twice, `ways(2)` three times, and the duplication compounds. That is exactly the overlapping-subproblems signal, and caching those repeated calls is the whole of dynamic programming."
+      },
+      "approach": [
+        "Define the state: `dp[i]` is the number of distinct ways to reach step i.",
+        "Write the recurrence: you arrive at step i either from i-1 (one step) or from i-2 (two steps), and those routes are disjoint, so `dp[i] = dp[i-1] + dp[i-2]`.",
+        "Set the base cases: `dp[0] = 1` (one way to be at the bottom — do nothing) and `dp[1] = 1`.",
+        "Fill the table from 2 upwards, so both dependencies are already computed.",
+        "Return `dp[n]`.",
+        "Notice that only the previous two values are ever read, so replace the array with two variables for O(1) space."
+      ],
       "code": {
         "python": "def climbStairs(n):\n    a, b = 1, 1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b",
         "cpp": "class Solution {\npublic:\n    int climbStairs(int n) {\n        int a = 1, b = 1;\n        for (int i = 2; i <= n; i++) { int c = a + b; a = b; b = c; }\n        return b;\n    }\n};",
         "java": "class Solution {\n    public int climbStairs(int n) {\n        int a = 1, b = 1;\n        for (int i = 2; i <= n; i++) { int c = a + b; a = b; b = c; }\n        return b;\n    }\n}",
         "js": "var climbStairs = function(n) {\n    let a = 1, b = 1;\n    for (let i = 2; i <= n; i++) { const c = a + b; a = b; b = c; }\n    return b;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with constant work per step. The O(N) table collapses to two variables because the recurrence looks back exactly two positions — the standard first optimisation to spot in any linear DP. There is also an O(log N) solution by matrix exponentiation, and a closed form, which are worth knowing exist."
+      },
+      "dryRun": "n = 5.    dp[i] = the number of distinct ways to reach step i.\n\n  base   dp[0] = 1   (one way to stand at the bottom: do nothing)\n         dp[1] = 1\n\n  dp[2] = dp[1] + dp[0] = 1 + 1 = 2\n  dp[3] = dp[2] + dp[1] = 2 + 1 = 3\n  dp[4] = dp[3] + dp[2] = 3 + 2 = 5\n  dp[5] = dp[4] + dp[3] = 5 + 3 = 8\n\n  index    0   1   2   3   4   5\n  dp       1   1   2   3   5   8\n\n  answer = 8\n\nThe sequence is Fibonacci, but arriving at it through the four DP\nquestions is the point: state, recurrence, base case, fill order.\n\nWhy the two routes are added rather than combined some other way: the\nroutes arriving from step i-1 and from step i-2 are disjoint sets — a\nroute's final move is either a 1-step or a 2-step, never both — so the\ncounts simply sum.\n\nAnd why dp[0] = 1 rather than 0: there is exactly one way to be at the\nbottom, namely the empty sequence of moves. Set it to 0 and the zero\npropagates through every later entry.\n\nOnly dp[i-1] and dp[i-2] are ever read, so two variables replace the\nwhole array and the space drops to O(1).",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Setting `dp[0] = 0`. There is exactly one way to be at the bottom of the stairs — doing nothing — and zero would propagate through the whole table.",
+        "Writing the recurrence as `dp[i] = dp[i-1] + 1`, which counts steps rather than routes.",
+        "Off-by-one on the array size. Indexing `dp[n]` needs n+1 slots.",
+        "Returning `dp[n-1]`, which answers for one step fewer.",
+        "In the two-variable version, updating the variables in the wrong order so the old value is lost before it is used."
+      ],
+      "edgeCases": [
+        "n = 1 -> 1",
+        "n = 2 -> 2, the two routes being 1+1 and 2",
+        "n = 3 -> 3, which is the first case where the pattern is visible",
+        "n = 0 -> 1, if the problem permits it",
+        "large n, where the result overflows 32-bit integers around n = 45"
+      ],
+      "followUps": [
+        {
+          "q": "What if you could climb 1, 2 or 3 steps?",
+          "a": "Sum the previous three: `dp[i] = dp[i-1] + dp[i-2] + dp[i-3]`, the tribonacci sequence. For an arbitrary set of allowed step sizes, sum over that set — which turns this into Combination Sum IV, a counting problem over an unbounded choice set."
+        },
+        {
+          "q": "Can it be done faster than O(N)?",
+          "a": "Yes. The recurrence is linear, so a 2x2 matrix raised to the nth power gives it in O(log N) by fast exponentiation. There is also Binet's closed form with the golden ratio, though floating-point error makes it unreliable for large n."
+        },
+        {
+          "q": "What if some steps were broken and could not be used?",
+          "a": "Set `dp[i] = 0` for a broken step — there are no ways to stand there — and the recurrence handles the rest unchanged. That small extension is the bridge to Jump Game and the grid-with-obstacles variants of Unique Paths."
+        },
+        {
+          "q": "Why is this a DP problem at all, if it is just Fibonacci?",
+          "a": "Because the route to it is the DP route: define a state, find the recurrence, identify base cases. Recognising the Fibonacci shape afterwards is a shortcut, not the method. The same four questions solve Min Cost Climbing Stairs and House Robber, which have no closed form."
+        }
+      ],
+      "related": [
+        "min-cost-climbing-stairs",
+        "house-robber",
+        "coin-change"
+      ],
+      "core": true
     },
     {
       "id": "746",
@@ -64,25 +131,78 @@
         "leetcode": "https://leetcode.com/problems/min-cost-climbing-stairs/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=ktmzAZWkEZ0"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Linear DP",
+      "patternTriggers": [
+        "Climbing Stairs with weights — same movement rules, but now minimising a cost instead of counting routes.",
+        "Each position's answer depends on a fixed small window of earlier positions.",
+        "The start and end conditions are slightly unusual, which is where the problem actually lives."
+      ],
+      "keyInsight": "Climbing Stairs with a cost attached, so the recurrence changes from a **sum** to a **minimum**: `dp[i] = cost[i] + min(dp[i-1], dp[i-2])`, meaning the cheapest way to stand on step i. The subtlety is the finish line — you may start on either step 0 or step 1, and you need to step *past* the top, so the answer is `min(dp[n-1], dp[n-2])` rather than `dp[n-1]`. Framing the state as \"cheapest to reach step i\" rather than \"cheapest after i steps\" is what makes both ends come out right.",
+      "bruteForce": {
+        "idea": "Recurse from each possible starting step, trying both a 1-step and a 2-step move at every position, and take the cheapest total.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "The same positions are re-costed by exponentially many routes through them. The cheapest way to stand on step i does not depend on how you arrived, so it should be computed once — which is precisely what the cache does."
+      },
+      "approach": [
+        "Define the state: `dp[i]` is the minimum total cost to **stand on** step i.",
+        "The recurrence: you arrive from i-1 or i-2, so `dp[i] = cost[i] + min(dp[i-1], dp[i-2])`.",
+        "Base cases: `dp[0] = cost[0]` and `dp[1] = cost[1]`, since you may start on either step for free.",
+        "Fill upward from index 2.",
+        "The goal is to step past the last stair, which you can do from either of the last two steps — so return `min(dp[n-1], dp[n-2])`.",
+        "Only two previous values are needed, so collapse the array to two variables."
+      ],
       "code": {
         "python": "def minCostClimbingStairs(cost):\n    for i in range(2, len(cost)):\n        cost[i] += min(cost[i-1], cost[i-2])\n    return min(cost[-1], cost[-2])",
         "cpp": "class Solution {\npublic:\n    int minCostClimbingStairs(vector<int>& cost) {\n        int a = 0, b = 0;\n        for (int i = 2; i <= cost.size(); i++) {\n            int c = min(a + cost[i-2], b + cost[i-1]);\n            a = b; b = c;\n        }\n        return b;\n    }\n};",
         "java": "class Solution {\n    public int minCostClimbingStairs(int[] cost) {\n        int a = 0, b = 0;\n        for (int i = 2; i <= cost.length; i++) {\n            int c = Math.min(a + cost[i-2], b + cost[i-1]);\n            a = b; b = c;\n        }\n        return b;\n    }\n}",
         "js": "var minCostClimbingStairs = function(cost) {\n    let a = 0, b = 0;\n    for (let i = 2; i <= cost.length; i++) {\n        const c = Math.min(a + cost[i-2], b + cost[i-1]);\n        a = b; b = c;\n    }\n    return b;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass, constant work per step, and two variables suffice because the recurrence reaches back exactly two positions. Identical shape to Climbing Stairs — only the combining operation and the boundary conditions differ."
+      },
+      "dryRun": "cost = [10, 15, 20].    dp[i] = cheapest total to STAND ON step i.\n\n  index     0    1    2\n  cost     10   15   20\n  dp       10   15   30\n\n  dp[0] = 10,  dp[1] = 15      (you may start free on either)\n  dp[2] = cost[2] + min(dp[1], dp[0]) = 20 + min(15, 10) = 30\n\n  The top is PAST the last step, reachable from either of the final two:\n  answer = min(dp[2], dp[1]) = min(30, 15) = 15\n\nReturning dp[n-1] would answer 30 — you would have paid 20 to stand on\nthe last step when stepping off from step 1 was cheaper. The finish\ncondition is the whole difficulty of this problem.\n\n\nThe longer example:  cost = [1, 100, 1, 1, 1, 100, 1, 1, 100, 1]\n\n  index     0    1    2    3    4    5    6    7    8    9\n  cost      1  100    1    1    1  100    1    1  100    1\n  dp        1  100    2    3    3  103    4    5  104    6\n\n  answer = min(dp[9], dp[8]) = min(6, 104) = 6\n\nFollow dp[5] = 103. Standing on the expensive step 5 is possible but\nterrible, and dp[6] = cost[6] + min(dp[5], dp[4]) = 1 + min(103, 3) = 4\nsimply jumps over it. The minimum in the recurrence is what routes\naround expensive steps without any special handling.\n\nState choice matters here. \"Cheapest to stand on i\" keeps the\nrecurrence uniform; \"cheapest after i steps\" would need awkward cases\nat both ends.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning `dp[n-1]`. The top is *past* the last step, so finishing from `n-2` is allowed and is sometimes cheaper.",
+        "Including a cost for the top itself. You step off the last stair and pay nothing more.",
+        "Setting `dp[1] = cost[0] + cost[1]`, which forbids starting on step 1.",
+        "Defining the state as \"cheapest to get past step i\", which then needs awkward special cases at both ends. \"Cheapest to stand on i\" keeps the recurrence uniform.",
+        "Mishandling an input of length 2, where the answer is just `min(cost[0], cost[1])`."
+      ],
+      "edgeCases": [
+        "exactly two steps -> min(cost[0], cost[1])",
+        "all costs equal -> taking 2-steps throughout is cheapest",
+        "one very expensive step in the middle, which should be jumped over",
+        "cost[0] much cheaper than cost[1], or the reverse",
+        "zero costs"
+      ],
+      "followUps": [
+        {
+          "q": "What if you also had to pay for the step you start on, and could only start at 0?",
+          "a": "Then `dp[1] = cost[0] + cost[1]` and only step 0 is a valid start — the recurrence is unchanged and only the base cases move. That is a useful demonstration that base cases encode the problem's boundary rules, not arithmetic trivia."
+        },
+        {
+          "q": "Return the actual sequence of steps taken.",
+          "a": "Record at each i which predecessor was chosen, then walk the choices backwards from whichever of the last two steps won. O(N) extra space for the decision array — the standard way to recover a solution from any DP table."
+        },
+        {
+          "q": "How does this differ from House Robber?",
+          "a": "House Robber forbids adjacent choices and maximises, so its recurrence is `max(dp[i-1], dp[i-2] + nums[i])` — the skip is mandatory. Here steps are *paid for* rather than forbidden, and you minimise. Same window, opposite objective, different constraint. Comparing the two recurrences side by side is the fastest way to see what the state is really encoding."
+        },
+        {
+          "q": "What if steps of size 3 were allowed?",
+          "a": "Extend the minimum to three predecessors and keep three variables. The pattern generalises to any fixed jump set; with an arbitrary jump set it becomes a shortest-path problem on a DAG, which is still linear."
+        }
+      ],
+      "related": [
+        "climbing-stairs",
+        "house-robber",
+        "jump-game-ii"
+      ],
+      "core": true
     },
     {
       "id": "198",
@@ -98,25 +218,79 @@
         "leetcode": "https://leetcode.com/problems/house-robber/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=73r3KWiEvyk"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP (Take or Skip)",
+      "patternTriggers": [
+        "A sequence of items with a **constraint between adjacent choices** — you cannot take two neighbours.",
+        "At each position the decision is binary: take this one and skip the previous, or skip this one and keep whatever was best before.",
+        "Maximising a total where the choices interact only locally."
+      ],
       "keyInsight": "At each house: rob it (add to i-2's max) or skip it (keep i-1's max). dp[i] = max(dp[i-1], dp[i-2] + nums[i]).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse on each house: either rob it and jump to i+2, or skip it and move to i+1. Take the better.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Both branches eventually reach the same houses, so subproblems repeat exponentially. The best loot obtainable from house i onwards does not depend on what happened before i — so it should be computed once, which makes this a textbook memoisation target."
+      },
+      "approach": [
+        "Define the state: `dp[i]` is the maximum loot obtainable from the first i houses.",
+        "At house i you have exactly two options. Rob it, which forbids house i-1, giving `dp[i-2] + nums[i]`. Or skip it, giving `dp[i-1]`.",
+        "So `dp[i] = max(dp[i-1], dp[i-2] + nums[i])`.",
+        "Base cases: `dp[0] = nums[0]`, and `dp[1] = max(nums[0], nums[1])`.",
+        "Fill upward and return `dp[n-1]`.",
+        "Only two previous values are read, so two variables replace the array."
+      ],
       "code": {
         "python": "def rob(nums):\n    prev2, prev1 = 0, 0\n    for n in nums:\n        prev2, prev1 = prev1, max(prev1, prev2 + n)\n    return prev1",
         "cpp": "class Solution {\npublic:\n    int rob(vector<int>& nums) {\n        int prev2 = 0, prev1 = 0;\n        for (int n : nums) { int cur = max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n};",
         "java": "class Solution {\n    public int rob(int[] nums) {\n        int prev2 = 0, prev1 = 0;\n        for (int n : nums) { int cur = Math.max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n}",
         "js": "var rob = function(nums) {\n    let prev2 = 0, prev1 = 0;\n    for (const n of nums) { const cur = Math.max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n    return prev1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with constant work per house. The two-variable collapse is immediate because the recurrence looks back two positions. Note this state is \"first i houses\" rather than \"ending at i\", so the answer is the final entry and no running maximum is needed."
+      },
+      "dryRun": "nums = [1, 2, 3, 1].    dp[i] = most loot from the first i+1 houses.\n\n  index     0   1   2   3\n  nums      1   2   3   1\n  dp        1   2   4   4\n\n  dp[0] = 1\n  dp[1] = max(1, 2) = 2\n  dp[2] = max(dp[1]=2, dp[0]+3 = 1+3 = 4) = 4        rob house 2\n  dp[3] = max(dp[2]=4, dp[1]+1 = 2+1 = 3) = 4        skip house 3\n\n  answer = 4     houses 0 and 2\n\n\nNow the input that defeats every greedy rule:  nums = [2, 1, 1, 2]\n\n  index     0   1   2   3\n  nums      2   1   1   2\n  dp        2   2   3   4\n\n  dp[2] = max(dp[1]=2, dp[0]+1 = 2+1 = 3) = 3\n  dp[3] = max(dp[2]=3, dp[1]+2 = 2+2 = 4) = 4\n\n  answer = 4     houses 0 and 3 — two houses SKIPPED in a row\n\n\"Rob every other house\" gives 2 + 1 = 3. \"Always rob the largest\n available\" gives 2 then 2, which is correct here but fails elsewhere.\nOnly considering both options at every index gets 4 reliably.\n\nNote the shape of the recurrence. Writing it as\n  max(dp[i-1], dp[i-2]) + nums[i]\nrobs house i unconditionally. The choice to SKIP has to live inside the\nmax, not outside it.\n\nThe state is \"first i+1 houses\", not \"ending at i\", so the answer is the\nlast entry and no running maximum is needed.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Writing `dp[i] = max(dp[i-1], dp[i-2]) + nums[i]`, which robs house i unconditionally. The choice to skip must be inside the max, not outside it.",
+        "Using `dp[i-2] + nums[i]` without the max against `dp[i-1]`, which forces an alternating pattern and misses cases like [2, 1, 1, 2] where skipping two in a row is optimal.",
+        "Setting `dp[1] = nums[1]` instead of `max(nums[0], nums[1])`.",
+        "Reaching for a greedy rule such as \"rob every other house\" or \"always rob the largest\". Both fail on [2, 1, 1, 2]: the answer is 4, which greedy approaches miss.",
+        "Not handling a single house."
+      ],
+      "edgeCases": [
+        "a single house -> its value",
+        "two houses -> the larger",
+        "[2, 1, 1, 2] -> 4, robbing the first and last; the input that breaks greedy",
+        "all values equal",
+        "all zeros -> 0",
+        "a strictly increasing sequence"
+      ],
+      "followUps": [
+        {
+          "q": "What if the houses were in a circle?",
+          "a": "The first and last become adjacent, so they cannot both be robbed. Run this algorithm twice — once on houses 0..n-2 and once on 1..n-1 — and take the better. That is House Robber II, and the trick is to reduce a circular constraint to two linear subproblems rather than invent a circular recurrence."
+        },
+        {
+          "q": "What if the houses formed a tree?",
+          "a": "Now each node returns two values: the best with that node robbed, and the best without. A parent combines its children's values accordingly. That is House Robber III, and it is the same take-or-skip decision expressed as a tree recursion returning a pair."
+        },
+        {
+          "q": "Which houses were robbed, not just the total?",
+          "a": "Record the decision at each i and walk backwards from the end. Alternatively reconstruct by comparing `dp[i]` with `dp[i-1]`: if they differ, house i was robbed. O(N) either way."
+        },
+        {
+          "q": "What if no two houses within k of each other could be robbed?",
+          "a": "The recurrence becomes `max(dp[i-1], dp[i-k-1] + nums[i])`, so you keep k+1 variables instead of two. Same structure, wider lookback — which shows the window size is a parameter, not part of the idea."
+        }
+      ],
+      "related": [
+        "house-robber-ii",
+        "min-cost-climbing-stairs",
+        "maximum-subarray"
+      ],
+      "core": true
     },
     {
       "id": "213",
@@ -132,25 +306,80 @@
         "leetcode": "https://leetcode.com/problems/house-robber-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=rWAJCfYYOvM"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP on Two Ranges",
+      "patternTriggers": [
+        "A **circular** version of a problem you can already solve linearly.",
+        "The circularity creates exactly one extra constraint — the first and last elements interact.",
+        "The right move is almost never a circular recurrence; it is to split into a small number of linear cases."
+      ],
       "keyInsight": "Circular: can't rob both first and last. Run House Robber twice: once excluding last, once excluding first. Take max.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every valid subset of non-adjacent houses on the circle and keep the best total.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponential, and it misses the structural simplification. The circle adds only one rule — not both ends — so fixing which end is excluded reduces the problem to two independent instances of plain House Robber."
+      },
+      "approach": [
+        "Observe that in a circle, house 0 and house n-1 are adjacent, so at most one of them can be robbed.",
+        "Split into two cases that together cover every possibility: exclude the last house, or exclude the first.",
+        "Case A: run linear House Robber on houses 0 through n-2.",
+        "Case B: run linear House Robber on houses 1 through n-1.",
+        "Return the larger of the two results.",
+        "Handle a single house separately, since both ranges would be empty.",
+        "Note the cases overlap — a solution robbing neither end appears in both — which is harmless, because taking the maximum cannot double-count."
+      ],
       "code": {
         "python": "def rob(nums):\n    if len(nums) == 1: return nums[0]\n    def rob1(arr):\n        p2, p1 = 0, 0\n        for n in arr:\n            p2, p1 = p1, max(p1, p2 + n)\n        return p1\n    return max(rob1(nums[:-1]), rob1(nums[1:]))",
         "cpp": "class Solution {\npublic:\n    int rob(vector<int>& nums) {\n        if (nums.size() == 1) return nums[0];\n        return max(robRange(nums, 0, nums.size()-2), robRange(nums, 1, nums.size()-1));\n    }\n    int robRange(vector<int>& nums, int lo, int hi) {\n        int prev2 = 0, prev1 = 0;\n        for (int i = lo; i <= hi; i++) { int cur = max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n};",
         "java": "class Solution {\n    public int rob(int[] nums) {\n        if (nums.length == 1) return nums[0];\n        return Math.max(robRange(nums, 0, nums.length-2), robRange(nums, 1, nums.length-1));\n    }\n    int robRange(int[] nums, int lo, int hi) {\n        int prev2 = 0, prev1 = 0;\n        for (int i = lo; i <= hi; i++) { int cur = Math.max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n}",
         "js": "var rob = function(nums) {\n    if (nums.length === 1) return nums[0];\n    const robRange = (lo, hi) => {\n        let prev2 = 0, prev1 = 0;\n        for (let i = lo; i <= hi; i++) { const cur = Math.max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    };\n    return Math.max(robRange(0, nums.length-2), robRange(1, nums.length-1));\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "Two linear passes, each O(N) with two variables, so still linear time and constant space. The whole gain is conceptual: turning a circular constraint into two linear subproblems avoids inventing a wraparound recurrence that would be much harder to get right."
+      },
+      "dryRun": "The circle adds exactly one rule: houses 0 and n-1 are now adjacent, so\nat most one of them may be robbed. Every valid solution therefore\nomits at least one end — which is covered by running plain House\nRobber on two ranges.\n\n  nums = [2, 3, 2]\n    exclude the last:   rob([2, 3])    = 3\n    exclude the first:  rob([3, 2])    = 3\n    answer = max(3, 3) = 3\n\n    Note 2 + 2 = 4 is NOT allowed — those are the two ends, adjacent on\n    the circle. The split is what rules it out automatically.\n\n  nums = [1, 2, 3, 1]\n    exclude the last:   rob([1, 2, 3]) = 4      houses 0 and 2\n    exclude the first:  rob([2, 3, 1]) = 3\n    answer = max(4, 3) = 4\n\n  nums = [1, 2, 3]\n    exclude the last:   rob([1, 2])    = 2\n    exclude the first:  rob([2, 3])    = 3\n    answer = max(2, 3) = 3\n\nThe two ranges overlap — a solution robbing neither end appears in\nboth — and that is harmless. A maximum over overlapping cases cannot\ndouble-count; what matters is only that the cases are EXHAUSTIVE.\n\nA single house needs its own check: both ranges would be empty and the\nvalue would be lost.\n\nThe transferable move is reducing a circular constraint to a small\nnumber of linear subproblems rather than inventing a wraparound\nrecurrence. The same trick solves circular maximum-subarray.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not special-casing a single house. Both ranges are empty, so the loops return 0 and the house's value is lost.",
+        "Trying to handle the circle in one pass with a wraparound index. It is possible but needs extra state tracking whether house 0 was taken, and is far more error-prone than two clean passes.",
+        "Splitting as 0..n-2 and 1..n-2, which omits the last house entirely.",
+        "Worrying that the two ranges overlap. They must — the union has to cover every valid selection, and a maximum over overlapping cases is still correct.",
+        "Reusing a mutable helper's state between the two calls, so the second run starts from the first's leftovers."
+      ],
+      "edgeCases": [
+        "a single house -> its value",
+        "two houses -> the larger, since they are adjacent on the circle",
+        "three houses -> the largest single value, as no two are non-adjacent",
+        "all values equal",
+        "the optimal solution robbing neither the first nor the last house",
+        "[1, 2, 3, 1] -> 4, from robbing houses 0 and 2"
+      ],
+      "followUps": [
+        {
+          "q": "Why exactly two cases, and why is that enough?",
+          "a": "The only new constraint is that houses 0 and n-1 cannot both be robbed. Any valid solution therefore excludes at least one of them, so it is covered by the range that omits that one. The two cases are exhaustive by construction, which is the argument to give rather than just asserting it works."
+        },
+        {
+          "q": "Can the two passes be fused into one?",
+          "a": "Yes — carry two independent pairs of variables through a single loop. It saves one traversal and costs clarity. Worth mentioning as a micro-optimisation, not as the solution you present first."
+        },
+        {
+          "q": "How do you handle circular constraints in general?",
+          "a": "Fix the ambiguous element's state and solve the resulting linear problems. The same move appears in circular array maximum-subarray (answer is either a normal subarray or the total minus the minimum subarray) and in circular versions of Next Greater Element."
+        },
+        {
+          "q": "What if the houses formed a cycle of length 1 or 2?",
+          "a": "Length 1 is the single-house case, and length 2 means the two are mutually adjacent so the answer is the larger. Both need checking explicitly, because the general two-range split degenerates there — a good reminder to test the smallest inputs on any case-splitting solution."
+        }
+      ],
+      "related": [
+        "house-robber",
+        "maximum-subarray",
+        "min-cost-climbing-stairs"
+      ],
+      "core": true
     },
     {
       "id": "5",
@@ -167,25 +396,80 @@
         "leetcode": "https://leetcode.com/problems/longest-palindromic-substring/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=XYQecbcd6_c"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Expand Around Center",
+      "patternTriggers": [
+        "Palindromic substrings, where the structure is **symmetric about a centre** rather than built left to right.",
+        "There are O(N) possible centres and each expands in O(N), which gives a clean quadratic solution with no table.",
+        "The words *palindromic substring*, *longest symmetric*, *reads the same both ways*."
+      ],
       "keyInsight": "Expand around center. For each index, try both odd-length (single center) and even-length (double center) palindromes.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Check every substring for palindromicity and keep the longest.",
+        "time": "O(N^3)",
+        "space": "O(1)",
+        "whyItFails": "There are O(N^2) substrings and each check is O(N). The waste is that neighbouring substrings share almost all their characters — expanding outward from a centre reuses the verification of the inner part for free, which removes a whole factor of N."
+      },
+      "approach": [
+        "Observe that every palindrome has a centre: a single character for odd lengths, or the gap between two characters for even lengths.",
+        "There are 2N-1 such centres in total.",
+        "For each centre, expand two pointers outward while the characters match and both stay in bounds.",
+        "The span reached is the longest palindrome with that centre.",
+        "Track the best start index and length seen across all centres.",
+        "Return that substring.",
+        "Handle odd and even centres with the same expansion routine, called twice per index."
+      ],
       "code": {
         "python": "def longestPalindrome(s):\n    result = \"\"\n    def expand(l, r):\n        nonlocal result\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            if r - l + 1 > len(result):\n                result = s[l:r+1]\n            l -= 1; r += 1\n    for i in range(len(s)):\n        expand(i, i)    # odd\n        expand(i, i+1)  # even\n    return result",
         "cpp": "class Solution {\npublic:\n    string longestPalindrome(string s) {\n        int start = 0, maxLen = 0;\n        for (int i = 0; i < s.size(); i++) {\n            for (int d : {0, 1}) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.size() && s[l] == s[r]) { l--; r++; }\n                if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n            }\n        }\n        return s.substr(start, maxLen);\n    }\n};",
         "java": "class Solution {\n    public String longestPalindrome(String s) {\n        int start = 0, maxLen = 0;\n        for (int i = 0; i < s.length(); i++) {\n            for (int d = 0; d <= 1; d++) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) { l--; r++; }\n                if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n            }\n        }\n        return s.substring(start, start + maxLen);\n    }\n}",
         "js": "var longestPalindrome = function(s) {\n    let start = 0, maxLen = 0;\n    for (let i = 0; i < s.length; i++) {\n        for (const d of [0, 1]) {\n            let l = i, r = i + d;\n            while (l >= 0 && r < s.length && s[l] === s[r]) { l--; r++; }\n            if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n        }\n    }\n    return s.substring(start, start + maxLen);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "note": "2N-1 centres, each expanding O(N) in the worst case of an all-identical string. The constant space is the advantage over the DP formulation, which also runs in O(N^2) time but needs an O(N^2) boolean table. There is an O(N) algorithm — Manacher's — which is rarely expected but worth naming."
+      },
+      "dryRun": "s = \"babad\".   Expand outward from each of the 2N-1 centres.\n\n  centre (0,0)  'b'                      best = \"b\"\n  centre (0,1)  'b' vs 'a'  no match\n  centre (1,1)  'a'  -> expand to (0,2): 'b' == 'b'   best = \"bab\"\n                     -> expand to (-1,3): out of bounds, stop\n  centre (1,2)  'a' vs 'b'  no match\n  centre (2,2)  'b'  -> expand to (1,3): 'a' == 'a'   length 3, not longer\n  ...\n\n  answer = \"bab\"      (\"aba\" is equally long and also acceptable)\n\n\nThe even-length case:  s = \"cbbd\"\n\n  centre (0,0)  'c'                      best = \"c\"\n  centre (1,1)  'b'                      length 1\n  centre (1,2)  'b' == 'b'  MATCH        best = \"bb\"\n                -> expand to (0,3): 'c' vs 'd', stop\n\n  answer = \"bb\"\n\n\"bb\" has no single-character centre — it sits in the GAP between\nindices 1 and 2. Handling only odd centres would answer \"c\", which is\nwhy each index must be expanded twice.\n\nWhy expansion is cheaper than checking every substring: when (1,2)\nmatched, the inner palindrome had already been verified, so widening to\n(0,3) is a single character comparison rather than a fresh O(N) scan.\nThat reuse removes a whole factor of N.\n\nWorst case is an all-identical string like \"aaaa\", where every centre\nexpands the full width — O(N^2), with O(1) space.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Only handling odd-length centres, which misses every even palindrome. \"abba\" has no single-character centre.",
+        "Expanding before checking bounds, which reads past either end of the string.",
+        "Returning the length instead of the substring, or computing the start index from the length incorrectly — off-by-one here is very common, so derive `start = center - (len - 1) / 2` carefully or track the two pointers directly.",
+        "Building the DP table and claiming O(N) space. The table is O(N^2); expansion is what gives O(1).",
+        "Initialising the best length to 0 and then returning an empty string for a non-empty input — any single character is a palindrome of length 1."
+      ],
+      "edgeCases": [
+        "an empty string -> empty",
+        "a single character -> itself",
+        "all characters identical, e.g. \"aaaa\" -> the whole string, and the worst case for expansion",
+        "no palindrome longer than 1, e.g. \"abcd\" -> any single character",
+        "an even-length answer, e.g. \"cbbd\" -> \"bb\"",
+        "two palindromes of equal maximum length, where either is acceptable"
+      ],
+      "followUps": [
+        {
+          "q": "How does the DP formulation compare?",
+          "a": "`isPal[i][j]` is true when `s[i] == s[j]` and `isPal[i+1][j-1]`, filled by increasing length. Same O(N^2) time but O(N^2) space, so expansion is strictly better here. The table earns its keep when you need to answer many palindrome queries, as in Palindrome Partitioning."
+        },
+        {
+          "q": "Is there a linear-time solution?",
+          "a": "Yes — Manacher's algorithm, which reuses the symmetry of already-found palindromes to avoid re-expanding. O(N) time and space. Rarely required in interviews, but naming it signals you know the quadratic bound is not fundamental."
+        },
+        {
+          "q": "Count all palindromic substrings instead of finding the longest.",
+          "a": "Identical expansion loop; instead of tracking a maximum, add one to a counter for each successful expansion step, since each is a distinct palindrome. That is Palindromic Substrings — same code, different accumulator."
+        },
+        {
+          "q": "Longest palindromic *subsequence* rather than substring?",
+          "a": "A genuinely different problem, since characters may be skipped. It is the longest common subsequence of the string with its own reverse, solved by 2-D DP in O(N^2). Expansion does not apply because the result is not contiguous."
+        }
+      ],
+      "related": [
+        "palindromic-substrings",
+        "longest-common-subsequence",
+        "valid-palindrome"
+      ],
+      "core": true
     },
     {
       "id": "647",
@@ -202,25 +486,79 @@
         "leetcode": "https://leetcode.com/problems/palindromic-substrings/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=4RACzI5-du8"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Expand Around Center",
+      "patternTriggers": [
+        "Count substrings with a symmetric property, rather than find the best one.",
+        "Every palindrome has a centre, and expanding from a centre enumerates all palindromes with that centre in order of increasing length.",
+        "The words *count the palindromic substrings*, *how many*, with substrings at different positions counted separately even if identical."
+      ],
+      "keyInsight": "Exactly the same expansion as Longest Palindromic Substring, with the accumulator changed: instead of tracking the longest span, **count one palindrome per successful expansion step**. Every time the two pointers match and move outward, they have identified a distinct palindromic substring, so the count is simply the total number of expansion steps across all 2N-1 centres. Recognising that two problems share an algorithm and differ only in what they accumulate is most of the value of working through a category in order.",
+      "bruteForce": {
+        "idea": "Check every substring for palindromicity and count the ones that pass.",
+        "time": "O(N^3)",
+        "space": "O(1)",
+        "whyItFails": "The same O(N^2) substrings with an O(N) check each. Expanding outward verifies the inner palindrome implicitly — if `s[i..j]` is a palindrome and the characters just outside match, then `s[i-1..j+1]` is one too, with no re-checking."
+      },
+      "approach": [
+        "For each of the 2N-1 centres — N single characters and N-1 gaps — run an expansion.",
+        "Expand two pointers outward while they are in bounds and the characters match.",
+        "Increment the count on **every** successful match, not just at the end: each expansion step is itself a palindrome.",
+        "Stop that centre as soon as the characters differ or a pointer leaves the string.",
+        "Sum the counts across all centres.",
+        "Note that every single character contributes 1 automatically, so a string of length N always has at least N palindromic substrings."
+      ],
       "code": {
         "python": "def countSubstrings(s):\n    count = 0\n    def expand(l, r):\n        nonlocal count\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            count += 1; l -= 1; r += 1\n    for i in range(len(s)):\n        expand(i, i); expand(i, i+1)\n    return count",
         "cpp": "class Solution {\npublic:\n    int countSubstrings(string s) {\n        int count = 0;\n        for (int i = 0; i < s.size(); i++)\n            for (int d : {0, 1}) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.size() && s[l] == s[r]) { count++; l--; r++; }\n            }\n        return count;\n    }\n};",
         "java": "class Solution {\n    public int countSubstrings(String s) {\n        int count = 0;\n        for (int i = 0; i < s.length(); i++)\n            for (int d = 0; d <= 1; d++) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) { count++; l--; r++; }\n            }\n        return count;\n    }\n}",
         "js": "var countSubstrings = function(s) {\n    let count = 0;\n    for (let i = 0; i < s.length; i++)\n        for (const d of [0, 1]) {\n            let l = i, r = i + d;\n            while (l >= 0 && r < s.length && s[l] === s[r]) { count++; l--; r++; }\n        }\n    return count;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "note": "2N-1 centres each expanding up to O(N). The worst case is an all-identical string, which has exactly N(N+1)/2 palindromic substrings — every substring is one — so the quadratic count is not avoidable here: the output itself is quadratic in magnitude."
+      },
+      "dryRun": "Same expansion as Longest Palindromic Substring; count every successful\nstep instead of tracking the longest.\n\n  s = \"abc\"\n    centre (0,0) 'a'                     count 1\n    centre (0,1) no match\n    centre (1,1) 'b'                     count 2\n    centre (1,2) no match\n    centre (2,2) 'c'                     count 3\n    answer = 3        just the three single characters\n\n  s = \"aba\"\n    (0,0) 'a'                            count 1\n    (1,1) 'b'  -> expand (0,2): 'a'=='a' count 3   found 'b' then 'aba'\n    (2,2) 'a'                            count 4\n    answer = 4        a, b, aba, a\n\n  s = \"aaa\"\n    (0,0) 'a'                            1\n    (0,1) 'a'=='a' -> 'aa'               2\n    (1,1) 'a'                            3\n          expand (0,2) -> 'aaa'          4\n    (1,2) 'a'=='a' -> 'aa'               5\n    (2,2) 'a'                            6\n    answer = 6        a, aa, a, aaa, aa, a\n\nThe \"aaa\" case shows two things. Each expansion STEP counts, not just\nthe longest per centre — the centre at index 1 contributes both 'a' and\n'aaa'. And identical substrings at different positions are counted\nseparately: three distinct single 'a's and two distinct 'aa's, even\nthough they read the same.\n\nAn all-identical string of length N has N(N+1)/2 palindromic\nsubstrings — every substring qualifies. So the output magnitude is\nitself quadratic, which tells you no enumeration can be faster than\nO(N^2).",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Counting only the longest palindrome per centre. Each expansion step is a separate substring, so \"aaa\" centred at the middle contributes both \"a\" and \"aaa\".",
+        "Forgetting the even-length centres, which halves the answer on strings like \"aaaa\".",
+        "Deduplicating identical substrings at different positions. The problem counts them separately — \"aaa\" has 6, not 3.",
+        "Expanding before the bounds check.",
+        "Trying to derive the count from the longest palindrome's length, which does not determine it."
+      ],
+      "edgeCases": [
+        "a single character -> 1",
+        "all characters distinct, e.g. \"abc\" -> 3, just the singles",
+        "all characters identical, e.g. \"aaa\" -> 6",
+        "an empty string -> 0",
+        "\"aba\" -> 4: a, b, a, aba",
+        "a long all-identical string, which is the quadratic worst case"
+      ],
+      "followUps": [
+        {
+          "q": "Why is every expansion step a distinct palindrome?",
+          "a": "Each step widens the span by one character on each side, producing a substring with different start and end indices from every previous step at that centre. Different index pairs mean different substrings, and the problem counts by position, so each must be counted."
+        },
+        {
+          "q": "Count *distinct* palindromic substrings instead.",
+          "a": "Now you must deduplicate by content, which needs a set of the substrings — O(N^2) space and O(N^3) time naively. The efficient route is Eertree (a palindromic tree) in O(N), or hashing the spans. A genuinely harder problem hiding behind one word in the statement."
+        },
+        {
+          "q": "How does the DP version look?",
+          "a": "Fill `isPal[i][j]` by increasing length and count the true entries. Same O(N^2) time, O(N^2) space. The table is only worth building if something else also needs palindrome queries — which is exactly the situation in Palindrome Partitioning."
+        },
+        {
+          "q": "What is the maximum possible answer for a string of length N?",
+          "a": "N(N+1)/2, achieved when every character is the same, because then every substring is a palindrome. Knowing the output can be quadratic tells you immediately that no linear algorithm can enumerate them, though Manacher's can still *count* them in O(N)."
+        }
+      ],
+      "related": [
+        "longest-palindromic-substring",
+        "palindrome-partitioning",
+        "valid-palindrome"
+      ],
+      "core": true
     },
     {
       "id": "91",
@@ -237,25 +575,81 @@
         "leetcode": "https://leetcode.com/problems/decode-ways/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=6aEyTjOwlJU"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP with Validity Checks",
+      "patternTriggers": [
+        "**Count the ways** to decode, parse or segment a sequence, where each step consumes a variable number of elements.",
+        "Each prefix or suffix is a subproblem, and the ways to decode it are the sum over each valid first chunk.",
+        "Validity rules make some transitions unavailable — which is what makes this harder than Climbing Stairs."
+      ],
       "keyInsight": "dp[i] = ways to decode s[i:]. Single digit (1-9): dp[i] += dp[i+1]. Two digits (10-26): dp[i] += dp[i+2].",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse from each position: take one digit if valid, or two digits if valid, and sum the results.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "The number of ways to decode the suffix starting at i is independent of how you reached i, yet the recursion recomputes it once per route. Caching on the single index collapses the exponential tree into N states."
+      },
+      "approach": [
+        "Define the state: `dp[i]` is the number of ways to decode the suffix starting at index i.",
+        "Base case: `dp[n] = 1` — the empty suffix has exactly one decoding, the empty one. This is the base case people get wrong, and it is what makes the arithmetic work.",
+        "If `s[i]` is '0' then `dp[i] = 0`: no letter maps to 0 and no valid code starts with it.",
+        "Otherwise take one digit, contributing `dp[i+1]`.",
+        "If the two-digit number `s[i..i+1]` is between 10 and 26, also add `dp[i+2]`.",
+        "Fill from the end backwards so both dependencies exist, and return `dp[0]`.",
+        "Only two states ahead are ever read, so two variables suffice."
+      ],
       "code": {
         "python": "def numDecodings(s):\n    dp = {len(s): 1}\n    for i in range(len(s) - 1, -1, -1):\n        if s[i] == \"0\":\n            dp[i] = 0\n        else:\n            dp[i] = dp[i + 1]\n            if i + 1 < len(s) and int(s[i:i+2]) <= 26:\n                dp[i] += dp[i + 2]\n    return dp[0]",
         "cpp": "class Solution {\npublic:\n    int numDecodings(string s) {\n        int n = s.size(), prev2 = 1, prev1 = s[0] != '0' ? 1 : 0;\n        for (int i = 2; i <= n; i++) {\n            int cur = 0;\n            if (s[i-1] != '0') cur += prev1;\n            int two = stoi(s.substr(i-2, 2));\n            if (two >= 10 && two <= 26) cur += prev2;\n            prev2 = prev1; prev1 = cur;\n        }\n        return prev1;\n    }\n};",
         "java": "class Solution {\n    public int numDecodings(String s) {\n        int prev2 = 1, prev1 = s.charAt(0) != '0' ? 1 : 0;\n        for (int i = 2; i <= s.length(); i++) {\n            int cur = 0;\n            if (s.charAt(i-1) != '0') cur += prev1;\n            int two = Integer.parseInt(s.substring(i-2, i));\n            if (two >= 10 && two <= 26) cur += prev2;\n            prev2 = prev1; prev1 = cur;\n        }\n        return prev1;\n    }\n}",
         "js": "var numDecodings = function(s) {\n    let prev2 = 1, prev1 = s[0] !== '0' ? 1 : 0;\n    for (let i = 2; i <= s.length; i++) {\n        let cur = 0;\n        if (s[i-1] !== '0') cur += prev1;\n        const two = Number(s.substring(i-2, i));\n        if (two >= 10 && two <= 26) cur += prev2;\n        prev2 = prev1; prev1 = cur;\n    }\n    return prev1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass with constant work per character — a two-digit range check and at most two additions. The table collapses to two variables because the recurrence looks ahead exactly two positions. The answer can grow exponentially in N, so watch the integer width even though the algorithm is linear."
+      },
+      "dryRun": "dp[i] = the number of ways to decode the suffix starting at index i.\nBase case dp[n] = 1 — the empty suffix has exactly one decoding.\n\n  s = \"226\"\n\n    i        0   1   2   3\n    dp       3   2   1   1\n\n    dp[3] = 1                                    (base case)\n    dp[2]: s[2]='6', single digit ok             -> dp[3] = 1\n    dp[1]: s[1]='2' -> dp[2] = 1\n           two-digit \"26\" is in 10..26           -> + dp[3] = 1\n                                                 -> 2\n    dp[0]: s[0]='2' -> dp[1] = 2\n           two-digit \"22\" is in 10..26           -> + dp[2] = 1\n                                                 -> 3\n\n    answer = 3     the decodings 2-2-6, 22-6, 2-26\n\n\n  s = \"06\"   ->  dp[0] = 0, because a code may not start with '0'\n  s = \"27\"   ->  1, since \"27\" exceeds 26 so only 2-7 works\n\n\n  s = \"11106\"\n\n    i        0   1   2   3   4   5\n    dp       2   1   1   0   1   1\n\n    dp[4]: '6'                                   -> 1\n    dp[3]: s[3]='0'                              -> 0   dead end\n    dp[2]: '1' -> dp[3] = 0; \"10\" valid -> + dp[4] = 1   -> 1\n    dp[1]: '1' -> dp[2] = 1; \"11\" valid -> + dp[3] = 0   -> 1\n    dp[0]: '1' -> dp[1] = 1; \"11\" valid -> + dp[2] = 1   -> 2\n\n    answer = 2     the decodings 1-1-10-6 and 11-10-6\n\nThe zero at index 3 is the instructive part. dp[3] = 0 means nothing\ncan start there, so dp[2] gets its entire value from the two-digit\n\"10\" route — the '0' survives only as the tail of a 10 or 20.\n\nSetting dp[n] = 0 instead of 1 would zero the entire table, since every\nentry is a sum of later entries.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Setting `dp[n] = 0`. The empty suffix has one decoding, and zero makes the whole table collapse to zero.",
+        "Treating '0' as decodable. There is no letter 0, so a '0' can only ever be the second digit of 10 or 20.",
+        "Accepting any two-digit pair. Only 10 to 26 are valid, so \"27\" and \"06\" must not count — note that \"06\" is invalid precisely because of the leading zero, not the value.",
+        "Comparing the two digits as characters rather than as a number, so \"9\" followed by \"1\" is read as valid.",
+        "Forgetting that a string of length 1 that is \"0\" has zero decodings, not one."
+      ],
+      "edgeCases": [
+        "\"0\" -> 0",
+        "\"06\" -> 0, since a leading zero is not a valid two-digit code",
+        "\"10\" -> 1, only as 'J'",
+        "\"27\" -> 1, only as 2 then 7, because 27 exceeds 26",
+        "\"226\" -> 3: 2-2-6, 22-6, 2-26",
+        "a long run of 1s and 2s, which produces a Fibonacci-sized count",
+        "an empty string -> 1 by the base case, though the problem may exclude it"
+      ],
+      "followUps": [
+        {
+          "q": "Why is dp[n] = 1 rather than 0?",
+          "a": "Because `dp[i]` counts decodings of the suffix, and the empty suffix has exactly one — the empty decoding. Setting it to 0 would make every state zero by multiplication through the sums. This is the same reasoning as `dp[0] = 1` in Climbing Stairs: there is one way to do nothing."
+        },
+        {
+          "q": "What if the alphabet went up to 99 instead of 26?",
+          "a": "The two-digit range check widens, and if codes up to three digits existed you would look ahead three states. The structure is unchanged; only the validity predicate and the lookback width move — which is a good way to confirm you understood the recurrence rather than memorised it."
+        },
+        {
+          "q": "What if '*' could stand for any digit 1 to 9?",
+          "a": "Each transition now has a multiplicity: a single '*' contributes 9 ways, and a two-character pair contributes a count depending on which digits are wildcards. That is Decode Ways II, with the same shape and much fussier case analysis."
+        },
+        {
+          "q": "List all the decodings rather than count them.",
+          "a": "That switches to backtracking, because the output is exponential in size. The DP collapses the enumeration into a count, which is exactly the trade between the two techniques."
+        }
+      ],
+      "related": [
+        "climbing-stairs",
+        "word-break",
+        "coin-change"
+      ],
+      "core": true
     },
     {
       "id": "322",
@@ -271,25 +665,114 @@
         "leetcode": "https://leetcode.com/problems/coin-change/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=H9bfqozjoqs"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Unbounded Knapsack (Min)",
+      "patternTriggers": [
+        "Reach an exact target using items that may be reused **any number of times**, minimising the count.",
+        "A greedy rule is tempting and provably wrong, which is the signal to reach for DP.",
+        "The words *fewest coins*, *minimum number of items*, *make exactly*."
+      ],
       "keyInsight": "dp[amount] = min coins to make that amount. For each coin, dp[a] = min(dp[a], 1 + dp[a - coin]).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Greedy — always take the largest coin that fits. Or recurse over every combination of coins.",
+        "time": "O(1) for greedy, exponential for the recursion",
+        "space": "O(amount)",
+        "whyItFails": "The greedy is **wrong**, which is the important part. With coins [1, 3, 4] and amount 6, greedy takes 4 then 1 then 1 for three coins, while 3 + 3 uses two. Greedy only works for so-called canonical coin systems, and the general case needs DP. The recursion is correct but re-solves the same amounts exponentially often."
+      },
+      "approach": [
+        "Define the state: `dp[a]` is the minimum number of coins that make amount a.",
+        "Initialise `dp[0] = 0` — zero coins make zero — and everything else to infinity, meaning unreachable.",
+        "Infinity is the identity for a minimum, which is why it is the right sentinel.",
+        "For each amount a from 1 to the target, and each coin c that does not exceed a, consider `dp[a - c] + 1`.",
+        "Take the minimum over all those options.",
+        "Iterating amounts in the outer loop means `dp[a - c]` is always already final, which is what allows coins to be reused freely.",
+        "Return `dp[amount]`, or -1 if it is still infinity."
+      ],
       "code": {
         "python": "def coinChange(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for a in range(1, amount + 1):\n        for c in coins:\n            if a - c >= 0:\n                dp[a] = min(dp[a], 1 + dp[a - c])\n    return dp[amount] if dp[amount] != float('inf') else -1",
         "cpp": "class Solution {\npublic:\n    int coinChange(vector<int>& coins, int amount) {\n        vector<int> dp(amount + 1, amount + 1);\n        dp[0] = 0;\n        for (int i = 1; i <= amount; i++)\n            for (int c : coins)\n                if (c <= i) dp[i] = min(dp[i], dp[i - c] + 1);\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n};",
         "java": "class Solution {\n    public int coinChange(int[] coins, int amount) {\n        int[] dp = new int[amount + 1];\n        Arrays.fill(dp, amount + 1);\n        dp[0] = 0;\n        for (int i = 1; i <= amount; i++)\n            for (int c : coins)\n                if (c <= i) dp[i] = Math.min(dp[i], dp[i - c] + 1);\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n}",
         "js": "var coinChange = function(coins, amount) {\n    const dp = new Array(amount + 1).fill(amount + 1);\n    dp[0] = 0;\n    for (let i = 1; i <= amount; i++)\n        for (const c of coins)\n            if (c <= i) dp[i] = Math.min(dp[i], dp[i - c] + 1);\n    return dp[amount] > amount ? -1 : dp[amount];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(amount * number of coins)",
+        "space": "O(amount)",
+        "note": "Every (amount, coin) pair is examined once. This is pseudo-polynomial: linear in the numeric *value* of the amount rather than in its number of digits, so an amount of 10^9 is intractable even with three coins. Saying that out loud distinguishes understanding from memorisation."
+      },
+      "dryRun": "coins = [1, 3, 4], amount = 6.\ndp[a] = the fewest coins making exactly a; infinity means unreachable.\n\n  amount   0   1   2   3   4   5   6\n  dp       0   1   2   1   1   2   2\n\n  dp[1] = dp[0] + 1 = 1                       using coin 1\n  dp[2] = dp[1] + 1 = 2                       1 + 1\n  dp[3] = min(dp[2]+1, dp[0]+1) = 1           the coin 3 alone\n  dp[4] = min(dp[3]+1, dp[1]+1, dp[0]+1) = 1  the coin 4 alone\n  dp[5] = min(dp[4]+1, dp[2]+1, dp[1]+1) = 2  4 + 1\n  dp[6] = min(dp[5]+1, dp[3]+1, dp[2]+1) = 2  3 + 3\n\n  answer = 2\n\nGREEDY, taking the largest coin that fits: 4, then 1, then 1 — three\ncoins. The DP answers 2 via 3 + 3. This input is the standard\ncounterexample, and it is worth having memorised: greedy is correct only\nfor canonical coin systems, which [1, 3, 4] is not.\n\n\nUnreachable amounts:  coins = [2], amount = 3\n\n  amount   0   1   2   3\n  dp       0 inf   1 inf\n\n  dp[3] is still infinity  ->  return -1\n\nInfinity is the right sentinel because it is the identity for a minimum\n— any real candidate beats it. Initialising to 0 would make every\namount look achievable in one coin.\n\nThe complexity is O(amount x coins), which is pseudo-polynomial: linear\nin the VALUE of the amount, not in its number of digits. An amount of\n10^9 is intractable even with three coins.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "dp"
+          ],
+          "colLabels": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "cells": [
+            [
+              0,
+              1,
+              2,
+              1,
+              1,
+              2,
+              2
+            ]
+          ],
+          "highlight": [
+            [
+              0,
+              6
+            ]
+          ]
+        },
+        "caption": "coins = [1, 3, 4]. dp[6] = 2 via 3+3, whereas greedy takes 4 then 1 then 1 for three coins. dp[5] = 2 via 4+1, and dp[2] = 2 via 1+1 — each entry is the minimum over dp[a-c]+1 for every usable coin."
+      },
+      "pitfalls": [
+        "Using greedy. It is the intuitive approach and it is wrong — be ready with the [1, 3, 4] counterexample.",
+        "Initialising unreachable amounts to 0 instead of infinity, which makes every amount look achievable in one coin.",
+        "Using `amount + 1` as the infinity sentinel and then forgetting to check against it before adding 1, which can overflow or silently produce a valid-looking answer.",
+        "Returning `dp[amount]` without checking for unreachability, so an impossible amount reports a huge number instead of -1.",
+        "Swapping the loops and then being surprised — for the *minimum coins* problem either loop order works, but for Coin Change II (counting combinations) the order determines whether you count combinations or permutations. Knowing when order matters is the real lesson."
+      ],
+      "edgeCases": [
+        "amount 0 -> 0 coins",
+        "no coin divides the amount, e.g. coins [2] and amount 3 -> -1",
+        "a coin equal to the amount -> 1",
+        "a coin larger than the amount, which must be skipped",
+        "a single coin of value 1, which always works",
+        "duplicate coin values in the input, which change nothing"
+      ],
+      "followUps": [
+        {
+          "q": "Count the number of ways to make the amount instead of the minimum coins.",
+          "a": "That is Coin Change II, and the loop order becomes critical: coins in the outer loop counts *combinations*, amounts in the outer loop counts *permutations*. Same table, same size, completely different answer — which is why the loop order deserves a sentence of explanation whenever you write one of these."
+        },
+        {
+          "q": "What if each coin could be used at most once?",
+          "a": "That is 0/1 knapsack rather than unbounded. Iterate the amounts *downward* for each coin so a coin cannot be reused within its own pass. The direction of a single loop is the entire difference between the two problems."
+        },
+        {
+          "q": "When is greedy actually correct?",
+          "a": "For canonical coin systems, which include real currencies — with coins [1, 5, 10, 25] greedy is optimal. There is no simple test for canonicity, and verifying it is itself a nontrivial computation, which is why DP is the safe default."
+        },
+        {
+          "q": "Return which coins were used.",
+          "a": "Record the chosen coin at each amount, then walk backwards from the target. O(amount) extra space — the standard reconstruction technique for any DP where the path matters."
+        }
+      ],
+      "related": [
+        "coin-change-ii",
+        "partition-equal-subset-sum",
+        "climbing-stairs"
+      ],
+      "core": true
     },
     {
       "id": "152",
@@ -305,25 +788,80 @@
         "leetcode": "https://leetcode.com/problems/maximum-product-subarray/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=lXVy6YWFcRM"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP (Track Max and Min)",
+      "patternTriggers": [
+        "A running optimum over a **contiguous** subarray, where the combining operation is multiplication rather than addition.",
+        "Negative values can flip the ordering, so the best answer may come from the *worst* previous value.",
+        "The giveaway that the state is incomplete: you find yourself needing information the state does not carry."
+      ],
       "keyInsight": "Track both max AND min product ending here (negative * negative = positive). At each step, consider: num alone, num*prevMax, num*prevMin.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Compute the product of every subarray and keep the largest.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "It recomputes overlapping products. But the more interesting failure is the naive fix — carrying only the running maximum, as in Kadane's algorithm for sums. That breaks on [-2, 3, -4]: the best product is 24, which comes from multiplying the *minimum* so far (-2) by 3 to get -6, and then by -4. Two negatives make a positive, so the minimum is a candidate for the future maximum and must be tracked too."
+      },
+      "approach": [
+        "Define two states at each position: `curMax`, the largest product of a subarray ending here, and `curMin`, the smallest.",
+        "At each element there are exactly three candidates: the element alone, the element times the previous maximum, and the element times the previous minimum.",
+        "Set `curMax` to the largest of those three and `curMin` to the smallest.",
+        "Compute both from the *previous* values, so snapshot the old maximum before overwriting it.",
+        "Track the best `curMax` seen anywhere, since the state is \"ending at i\" and the answer need not be at the end.",
+        "Return that global best."
+      ],
       "code": {
         "python": "def maxProduct(nums):\n    result = max(nums)\n    cur_max = cur_min = 1\n    for n in nums:\n        vals = (n, n * cur_max, n * cur_min)\n        cur_max, cur_min = max(vals), min(vals)\n        result = max(result, cur_max)\n    return result",
         "cpp": "class Solution {\npublic:\n    int maxProduct(vector<int>& nums) {\n        int result = nums[0], curMax = 1, curMin = 1;\n        for (int n : nums) {\n            int a = curMax * n, b = curMin * n;\n            curMax = max({n, a, b});\n            curMin = min({n, a, b});\n            result = max(result, curMax);\n        }\n        return result;\n    }\n};",
         "java": "class Solution {\n    public int maxProduct(int[] nums) {\n        int result = nums[0], curMax = 1, curMin = 1;\n        for (int n : nums) {\n            int a = curMax * n, b = curMin * n;\n            curMax = Math.max(n, Math.max(a, b));\n            curMin = Math.min(n, Math.min(a, b));\n            result = Math.max(result, curMax);\n        }\n        return result;\n    }\n}",
         "js": "var maxProduct = function(nums) {\n    let result = nums[0], curMax = 1, curMin = 1;\n    for (const n of nums) {\n        const a = curMax * n, b = curMin * n;\n        curMax = Math.max(n, a, b);\n        curMin = Math.min(n, a, b);\n        result = Math.max(result, curMax);\n    }\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass holding three numbers. The state is \"ending exactly at i\", which is why a running global maximum is required rather than reading the last entry — the distinction that causes the most bugs in this category."
+      },
+      "dryRun": "Track BOTH the largest and smallest product ending at each position.\nAt each element the three candidates are: the element alone, element x\nprevious max, element x previous min.\n\n  nums = [2, 3, -2, 4]\n\n    start      curMax=2    curMin=2    best=2\n    x=3        candidates (3, 6, 6)      curMax=6   curMin=3   best=6\n    x=-2       candidates (-2, -12, -6)  curMax=-2  curMin=-12 best=6\n    x=4        candidates (4, -8, -48)   curMax=4   curMin=-48 best=6\n\n    answer = 6     the subarray [2, 3]\n\n  Note the answer does NOT extend to the end. The state is \"ending at\n  i\", so a running global best is required — returning curMax would\n  answer 4.\n\n\nNow the case that proves the minimum must be tracked:\n\n  nums = [-2, 3, -4]\n\n    start      curMax=-2   curMin=-2   best=-2\n    x=3        candidates (3, -6, -6)   curMax=3   curMin=-6  best=3\n    x=-4       candidates (-4, -12, 24) curMax=24  curMin=-12 best=24\n                                 ^^\n                          curMin(-6) x (-4) = 24\n\n    answer = 24     the whole array\n\nThe winning candidate came from the MINIMUM, not the maximum. Two\nnegatives multiply to a positive, so the worst value so far is a live\ncandidate for the best value next. Track only the maximum — the direct\nanalogue of Kadane's algorithm for sums — and this answers 3.\n\nZeros need no special case:\n\n  nums = [-2, 0, -1]   ->   at x=0 every candidate is 0, which resets\n                            the run; answer 0\n\nThat works because \"the element alone\" is always among the candidates.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Tracking only the maximum. This is the defining error: [-2, 3, -4] answers 3 instead of 24.",
+        "Overwriting `curMax` before computing `curMin`, so the minimum is derived from the already-updated maximum. Save the old value first.",
+        "Initialising the global best to 0. For an all-negative input like [-3] the answer is -3, and 0 would win incorrectly.",
+        "Special-casing zeros. They are handled automatically, because \"the element alone\" is always a candidate and resets the run.",
+        "Returning `curMax` at the end rather than the best seen, which misses answers that do not extend to the final element."
+      ],
+      "edgeCases": [
+        "a single element, possibly negative",
+        "all negatives with an even count, where the whole array may be the answer",
+        "all negatives with an odd count, where one must be excluded",
+        "zeros present, which split the array into independent runs",
+        "[-2, 3, -4] -> 24, the case that forces tracking the minimum",
+        "[0, 2] -> 2",
+        "[-2, 0, -1] -> 0"
+      ],
+      "followUps": [
+        {
+          "q": "How does this relate to Maximum Subarray?",
+          "a": "Kadane's algorithm for sums needs only the running maximum, because adding a number cannot turn a small value into a large one. Multiplication can, via a pair of negatives, so the state must widen to carry both extremes. Comparing the two is the clearest illustration of \"if the recurrence is awkward, the state is incomplete\"."
+        },
+        {
+          "q": "Can you solve it by splitting on zeros?",
+          "a": "Yes. Zeros partition the array into segments with no zeros, and within each segment the answer is either the whole product (if it has an even number of negatives) or the product with one end trimmed. Correct and O(N), but the max/min DP is shorter and handles everything uniformly."
+        },
+        {
+          "q": "What about the maximum product of a *subsequence*?",
+          "a": "Much easier, because you may skip elements: multiply all the non-zero values, and if the count of negatives is odd, divide out the largest negative. No DP needed — which is a useful reminder that contiguity is what makes the subarray version hard."
+        },
+        {
+          "q": "How do you handle overflow?",
+          "a": "Products grow fast, so use a 64-bit type, and if the constraints allow very long arrays consider tracking logarithms of absolute values alongside a sign. Worth flagging rather than silently overflowing."
+        }
+      ],
+      "related": [
+        "maximum-subarray",
+        "product-of-array-except-self",
+        "house-robber"
+      ],
+      "core": true
     },
     {
       "id": "139",
@@ -340,25 +878,80 @@
         "leetcode": "https://leetcode.com/problems/word-break/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Sx9NNgInc3A"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Linear DP over Prefixes",
+      "patternTriggers": [
+        "**Can this sequence be segmented** into valid pieces from a given set? A boolean DP over prefixes.",
+        "Each prefix is reachable if some valid piece ends there and the prefix before that piece was also reachable.",
+        "The words *word break*, *segment*, *can be constructed from*."
+      ],
       "keyInsight": "dp[i] = can we segment s[0:i]? For each position, check if any word in dict ends here AND dp[i - len(word)] is True.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse over every possible first word, then recurse on the remaining suffix.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Many different prefixes lead to the same suffix, and each re-solves it. On input like \"aaaaaaa\" with dictionary [\"a\", \"aa\"] the branching is exponential while there are only N distinct suffixes to decide — a textbook memoisation target."
+      },
+      "approach": [
+        "Define the state: `dp[i]` is true when the first i characters can be fully segmented.",
+        "Base case: `dp[0] = true` — the empty prefix is trivially segmentable.",
+        "For each position i from 1 to n, look at every word in the dictionary.",
+        "If the word fits ending at i, and `s[i - len(word) .. i]` equals that word, and `dp[i - len(word)]` is true, then `dp[i]` is true.",
+        "Break out of the inner loop once `dp[i]` is set — one valid segmentation is enough for a boolean.",
+        "Return `dp[n]`.",
+        "Put the dictionary in a set for O(1) membership, or build a trie if the dictionary is large."
+      ],
       "code": {
         "python": "def wordBreak(s, wordDict):\n    dp = [False] * (len(s) + 1)\n    dp[0] = True\n    for i in range(1, len(s) + 1):\n        for w in wordDict:\n            if i >= len(w) and dp[i - len(w)] and s[i-len(w):i] == w:\n                dp[i] = True\n                break\n    return dp[-1]",
         "cpp": "class Solution {\npublic:\n    bool wordBreak(string s, vector<string>& wordDict) {\n        unordered_set<string> dict(wordDict.begin(), wordDict.end());\n        int n = s.size();\n        vector<bool> dp(n + 1, false);\n        dp[0] = true;\n        for (int i = 1; i <= n; i++)\n            for (int j = 0; j < i; j++)\n                if (dp[j] && dict.count(s.substr(j, i - j))) { dp[i] = true; break; }\n        return dp[n];\n    }\n};",
         "java": "class Solution {\n    public boolean wordBreak(String s, List<String> wordDict) {\n        Set<String> dict = new HashSet<>(wordDict);\n        boolean[] dp = new boolean[s.length() + 1];\n        dp[0] = true;\n        for (int i = 1; i <= s.length(); i++)\n            for (int j = 0; j < i; j++)\n                if (dp[j] && dict.contains(s.substring(j, i))) { dp[i] = true; break; }\n        return dp[s.length()];\n    }\n}",
         "js": "var wordBreak = function(s, wordDict) {\n    const dict = new Set(wordDict);\n    const dp = new Array(s.length + 1).fill(false);\n    dp[0] = true;\n    for (let i = 1; i <= s.length; i++)\n        for (let j = 0; j < i; j++)\n            if (dp[j] && dict.has(s.substring(j, i))) { dp[i] = true; break; }\n    return dp[s.length];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2 * L)",
+        "space": "O(N)",
+        "note": "N positions, each trying up to N split points, with an O(L) string comparison per candidate. Iterating the dictionary instead gives O(N * D * L) for D words, which is better when the dictionary is small. A trie reduces the inner work to a single walk per position, giving O(N^2) with no L factor."
+      },
+      "dryRun": "dp[i] = can the first i characters be fully segmented?\nBase case dp[0] = true — the empty prefix is trivially segmentable.\n\n  s = \"leetcode\",  dict = [leet, code]\n\n    dp[4]  = true  via \"leet\"  (dp[0] was true)\n    dp[8]  = true  via \"code\"  (dp[4] was true)\n\n    i    0  1  2  3  4  5  6  7  8\n    dp   T  .  .  .  T  .  .  .  T\n\n    answer = true\n\n\n  s = \"applepenapple\",  dict = [apple, pen]\n\n    dp[5]  = true  via \"apple\"  (dp[0])\n    dp[8]  = true  via \"pen\"    (dp[5])\n    dp[13] = true  via \"apple\"  (dp[8])\n\n    answer = true — note \"apple\" is used twice; words may repeat\n\n\n  The case that defeats greedy:\n  s = \"catsandog\",  dict = [cats, dog, sand, and, cat]\n\n    dp[3] = true  via \"cat\"   (dp[0])\n    dp[4] = true  via \"cats\"  (dp[0])\n    dp[7] = true  via \"sand\"  (dp[3])\n    nothing else becomes reachable\n\n    i    0  1  2  3  4  5  6  7  8  9\n    dp   T  .  .  T  T  .  .  T  .  .\n\n    answer = false\n\nBoth dp[3] and dp[4] are true — \"cat\" and \"cats\" are both valid first\nwords. A greedy that commits to the longer match takes \"cats\", reaches\nindex 4, and then finds nothing starting there. The DP keeps BOTH\nreachable prefixes alive, follows dp[3] onward through \"sand\" to dp[7],\nand only then establishes that index 9 is unreachable from anywhere.\n\nThat is the difference between greedy and DP in one table: greedy picks\none path, DP tracks every reachable state.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Setting `dp[0] = false`, which makes every state false — the empty prefix must be reachable for anything to build on.",
+        "Greedily taking the longest matching word at each step. That fails on \"aaaaab\" with dictionary [\"a\", \"aaaa\"]: taking \"aaaa\" first strands the remainder, and backtracking is required.",
+        "Checking only whether each word *appears* in the string rather than whether it tiles the string exactly, contiguously, from the start.",
+        "Off-by-one in the substring bounds, which is the most common source of silent wrong answers here.",
+        "Using a list for the dictionary and doing linear membership checks inside the inner loop."
+      ],
+      "edgeCases": [
+        "an empty string -> true by the base case, though the problem may exclude it",
+        "no word in the dictionary matching any prefix -> false",
+        "the whole string being a single dictionary word -> true",
+        "words longer than the string, which must be skipped",
+        "reusable words, e.g. \"aaa\" from [\"a\"] -> true, since words may repeat",
+        "\"catsandog\" from [\"cats\",\"dog\",\"sand\",\"and\",\"cat\"] -> false, the classic case that defeats greedy"
+      ],
+      "followUps": [
+        {
+          "q": "Return all possible segmentations rather than a boolean.",
+          "a": "That is Word Break II, and the output can be exponential — so it becomes backtracking with memoisation on the suffix, caching the *list* of segmentations per position. The DP answers \"is it possible\" in linear space; enumerating costs exponential output."
+        },
+        {
+          "q": "Why does greedy fail?",
+          "a": "Because a locally longer match can strand the remainder. \"catsandog\" with [\"cats\",\"dog\",\"sand\",\"and\",\"cat\"] takes \"cats\" then cannot continue, while \"cat\" then \"sand\" then \"og\" also fails — the string genuinely cannot be segmented, and only exhaustive consideration of split points establishes that."
+        },
+        {
+          "q": "How would a trie help?",
+          "a": "Build a trie of the dictionary, then from each position walk forward through the trie one character at a time, marking `dp[j]` true whenever you pass a word-end and `dp[i]` was true. That removes both the dictionary loop and the string comparison, giving O(N^2) with small constants."
+        },
+        {
+          "q": "What if the dictionary were enormous but the string short?",
+          "a": "Iterate the split points rather than the dictionary, and check membership in a hash set — O(N^2) comparisons of O(L) each, independent of dictionary size. Choosing which to loop over based on relative sizes is the practical skill here."
+        }
+      ],
+      "related": [
+        "palindrome-partitioning",
+        "coin-change",
+        "implement-trie-prefix-tree"
+      ],
+      "core": true
     },
     {
       "id": "300",
@@ -375,25 +968,80 @@
         "leetcode": "https://leetcode.com/problems/longest-increasing-subsequence/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=cjWnW0hdVeM"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "DP + Patience Sorting",
+      "patternTriggers": [
+        "The longest **subsequence** with a property — elements may be skipped, so sliding windows and two pointers do not apply.",
+        "Each element's answer depends on all smaller-indexed elements, which gives a natural O(N^2) DP.",
+        "A required O(N log N) signals the patience-sorting trick with binary search."
+      ],
       "keyInsight": "dp[i] = length of LIS ending at i. For O(N log N): maintain a \"tails\" array, binary search for insertion point.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate every subsequence and keep the longest increasing one.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponentially many subsequences. The DP observation is that the longest increasing subsequence *ending at i* depends only on the answers for earlier indices with smaller values — N states instead of 2^N subsequences."
+      },
+      "approach": [
+        "The O(N^2) DP first: `dp[i]` is the length of the longest increasing subsequence ending exactly at index i.",
+        "Initialise every `dp[i]` to 1, since a single element is a subsequence of length 1.",
+        "For each i, look at every j before it; if `nums[j] < nums[i]`, then `dp[i]` can be at least `dp[j] + 1`.",
+        "The answer is the maximum over all `dp[i]`, not `dp[n-1]` — this is an \"ending at i\" state.",
+        "For O(N log N), maintain a `tails` array where `tails[k]` is the smallest possible tail of an increasing subsequence of length k+1.",
+        "For each number, binary search `tails` for the first element greater than or equal to it, and overwrite that position — or append if the number exceeds every tail.",
+        "The answer is the final length of `tails`. Note that `tails` is not itself a valid subsequence; only its length is meaningful."
+      ],
       "code": {
         "python": "# O(N^2) DP\ndef lengthOfLIS(nums):\n    dp = [1] * len(nums)\n    for i in range(1, len(nums)):\n        for j in range(i):\n            if nums[j] < nums[i]:\n                dp[i] = max(dp[i], dp[j] + 1)\n    return max(dp)\n\n# O(N log N) Binary Search\nimport bisect\ndef lengthOfLIS(nums):\n    tails = []\n    for num in nums:\n        pos = bisect.bisect_left(tails, num)\n        if pos == len(tails):\n            tails.append(num)\n        else:\n            tails[pos] = num\n    return len(tails)",
         "cpp": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> tails;\n        for (int n : nums) {\n            auto it = lower_bound(tails.begin(), tails.end(), n);\n            if (it == tails.end()) tails.push_back(n);\n            else *it = n;\n        }\n        return tails.size();\n    }\n};",
         "java": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        List<Integer> tails = new ArrayList<>();\n        for (int n : nums) {\n            int pos = Collections.binarySearch(tails, n);\n            if (pos < 0) pos = -(pos + 1);\n            if (pos == tails.size()) tails.add(n);\n            else tails.set(pos, n);\n        }\n        return tails.size();\n    }\n}",
         "js": "var lengthOfLIS = function(nums) {\n    const tails = [];\n    for (const n of nums) {\n        let l = 0, r = tails.length;\n        while (l < r) { const m = (l+r)>>1; tails[m] < n ? l = m+1 : r = m; }\n        tails[l] = n;\n    }\n    return tails.length;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2) for the DP, O(N log N) with patience sorting",
+        "space": "O(N)",
+        "note": "The DP examines every pair. The patience version does one binary search per element over a list that never exceeds the answer's length. The `tails` array is kept sorted by construction, which is what makes the binary search valid — worth stating, since it is not obvious."
+      },
+      "dryRun": "nums = [10, 9, 2, 5, 3, 7, 101, 18]\n\nO(N^2) DP.   dp[i] = length of the LIS ENDING EXACTLY at index i.\n\n  index      0    1    2    3    4    5    6    7\n  nums      10    9    2    5    3    7  101   18\n  dp         1    1    1    2    2    3    4    4\n\n  dp[3] = 2    because nums[2]=2 < 5, so dp[2]+1\n  dp[5] = 3    via 2, 3, 7\n  dp[6] = 4    via 2, 3, 7, 101\n\n  answer = max(dp) = 4\n\nHere dp[-1] also happens to be 4, which hides the bug. This input does\nnot:\n\n  nums = [1, 2, 3, 0]\n  dp   = [1, 2, 3, 1]\n  max(dp) = 3   but   dp[-1] = 1\n\nBecause the state is \"ending at i\", the answer is the maximum over the\nwhole table. Returning the last entry is the single most common error\non this problem.\n\n\nO(N log N) with patience sorting. tails[k] = the smallest possible tail\nof an increasing subsequence of length k+1.\n\n     10   exceeds every tail -> append    tails = [10]\n      9   replaces 10 at index 0          tails = [9]\n      2   replaces 9  at index 0          tails = [2]\n      5   exceeds every tail -> append    tails = [2, 5]\n      3   replaces 5  at index 1          tails = [2, 3]\n      7   exceeds every tail -> append    tails = [2, 3, 7]\n    101   exceeds every tail -> append    tails = [2, 3, 7, 101]\n     18   replaces 101 at index 3         tails = [2, 3, 7, 18]\n\n  answer = len(tails) = 4\n\nCritically, tails = [2, 3, 7, 18] is NOT a subsequence of the input in\nthat order — 18 comes after 101 in the array. Only the LENGTH of tails\nis meaningful. Keeping each tail as small as possible maximises future\nextension opportunities, which is why replacing is correct, and the\narray stays sorted by construction, which is what licenses the binary\nsearch.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning `dp[n-1]`. The state is \"ending at i\", so the answer is the maximum over the whole table — the single most common bug in this problem.",
+        "Using `<=` instead of `<` when comparing values, which permits equal elements and computes the longest *non-decreasing* subsequence instead.",
+        "Believing the `tails` array is the actual subsequence. It is not — it is a set of best-possible tails, and reconstructing the real subsequence needs a separate parent array.",
+        "In the binary search, looking for the first element strictly greater rather than greater-or-equal, which again admits equal elements.",
+        "Initialising `dp` to 0 instead of 1, which reports 0 for a single-element array."
+      ],
+      "edgeCases": [
+        "a single element -> 1",
+        "a strictly decreasing array -> 1",
+        "a strictly increasing array -> N",
+        "all elements equal -> 1, because the requirement is strict",
+        "duplicates scattered through the array",
+        "[10, 9, 2, 5, 3, 7, 101, 18] -> 4, via 2, 3, 7, 101 or 2, 3, 7, 18"
+      ],
+      "followUps": [
+        {
+          "q": "Why does the patience-sorting approach work?",
+          "a": "`tails[k]` holds the smallest tail achievable by an increasing subsequence of length k+1. Keeping tails as small as possible maximises future extension opportunities, and replacing the first tail that is not smaller than the new number maintains that invariant. The array stays sorted because each entry bounds the next, which licenses the binary search."
+        },
+        {
+          "q": "Recover the actual subsequence.",
+          "a": "In the O(N^2) DP, record which j produced each `dp[i]` and walk back from the best index. In the O(N log N) version, store for each element the position it landed in `tails` plus a predecessor pointer, then trace backwards from the last appended element."
+        },
+        {
+          "q": "What about the longest non-decreasing subsequence?",
+          "a": "Change the comparison to allow equality: in the DP use `<=`, and in the binary search look for the first element strictly greater. One comparison changes the problem — which is exactly why reading the strictness in the statement matters."
+        },
+        {
+          "q": "Where does LIS show up in disguise?",
+          "a": "Russian Doll Envelopes (sort by width, then LIS on heights), Longest Increasing Path variants, and minimum number of operations to make an array sorted. Any problem reducible to \"keep the longest chain under an ordering\" is LIS — and spotting that reduction is usually the whole difficulty."
+        }
+      ],
+      "related": [
+        "longest-common-subsequence",
+        "maximum-subarray",
+        "binary-search"
+      ],
+      "core": true
     },
     {
       "id": "416",
@@ -410,25 +1058,186 @@
         "leetcode": "https://leetcode.com/problems/partition-equal-subset-sum/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=IsvocB5BJhw"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "0/1 Knapsack (Subset Sum)",
+      "patternTriggers": [
+        "Split a collection into groups with **equal sums**, or hit an exact target with a subset.",
+        "Each element is used **at most once**, which is 0/1 knapsack rather than unbounded.",
+        "The words *partition*, *subset sum*, *can you make exactly*."
+      ],
       "keyInsight": "Partition into two equal halves = find subset with sum = total/2. This is 0/1 Knapsack. Use boolean DP: can we make sum j?",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Enumerate all 2^N subsets and check whether any sums to half the total.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Exponentially many subsets, but only O(sum) distinct reachable totals. Many different subsets reach the same sum, so what matters is *which sums are achievable*, not which subsets achieve them — collapsing the state from subsets to sums is the entire optimisation."
+      },
+      "approach": [
+        "Compute the total. If it is odd, no equal partition exists — return false immediately.",
+        "Otherwise the goal is a subset summing to exactly `total / 2`; the remaining elements then automatically sum to the same.",
+        "Define the state: `dp[j]` is true when some subset of the elements seen so far sums to exactly j.",
+        "Initialise `dp[0] = true` — the empty subset makes 0 — and everything else false.",
+        "For each number, iterate the sums **downward** from the target to that number.",
+        "Set `dp[j] = dp[j] or dp[j - num]`.",
+        "Iterating downward is essential: it guarantees `dp[j - num]` still refers to the state *before* this number was considered, so each number is used at most once.",
+        "Return `dp[target]`."
+      ],
       "code": {
         "python": "def canPartition(nums):\n    total = sum(nums)\n    if total % 2: return False\n    target = total // 2\n    dp = set([0])\n    for num in nums:\n        dp = dp | {s + num for s in dp}\n        if target in dp: return True\n    return False",
         "cpp": "class Solution {\npublic:\n    bool canPartition(vector<int>& nums) {\n        int sum = accumulate(nums.begin(), nums.end(), 0);\n        if (sum % 2) return false;\n        int target = sum / 2;\n        vector<bool> dp(target + 1, false);\n        dp[0] = true;\n        for (int n : nums)\n            for (int j = target; j >= n; j--)\n                dp[j] = dp[j] || dp[j - n];\n        return dp[target];\n    }\n};",
         "java": "class Solution {\n    public boolean canPartition(int[] nums) {\n        int sum = Arrays.stream(nums).sum();\n        if (sum % 2 != 0) return false;\n        int target = sum / 2;\n        boolean[] dp = new boolean[target + 1];\n        dp[0] = true;\n        for (int n : nums)\n            for (int j = target; j >= n; j--)\n                dp[j] = dp[j] || dp[j - n];\n        return dp[target];\n    }\n}",
         "js": "var canPartition = function(nums) {\n    const sum = nums.reduce((a, b) => a + b, 0);\n    if (sum % 2) return false;\n    const target = sum / 2;\n    const dp = new Array(target + 1).fill(false);\n    dp[0] = true;\n    for (const n of nums)\n        for (let j = target; j >= n; j--)\n            dp[j] = dp[j] || dp[j - n];\n    return dp[target];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(N * sum)",
+        "space": "O(sum)",
+        "note": "N numbers times half the total sum. This is pseudo-polynomial — linear in the numeric value of the sum, not in the input's bit length — so the problem is tractable only because the constraints bound the values. Subset-sum is NP-complete in general, which is worth saying: this is a bounded special case, not a polynomial algorithm for the general problem."
+      },
+      "dryRun": "nums = [1, 5, 11, 5], total = 22, so the target is 11.\ndp[j] = is a sum of exactly j reachable with the numbers seen so far?\n\nProcess each number, iterating sums DOWNWARD from the target.\n\n  sum      0  1  2  3  4  5  6  7  8  9 10 11\n  start    T  .  .  .  .  .  .  .  .  .  .  .\n  +1       T  T  .  .  .  .  .  .  .  .  .  .\n  +5       T  T  .  .  .  T  T  .  .  .  .  .\n  +11      T  T  .  .  .  T  T  .  .  .  .  T\n  +5       T  T  .  .  .  T  T  .  .  .  T  T\n\n  dp[11] is true  ->  answer true\n\nTwo subsets reach 11: the single 11, and 1 + 5 + 5. Either gives the\npartition {11} and {1, 5, 5}, both summing to 11.\n\nWatch the +5 rows. The first +5 marks sums 5 and 6 (5 alone, and 1+5).\nThe second +5 marks 10 (5+5) and confirms 11 (1+5+5). Each number\ncontributes once per pass, which is exactly what the downward iteration\nguarantees: dp[j - num] is always read from the state BEFORE this\nnumber was considered.\n\nIterate upward instead and the first +5 pass would mark 5, then use\nthat to mark 10, then 15 — reusing the same 5 repeatedly. That silently\nsolves the UNBOUNDED version, and the direction of one loop is the\nentire difference between the two problems.\n\n\nThe quick rejections:\n\n  nums = [1, 2, 3, 5], total = 11   ->  odd, return false immediately\n  nums = [1, 2, 5],    total = 8, target 4\n\n    sum      0  1  2  3  4\n    start    T  .  .  .  .\n    +1       T  T  .  .  .\n    +2       T  T  T  T  .\n    +5       T  T  T  T  .     5 exceeds the target, nothing changes\n\n    dp[4] is false  ->  false",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "start",
+            "+1",
+            "+5",
+            "+11",
+            "+5"
+          ],
+          "colLabels": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11"
+          ],
+          "cells": [
+            [
+              "T",
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              null,
+              "T"
+            ],
+            [
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              "T",
+              "T",
+              null,
+              null,
+              null,
+              "T",
+              "T"
+            ]
+          ],
+          "highlight": [
+            [
+              4,
+              11
+            ]
+          ]
+        },
+        "caption": "nums = [1, 5, 11, 5], total 22, target 11. Each row adds one number and marks the newly reachable sums. After all four, dp[11] is true — via 11 alone, or 1+5+5 — so an equal partition exists."
+      },
+      "pitfalls": [
+        "Iterating the sums **upward**, which lets a number be reused within its own pass and silently solves the unbounded version instead. This is the defining bug, and the direction of one loop is the whole difference.",
+        "Forgetting the odd-total check, which wastes work and can produce a confusing off-by-one target.",
+        "Initialising `dp[0] = false`, which makes the whole table false.",
+        "Stopping the inner loop at 0 rather than at the number's value, which indexes negatively.",
+        "Assuming the two halves must have equal *counts* of elements. Only the sums must match."
+      ],
+      "edgeCases": [
+        "an odd total -> false immediately",
+        "a single element -> false, since one side would be empty",
+        "[1, 1] -> true",
+        "[1, 2, 5] -> false, total 8 but no subset makes 4",
+        "[1, 5, 11, 5] -> true, via 11 and 1+5+5",
+        "a zero in the input, which can sit on either side",
+        "all elements equal with an even count -> true"
+      ],
+      "followUps": [
+        {
+          "q": "Why must the inner loop go downward?",
+          "a": "`dp[j] = dp[j] or dp[j - num]` reads a lower index. Going upward, `dp[j - num]` may already have been updated *in this same pass*, meaning `num` was used twice. Going downward, every value read is from the previous pass, so each number contributes at most once. Upward iteration is exactly how you would write the unbounded version on purpose."
+        },
+        {
+          "q": "Partition into k equal subsets instead of two.",
+          "a": "Much harder. The state becomes which elements are used plus the current bucket's fill, usually a bitmask DP of O(2^N * k). For k = 2 the complement makes one subset determine the other, which is what keeps this problem easy."
+        },
+        {
+          "q": "Minimise the difference between the two sums rather than requiring equality.",
+          "a": "Run the same reachability DP and then find the achievable sum closest to half the total; the answer is `total - 2 * bestSum`. Same table, different query — and it is the Last Stone Weight II problem."
+        },
+        {
+          "q": "Is this problem actually polynomial?",
+          "a": "No. Subset-sum is NP-complete, and O(N * sum) is pseudo-polynomial — it is exponential in the number of *bits* needed to write the sum. The algorithm is practical here only because the constraints cap the values, and saying so shows you understand what the bound means."
+        }
+      ],
+      "related": [
+        "coin-change",
+        "target-sum",
+        "coin-change-ii"
+      ],
+      "core": true
     }
   ]
 }
