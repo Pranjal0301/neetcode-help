@@ -4,18 +4,31 @@
   "icon": "🕸",
   "order": 11,
   "concept": {
-    "heading": "Core Patterns",
-    "body": "",
+    "heading": "Core Concepts",
+    "body": "Most problems in this category are graph problems **in disguise**. A grid is a graph whose nodes are cells and whose edges are the four neighbours — you never build an adjacency list, you just compute neighbours on demand. Course prerequisites are a directed graph. Word transformations are a graph whose nodes are words and whose edges are single-letter changes. Recognising the graph is usually the hard part; once you have, the algorithm is one of four.\n\n**DFS** answers questions about connectivity and structure: how many components, how large is this region, is there a cycle. **BFS** answers questions about distance, because it visits nodes in order of their hop count — so the first time you reach a node is by a shortest path. **Topological sort** orders a directed acyclic graph so every edge points forwards, which is what \"can these dependencies be satisfied\" means. And **union-find** tracks connectivity as edges arrive one at a time, which DFS cannot do without re-running.\n\nTwo tricks recur often enough to name. **Multi-source BFS** seeds the queue with every starting point at once, so one traversal computes the distance to the *nearest* source. And **reversing the question** — instead of asking which cells can reach the border, ask what the border can reach — turns many independent searches into one.",
     "bullets": [
-      "**Grid DFS/BFS:** Flood fill, island problems. 4-directional neighbors.",
-      "**Graph BFS:** Shortest path in unweighted graphs.",
-      "**Topological Sort:** DAG ordering (course schedule).",
-      "**Union-Find:** Connected components, cycle detection in undirected."
+      "**A grid is a graph.** Neighbours are computed, not stored. Keep the four offsets in one array so the direction set is factored out.",
+      "**BFS for shortest path** in an unweighted graph; DFS for components, areas and cycles. BFS's guarantee comes from visiting in hop order — mark nodes visited when you ENQUEUE them, not when you dequeue, or they get added many times.",
+      "**Multi-source BFS:** push every source before the loop starts. One traversal then gives each node its distance to the nearest source.",
+      "**Topological sort** two ways: Kahn's algorithm (repeatedly take a node with in-degree 0) or DFS postorder reversed. Kahn's detects a cycle naturally — if fewer than V nodes come out, one exists.",
+      "**Union-find** for edges arriving incrementally, or for \"are these two connected\" asked many times. With path compression and union by size it is effectively O(1) per operation.",
+      "**Reverse the question** when every node asks about the same destination. Searching outward from the destination once beats searching inward from every node."
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# --- Grid DFS: components, areas, flood fill ---\nDIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))\n\ndef dfs(r, c):\n    if not (0 <= r < rows and 0 <= c < cols):   # bounds FIRST\n        return 0\n    if grid[r][c] != '1':                        # wrong cell or already seen\n        return 0\n    grid[r][c] = '0'                             # mark visited\n    return 1 + sum(dfs(r + dr, c + dc) for dr, dc in DIRS)\n\n# --- BFS: shortest path, level by level ---\nfrom collections import deque\n\nq = deque(sources)                 # ALL sources for multi-source BFS\nseen = set(sources)\nsteps = 0\nwhile q:\n    for _ in range(len(q)):        # snapshot: one level per outer pass\n        r, c = q.popleft()\n        for dr, dc in DIRS:\n            nr, nc = r + dr, c + dc\n            if (nr, nc) in seen or not in_bounds(nr, nc):\n                continue\n            seen.add((nr, nc))     # mark on ENQUEUE, not on dequeue\n            q.append((nr, nc))\n    steps += 1\n\n# --- Topological sort, Kahn's algorithm (BFS on in-degree) ---\nindeg = [0] * n\nadj = [[] for _ in range(n)]\nfor a, b in edges:                 # b must come before a\n    adj[b].append(a)\n    indeg[a] += 1\n\nq = deque(i for i in range(n) if indeg[i] == 0)\norder = []\nwhile q:\n    node = q.popleft()\n    order.append(node)\n    for nxt in adj[node]:\n        indeg[nxt] -= 1\n        if indeg[nxt] == 0:\n            q.append(nxt)\nif len(order) < n:\n    ...                            # fewer than n came out -> a cycle exists\n\n# --- Union-Find with path compression and union by size ---\nparent = list(range(n))\nsize = [1] * n\n\ndef find(x):\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]   # path compression, halving\n        x = parent[x]\n    return x\n\ndef union(a, b):\n    ra, rb = find(a), find(b)\n    if ra == rb:\n        return False                     # already connected -> a cycle\n    if size[ra] < size[rb]:\n        ra, rb = rb, ra\n    parent[rb] = ra\n    size[ra] += size[rb]\n    return True",
+    "cpp": "// --- Grid DFS ---\nconst int DIRS[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};\n\nint dfs(int r, int c) {\n    if (r < 0 || r >= rows || c < 0 || c >= cols) return 0;   // bounds FIRST\n    if (grid[r][c] != '1') return 0;\n    grid[r][c] = '0';                                          // mark visited\n    int area = 1;\n    for (auto& d : DIRS) area += dfs(r + d[0], c + d[1]);\n    return area;\n}\n\n// --- BFS, level by level ---\nqueue<pair<int,int>> q;\nfor (auto& s : sources) { q.push(s); seen[s.first][s.second] = true; }\nint steps = 0;\nwhile (!q.empty()) {\n    int n = q.size();                  // snapshot: one level per outer pass\n    for (int i = 0; i < n; i++) {\n        auto [r, c] = q.front(); q.pop();\n        for (auto& d : DIRS) {\n            int nr = r + d[0], nc = c + d[1];\n            if (!inBounds(nr, nc) || seen[nr][nc]) continue;\n            seen[nr][nc] = true;       // mark on ENQUEUE\n            q.push({nr, nc});\n        }\n    }\n    steps++;\n}\n\n// --- Topological sort, Kahn's ---\nvector<int> indeg(n, 0);\nvector<vector<int>> adj(n);\nfor (auto& e : edges) { adj[e[1]].push_back(e[0]); indeg[e[0]]++; }\nqueue<int> tq;\nfor (int i = 0; i < n; i++) if (!indeg[i]) tq.push(i);\nvector<int> order;\nwhile (!tq.empty()) {\n    int node = tq.front(); tq.pop();\n    order.push_back(node);\n    for (int nxt : adj[node]) if (--indeg[nxt] == 0) tq.push(nxt);\n}\n// order.size() < n  ->  a cycle exists\n\n// --- Union-Find ---\nvector<int> parent(n), sz(n, 1);\niota(parent.begin(), parent.end(), 0);\n\nint find(int x) {\n    while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }\n    return x;\n}\nbool unite(int a, int b) {\n    int ra = find(a), rb = find(b);\n    if (ra == rb) return false;        // already connected -> a cycle\n    if (sz[ra] < sz[rb]) swap(ra, rb);\n    parent[rb] = ra; sz[ra] += sz[rb];\n    return true;\n}",
+    "java": "// --- Grid DFS ---\nstatic final int[][] DIRS = {{1,0},{-1,0},{0,1},{0,-1}};\n\nint dfs(char[][] grid, int r, int c) {\n    if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length) return 0;\n    if (grid[r][c] != '1') return 0;\n    grid[r][c] = '0';                       // mark visited\n    int area = 1;\n    for (int[] d : DIRS) area += dfs(grid, r + d[0], c + d[1]);\n    return area;\n}\n\n// --- BFS, level by level ---\nDeque<int[]> q = new ArrayDeque<>();\nfor (int[] s : sources) { q.add(s); seen[s[0]][s[1]] = true; }\nint steps = 0;\nwhile (!q.isEmpty()) {\n    int n = q.size();                       // snapshot\n    for (int i = 0; i < n; i++) {\n        int[] cur = q.poll();\n        for (int[] d : DIRS) {\n            int nr = cur[0] + d[0], nc = cur[1] + d[1];\n            if (!inBounds(nr, nc) || seen[nr][nc]) continue;\n            seen[nr][nc] = true;            // mark on ENQUEUE\n            q.add(new int[]{nr, nc});\n        }\n    }\n    steps++;\n}\n\n// --- Topological sort, Kahn's ---\nint[] indeg = new int[n];\nList<List<Integer>> adj = new ArrayList<>();\nfor (int i = 0; i < n; i++) adj.add(new ArrayList<>());\nfor (int[] e : edges) { adj.get(e[1]).add(e[0]); indeg[e[0]]++; }\nDeque<Integer> tq = new ArrayDeque<>();\nfor (int i = 0; i < n; i++) if (indeg[i] == 0) tq.add(i);\nList<Integer> order = new ArrayList<>();\nwhile (!tq.isEmpty()) {\n    int node = tq.poll();\n    order.add(node);\n    for (int nxt : adj.get(node)) if (--indeg[nxt] == 0) tq.add(nxt);\n}\n// order.size() < n  ->  a cycle exists\n\n// --- Union-Find ---\nint[] parent = new int[n], size = new int[n];\nfor (int i = 0; i < n; i++) { parent[i] = i; size[i] = 1; }\n\nint find(int x) {\n    while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }\n    return x;\n}\nboolean union(int a, int b) {\n    int ra = find(a), rb = find(b);\n    if (ra == rb) return false;             // already connected -> a cycle\n    if (size[ra] < size[rb]) { int t = ra; ra = rb; rb = t; }\n    parent[rb] = ra; size[ra] += size[rb];\n    return true;\n}",
+    "js": "// --- Grid DFS ---\nconst DIRS = [[1,0],[-1,0],[0,1],[0,-1]];\n\nconst dfs = (grid, r, c) => {\n  if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length) return 0;\n  if (grid[r][c] !== '1') return 0;\n  grid[r][c] = '0';                        // mark visited\n  let area = 1;\n  for (const [dr, dc] of DIRS) area += dfs(grid, r + dr, c + dc);\n  return area;\n};\n\n// --- BFS, level by level. Use an index cursor, NOT shift() ---\nlet q = sources.slice();\nlet steps = 0;\nwhile (q.length) {\n  const next = [];\n  for (const [r, c] of q) {                // whole level at once\n    for (const [dr, dc] of DIRS) {\n      const nr = r + dr, nc = c + dc;\n      if (!inBounds(nr, nc) || seen.has(`${nr},${nc}`)) continue;\n      seen.add(`${nr},${nc}`);             // mark on ENQUEUE\n      next.push([nr, nc]);\n    }\n  }\n  q = next;\n  steps++;\n}\n\n// --- Topological sort, Kahn's ---\nconst indeg = new Array(n).fill(0);\nconst adj = Array.from({ length: n }, () => []);\nfor (const [a, b] of edges) { adj[b].push(a); indeg[a]++; }\nlet frontier = [...indeg.keys()].filter((i) => indeg[i] === 0);\nconst order = [];\nwhile (frontier.length) {\n  const node = frontier.pop();\n  order.push(node);\n  for (const nxt of adj[node]) if (--indeg[nxt] === 0) frontier.push(nxt);\n}\n// order.length < n  ->  a cycle exists\n\n// --- Union-Find ---\nconst parent = [...Array(n).keys()];\nconst size = new Array(n).fill(1);\n\nconst find = (x) => {\n  while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }\n  return x;\n};\nconst union = (a, b) => {\n  let ra = find(a), rb = find(b);\n  if (ra === rb) return false;             // already connected -> a cycle\n  if (size[ra] < size[rb]) [ra, rb] = [rb, ra];\n  parent[rb] = ra; size[ra] += size[rb];\n  return true;\n};"
+  },
+  "recognitionTriggers": [
+    "A **grid** with regions, islands, flooding or spreading. That is DFS or BFS over an implicit graph — no adjacency list needed.",
+    "**Shortest path**, *minimum steps*, *fewest moves* in an unweighted graph. BFS, and mark visited on enqueue.",
+    "**Dependencies** — prerequisites, build order, *can all tasks be completed*. Topological sort, where \"impossible\" means a cycle.",
+    "**Connectivity as edges arrive**, *is this a valid tree*, *how many components*, *which edge creates a cycle*. Union-find.",
+    "An **implicit graph**: the nodes are states (a word, a board position, a tuple) and the edges are legal moves. Word Ladder is the canonical example."
+  ],
   "problems": [
     {
       "id": "200",
@@ -34,10 +47,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=pV2kpPD66nE"
       },
       "pattern": "DFS Flood Fill",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A grid with **connected regions** to count or measure.",
+        "Each region should be visited exactly once, so you need a way to mark cells already seen.",
+        "The words *island*, *region*, *connected component*, *flood fill*, *blob*."
+      ],
       "keyInsight": "For each unvisited '1', start DFS to mark all connected '1's as visited. Count how many times you start a DFS.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every pair of land cells, decide whether they are connected by some path, then count distinct connectivity classes.",
+        "time": "O((M*N)^2) or worse",
+        "space": "O(M*N)",
+        "whyItFails": "It re-derives connectivity for every pair, when one traversal from each unvisited cell already discovers an entire region. The insight is that the *number of times you need to start a traversal* is exactly the number of components."
+      },
+      "approach": [
+        "Walk every cell of the grid.",
+        "When you find a land cell that has not been visited, increment the island count — this is a region you have not seen before.",
+        "Launch a DFS or BFS from it that marks every reachable land cell as visited.",
+        "Mark by overwriting the cell with water, which needs no extra visited grid. If mutating the input is unacceptable, use a separate boolean grid and say why.",
+        "Check bounds before reading the cell, and treat out-of-bounds and water identically — both terminate that branch.",
+        "After the outer loop, the count is the answer."
+      ],
       "code": {
         "python": "def numIslands(grid):\n    rows, cols = len(grid), len(grid[0])\n    count = 0\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or grid[r][c]!=\"1\":\n            return\n        grid[r][c] = \"0\"  # mark visited\n        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1)\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == \"1\":\n                dfs(r, c)\n                count += 1\n    return count",
         "cpp": "class Solution {\npublic:\n    int numIslands(vector<vector<char>>& grid) {\n        int count = 0, m = grid.size(), n = grid[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (grid[i][j] == '1') { dfs(grid, i, j); count++; }\n        return count;\n    }\n    void dfs(vector<vector<char>>& grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.size() || j >= grid[0].size() || grid[i][j] != '1') return;\n        grid[i][j] = '0';\n        dfs(grid, i+1, j); dfs(grid, i-1, j); dfs(grid, i, j+1); dfs(grid, i, j-1);\n    }\n};",
@@ -45,16 +74,112 @@
         "js": "var numIslands = function(grid) {\n    let count = 0;\n    const m = grid.length, n = grid[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || grid[i][j] !== '1') return;\n        grid[i][j] = '0';\n        dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1);\n    };\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (grid[i][j] === '1') { dfs(i, j); count++; }\n    return count;\n};"
       },
       "complexity": {
-        "time": "O(M*N)",
-        "space": "O(M*N) stack"
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Every cell is examined by the outer loop once and visited by a traversal at most once, so the time is linear in the grid. The space is the recursion stack or BFS queue, which in the worst case — a grid that is entirely one snaking island — holds O(M * N) cells. BFS is the safer choice on large grids because the stack cannot overflow."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "grid (1 = land, 0 = water):\n\n       c0 c1 c2 c3\n  r0    1  1  0  0\n  r1    1  1  0  0\n  r2    0  0  1  0\n  r3    0  0  0  1\n\nScan every cell. Start a traversal only on land that has not been seen.\n\n  (0,0) is land and unvisited  ->  island #1\n        flood fill reaches (0,0) (0,1) (1,0) (1,1), marking each as water\n        4 cells consumed\n  (0,1) now water (consumed above)  ->  skip\n  (1,0) (1,1) likewise  ->  skip\n  (2,2) is land and unvisited  ->  island #2, 1 cell\n  (3,3) is land and unvisited  ->  island #3, 1 cell\n\n  answer: 3\n\nThe count is simply the number of times a traversal had to be STARTED.\nEvery cell is examined by the outer loop once and consumed by at most\none flood fill, which is why the whole thing is O(M*N) and not\nquadratic.\n\nThe cells at (2,2) and (3,3) touch only diagonally, so they are two\nseparate islands. If diagonals counted as adjacent the answer would be\n2 — worth confirming which the problem means before coding.\n\nMarking by overwriting with '0' means no separate visited grid is\nneeded. It does mutate the caller's input, which is worth saying out\nloud.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2",
+            "c3"
+          ],
+          "cells": [
+            [
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ]
+          ],
+          "highlight": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "caption": "Three islands. The highlighted 2x2 block is discovered by a single traversal starting at (0,0) — the other two land cells each need their own. The answer is the number of times a traversal has to be started."
+      },
+      "pitfalls": [
+        "Marking cells visited only after dequeuing in BFS. The same cell then gets enqueued by several neighbours, which is still correct but can blow up the queue to O(M*N) duplicates — mark on enqueue.",
+        "Checking the cell value before checking bounds, which reads out of range.",
+        "Counting diagonal neighbours as connected. Unless the problem says so, adjacency is the four orthogonal directions only.",
+        "Mutating the caller's grid without mentioning it. It is the neat solution, but it is a side effect worth declaring.",
+        "Recursing on a 10^3 x 10^3 grid of all land, which overflows the stack in most languages — reach for BFS at that scale."
+      ],
+      "edgeCases": [
+        "an empty grid -> 0",
+        "all water -> 0",
+        "all land -> 1",
+        "a single cell, land or water",
+        "islands touching only diagonally -> counted separately",
+        "a single-row or single-column grid"
+      ],
+      "followUps": [
+        {
+          "q": "What if the grid is too large to hold in memory?",
+          "a": "Process it in horizontal strips and use union-find to stitch components across strip boundaries — only the boundary row needs to be kept. This is roughly how connected-component labelling works on large images."
+        },
+        {
+          "q": "What if land could be added one cell at a time, with the count after each addition?",
+          "a": "DFS would mean re-running on every addition. Union-find handles it incrementally: add the cell, then union it with each already-land neighbour, decrementing the component count for each successful union. That is Number of Islands II, and it is the clearest demonstration of when union-find beats traversal."
+        },
+        {
+          "q": "DFS or BFS here?",
+          "a": "Either is O(M*N). BFS uses an explicit queue so it cannot overflow the stack, which matters on large grids; DFS is shorter to write. Say which you are choosing and why rather than picking silently."
+        },
+        {
+          "q": "Count islands that do not touch the border.",
+          "a": "Flood-fill inward from every border land cell first to eliminate those regions, then count what remains. The same reverse-the-question trick as Surrounded Regions and Pacific Atlantic Water Flow."
+        }
+      ],
+      "related": [
+        "max-area-of-island",
+        "surrounded-regions",
+        "number-of-connected-components"
+      ],
+      "core": true
     },
     {
       "id": "695",
@@ -72,25 +197,78 @@
         "leetcode": "https://leetcode.com/problems/max-area-of-island/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=iJGr1OtmH0c"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "DFS Flood Fill",
+      "patternTriggers": [
+        "A grid with connected regions, where you need a **measurement** of each region rather than just a count.",
+        "The measurement is additive over the region — area, sum of values, number of a particular cell type.",
+        "The words *largest*, *maximum area*, *biggest region*."
+      ],
+      "keyInsight": "The same traversal as Number of Islands, with one change: the DFS **returns the size** of the region it just explored instead of nothing. A cell contributes 1 plus whatever its four neighbours contribute, and out-of-bounds or water contributes 0. Keep the maximum across all starting cells. This is the \"information flows up\" shape from tree recursion applied to a grid — the only reason it feels different is that you also have to mark cells visited, because a grid has cycles and a tree does not.",
+      "bruteForce": {
+        "idea": "Find every region first, storing its cells in a list, then take the longest list.",
+        "time": "O(M*N)",
+        "space": "O(M*N)",
+        "whyItFails": "The same complexity, but it materialises every region's cell list to use only its length. Returning the count up through the recursion gives the same answer with O(1) extra state per frame."
+      },
+      "approach": [
+        "Define a DFS that returns the area of the region reachable from a cell.",
+        "Return 0 immediately if the position is out of bounds or the cell is not land — that is the identity for addition.",
+        "Mark the cell visited before recursing, or the four neighbours will bounce back into it and the recursion will not terminate.",
+        "Return 1 plus the sum of the DFS results for all four neighbours.",
+        "Call it from every cell of the grid, tracking the maximum returned.",
+        "Return that maximum, which is 0 if there is no land at all."
+      ],
       "code": {
         "python": "def maxAreaOfIsland(grid):\n    rows, cols = len(grid), len(grid[0])\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or grid[r][c]!=1:\n            return 0\n        grid[r][c] = 0\n        return 1 + dfs(r+1,c) + dfs(r-1,c) + dfs(r,c+1) + dfs(r,c-1)\n    return max((dfs(r,c) for r in range(rows) for c in range(cols)), default=0)",
         "cpp": "class Solution {\npublic:\n    int maxAreaOfIsland(vector<vector<int>>& grid) {\n        int maxArea = 0, m = grid.size(), n = grid[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (grid[i][j]) maxArea = max(maxArea, dfs(grid, i, j));\n        return maxArea;\n    }\n    int dfs(vector<vector<int>>& grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.size() || j >= grid[0].size() || !grid[i][j]) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(grid,i+1,j) + dfs(grid,i-1,j) + dfs(grid,i,j+1) + dfs(grid,i,j-1);\n    }\n};",
         "java": "class Solution {\n    public int maxAreaOfIsland(int[][] grid) {\n        int maxArea = 0;\n        for (int i = 0; i < grid.length; i++)\n            for (int j = 0; j < grid[0].length; j++)\n                if (grid[i][j] == 1) maxArea = Math.max(maxArea, dfs(grid, i, j));\n        return maxArea;\n    }\n    int dfs(int[][] grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.length || j >= grid[0].length || grid[i][j] == 0) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(grid,i+1,j) + dfs(grid,i-1,j) + dfs(grid,i,j+1) + dfs(grid,i,j-1);\n    }\n}",
         "js": "var maxAreaOfIsland = function(grid) {\n    const m = grid.length, n = grid[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || !grid[i][j]) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(i+1,j) + dfs(i-1,j) + dfs(i,j+1) + dfs(i,j-1);\n    };\n    let max = 0;\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (grid[i][j]) max = Math.max(max, dfs(i, j));\n    return max;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Each cell is visited once across all traversals, because it is marked immediately. The space is the recursion depth, which for a snaking single-region grid is the whole grid — the usual reason to prefer an explicit stack or BFS when the grid is large."
+      },
+      "dryRun": "Same grid as Number of Islands:\n\n       c0 c1 c2 c3\n  r0    1  1  0  0\n  r1    1  1  0  0\n  r2    0  0  1  0\n  r3    0  0  0  1\n\nThe DFS now RETURNS the area instead of nothing. For one cell:\n\n    area(r, c) = 0                            if out of bounds or water\n    area(r, c) = 1 + sum of the four neighbours' areas   otherwise\n\nStarting at (0,0), with each cell marked water on entry:\n\n  area(0,0) = 1 + area(1,0) + area(-1,0) + area(0,1) + area(0,-1)\n       area(1,0) = 1 + area(1,1) + ...\n            area(1,1) = 1 + area(0,1) + ...\n                 area(0,1) = 1 + (all neighbours now water or OOB) = 1\n            so area(1,1) = 2\n       so area(1,0) = 3\n  area(0,0) = 4\n\nThe exact nesting depends on the order the four directions are tried,\nbut the total is always 4 — each cell contributes exactly 1 because it\nis marked on entry and so can never be counted twice.\n\nAll three regions:\n\n  start (0,0) -> area 4      <- the maximum\n  start (2,2) -> area 1\n  start (3,3) -> area 1\n\n  answer: 4\n\nMark on ENTRY, before recursing. Mark afterwards and (0,0) recurses\ninto (0,1), which recurses back into (0,0), until the stack dies.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Marking the cell visited *after* recursing. Neighbour A recurses into B, which recurses back into A, and so on until the stack dies.",
+        "Returning 1 unconditionally and summing, rather than returning 0 for invalid cells — then water and out-of-bounds get counted.",
+        "Initialising the maximum to 1, which reports 1 on an all-water grid.",
+        "Counting a cell twice because the visited mark is written to a copy of the grid rather than the grid itself."
+      ],
+      "edgeCases": [
+        "no land at all -> 0",
+        "all land -> M * N",
+        "a single land cell -> 1",
+        "several regions of equal maximum area",
+        "a 1xN strip",
+        "an empty grid"
+      ],
+      "followUps": [
+        {
+          "q": "What is the largest island you could make by flipping one water cell to land?",
+          "a": "Label each region with an id and record its area in one pass. Then for every water cell, sum the areas of the *distinct* region ids among its neighbours and add 1. Still O(M*N) — the trick is deduplicating the neighbour ids, since two neighbours may belong to the same region."
+        },
+        {
+          "q": "Why does a grid need visited marking when a tree does not?",
+          "a": "Because a grid has cycles — A's neighbour B has A as a neighbour too. A tree's edges point strictly away from the root, so there is nothing to come back to. That single difference is why every grid traversal needs a visited mechanism."
+        },
+        {
+          "q": "Count the perimeter of the largest island rather than its area.",
+          "a": "Each land cell contributes 4 minus the number of its land neighbours. Return that sum from the same recursion instead of the cell count — the structure is unchanged, only the quantity being accumulated differs."
+        },
+        {
+          "q": "What if regions were defined by equal values rather than by land/water?",
+          "a": "Pass the expected value down and compare against it, which is exactly the Flood Fill problem. The traversal is identical; only the predicate for \"is this cell part of my region\" changes."
+        }
+      ],
+      "related": [
+        "number-of-islands",
+        "pacific-atlantic-water-flow",
+        "surrounded-regions"
+      ],
+      "core": true
     },
     {
       "id": "133",
@@ -108,25 +286,79 @@
         "leetcode": "https://leetcode.com/problems/clone-graph/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=mQeF6bN8hMk"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "DFS + Hash Map",
+      "patternTriggers": [
+        "A **deep copy** of a structure whose references can point anywhere, including backwards.",
+        "You need to translate \"original node\" into \"its clone\", which is a lookup — so a map from one to the other.",
+        "The graph has cycles, so the map doubles as the visited set: a key already present means \"already cloned, do not recurse\"."
+      ],
       "keyInsight": "DFS with a hashmap {old_node: new_node}. If already cloned, return existing. Otherwise create clone, recurse on neighbors.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Traverse the graph creating clones, and whenever a neighbour is needed, search the clones created so far for one with a matching value.",
+        "time": "O(V^2)",
+        "space": "O(V)",
+        "whyItFails": "Searching by value is both slow and wrong — node values may repeat, and two distinct nodes with the same value must stay distinct. A map keyed on node *identity* answers the question in O(1) and cannot confuse them."
+      },
+      "approach": [
+        "Keep a map from original node to its clone. This map serves two purposes: the translation table and the visited set.",
+        "On visiting a node, first check the map. If it is already there, return the existing clone — this is what terminates the recursion on a cycle.",
+        "Otherwise create the clone with the same value, and record it in the map **before** recursing.",
+        "Recording before recursing is essential: a neighbour may point back at this node, and it must find the clone already registered.",
+        "For each neighbour, recurse and append the returned clone to this clone's neighbour list.",
+        "Return the clone of the starting node, handling a null input by returning null."
+      ],
       "code": {
         "python": "def cloneGraph(node):\n    old_to_new = {}\n    def dfs(node):\n        if node in old_to_new:\n            return old_to_new[node]\n        clone = Node(node.val)\n        old_to_new[node] = clone\n        clone.neighbors = [dfs(n) for n in node.neighbors]\n        return clone\n    return dfs(node) if node else None",
         "cpp": "class Solution {\npublic:\n    Node* cloneGraph(Node* node) {\n        if (!node) return nullptr;\n        unordered_map<Node*, Node*> map;\n        function<Node*(Node*)> dfs = [&](Node* n) -> Node* {\n            if (map.count(n)) return map[n];\n            map[n] = new Node(n->val);\n            for (auto* nb : n->neighbors) map[n]->neighbors.push_back(dfs(nb));\n            return map[n];\n        };\n        return dfs(node);\n    }\n};",
         "java": "class Solution {\n    Map<Node, Node> map = new HashMap<>();\n    public Node cloneGraph(Node node) {\n        if (node == null) return null;\n        if (map.containsKey(node)) return map.get(node);\n        Node clone = new Node(node.val);\n        map.put(node, clone);\n        for (Node nb : node.neighbors) clone.neighbors.add(cloneGraph(nb));\n        return clone;\n    }\n}",
         "js": "var cloneGraph = function(node) {\n    if (!node) return null;\n    const map = new Map();\n    const dfs = (n) => {\n        if (map.has(n)) return map.get(n);\n        const clone = new Node(n.val);\n        map.set(n, clone);\n        for (const nb of n.neighbors) clone.neighbors.push(dfs(nb));\n        return clone;\n    };\n    return dfs(node);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(V + E)",
+        "space": "O(V)",
+        "note": "Every node is cloned once and every edge is followed once. The map holds V entries, and the recursion depth is O(V) in the worst case of a path-shaped graph — which is the reason to consider an iterative BFS version on large inputs."
+      },
+      "dryRun": "graph: a 4-cycle.  1 - 2 - 3 - 4 - 1\n  adjacency: 1:[2,4]  2:[1,3]  3:[2,4]  4:[1,3]\n\nThe map does double duty — translation table AND visited set. The clone\nis registered BEFORE recursing, which is what terminates the cycle.\n\n  node 1: not in map -> create clone(1), REGISTER IT, then recurse\n    1 -> neighbour 2\n      node 2: not in map -> create clone(2), register, recurse\n        2 -> neighbour 1\n          node 1: already in map -> return clone(1), stop        <--\n        2 -> neighbour 3\n          node 3: not in map -> create clone(3), register, recurse\n            3 -> neighbour 2\n              node 2: already in map -> return clone(2), stop     <--\n            3 -> neighbour 4\n              node 4: not in map -> create clone(4), register, recurse\n                4 -> neighbour 1\n                  node 1: already in map -> return clone(1), stop <--\n                4 -> neighbour 3\n                  node 3: already in map -> return clone(3), stop <--\n    1 -> neighbour 4\n      node 4: already in map -> return clone(4), stop             <--\n\n  cloned adjacency: 1:[2,4]  2:[1,3]  3:[2,4]  4:[1,3]   — identical\n\nEvery line marked <-- is the map acting as the cycle guard. Without\nregistering before recursing, the very first of them — node 2 looking\nback at node 1 — would find nothing in the map, create a SECOND clone\nof node 1, and recurse into node 2 again. The recursion would never\nterminate.\n\nNote the map is keyed on node identity, not value. Two different nodes\nmay hold the same value and must remain two nodes in the copy.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Recursing before putting the clone in the map. On a cycle, the recursion re-enters the same node, finds nothing in the map, creates a second clone, and loops forever.",
+        "Keying the map on node value rather than node identity. Duplicate values then collapse into one node.",
+        "Returning the original node instead of its clone, so the \"copy\" is the input.",
+        "Forgetting the null input case.",
+        "Appending the original neighbours to the clone's list, which leaves the copy pointing into the original graph — a shallow copy wearing a deep copy's clothes."
+      ],
+      "edgeCases": [
+        "null input -> null",
+        "a single node with no neighbours",
+        "a single node with a self-loop",
+        "two nodes pointing at each other",
+        "a disconnected graph — only the component containing the start is reachable, which is what the problem asks for",
+        "several nodes sharing the same value"
+      ],
+      "followUps": [
+        {
+          "q": "Do it iteratively.",
+          "a": "BFS: create the start's clone and enqueue the original. On dequeuing a node, for each neighbour create its clone if absent (and enqueue it), then wire the edge. Same complexity, and no risk of stack overflow on a long chain."
+        },
+        {
+          "q": "How does this relate to Copy List with Random Pointer?",
+          "a": "It is the same problem. Both need a map from original to copy because references can point to nodes not yet created. Recognising them as one idea — \"copy the nodes, then translate the edges\" — is the transferable part."
+        },
+        {
+          "q": "What if the graph were disconnected and you had to clone all of it?",
+          "a": "You would need the full node list rather than a single entry point, then run the same clone from each unvisited node. The problem hands you one node precisely to avoid that, which is worth noticing."
+        },
+        {
+          "q": "What if nodes carried mutable payloads?",
+          "a": "Then \"deep\" has to be defined: copy the payload too, or share it? Shared mutable state means the copy is not independent. Worth asking before coding, because it changes what the caller can safely do with the result."
+        }
+      ],
+      "related": [
+        "copy-list-with-random-pointer",
+        "number-of-connected-components",
+        "course-schedule"
+      ],
+      "core": true
     },
     {
       "id": "286",
@@ -143,24 +375,79 @@
         "leetcode": "https://leetcode.com/problems/walls-and-gates/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=e69C6xhiSQE"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Multi-Source BFS",
+      "patternTriggers": [
+        "Every cell needs its distance to the **nearest** of several sources.",
+        "Running a separate BFS from each cell would repeat almost all the work.",
+        "The words *nearest*, *closest gate*, *shortest distance to any*."
+      ],
       "keyInsight": "Multi-source BFS starting from ALL gates simultaneously. Each empty room gets the distance to its nearest gate.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "From each empty room, run a BFS until a gate is reached, recording the distance.",
+        "time": "O((M*N)^2)",
+        "space": "O(M*N)",
+        "whyItFails": "Every room pays for its own full traversal. Flipping the direction — BFS *outward from all the gates at once* — computes every room's answer in a single pass, because the first time BFS reaches a room it arrives from the nearest gate by construction."
+      },
+      "approach": [
+        "Seed the queue with **every** gate before the loop begins. This is the entire trick.",
+        "Mark gates as distance 0, which they already are.",
+        "Process the queue level by level, each level being one more step from the nearest gate.",
+        "For each dequeued cell, look at its four neighbours.",
+        "If a neighbour is an unvisited empty room, set its distance to the current distance plus one and enqueue it.",
+        "Because BFS expands in hop order from all sources simultaneously, the first assignment to a room is its distance to the nearest gate — so rooms are never updated twice.",
+        "Rooms never reached remain at infinity, meaning no gate can get to them."
+      ],
       "code": {
         "python": "def wallsAndGates(rooms):\n    rows, cols = len(rooms), len(rooms[0])\n    queue = deque()\n    for r in range(rows):\n        for c in range(cols):\n            if rooms[r][c] == 0:\n                queue.append((r, c))\n    while queue:\n        r, c = queue.popleft()\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<rows and 0<=nc<cols and rooms[nr][nc]==2147483647:\n                rooms[nr][nc] = rooms[r][c] + 1\n                queue.append((nr, nc))",
         "cpp": "class Solution {\npublic:\n    void wallsAndGates(vector<vector<int>>& rooms) {\n        int m = rooms.size(), n = rooms[0].size();\n        queue<pair<int,int>> q;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (rooms[i][j] == 0) q.push({i, j});\n        int dirs[] = {0,1,0,-1,0};\n        while (!q.empty()) {\n            auto [r, c] = q.front(); q.pop();\n            for (int d = 0; d < 4; d++) {\n                int ni = r+dirs[d], nj = c+dirs[d+1];\n                if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] == INT_MAX) {\n                    rooms[ni][nj] = rooms[r][c] + 1;\n                    q.push({ni, nj});\n                }\n            }\n        }\n    }\n};",
         "java": "class Solution {\n    public void wallsAndGates(int[][] rooms) {\n        int m = rooms.length, n = rooms[0].length;\n        Queue<int[]> q = new LinkedList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (rooms[i][j] == 0) q.offer(new int[]{i,j});\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!q.isEmpty()) {\n            int[] cell = q.poll();\n            for (int[] d : dirs) {\n                int ni = cell[0]+d[0], nj = cell[1]+d[1];\n                if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] == Integer.MAX_VALUE) {\n                    rooms[ni][nj] = rooms[cell[0]][cell[1]] + 1;\n                    q.offer(new int[]{ni,nj});\n                }\n            }\n        }\n    }\n}",
         "js": "var wallsAndGates = function(rooms) {\n    const m = rooms.length, n = rooms[0].length, q = [];\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (rooms[i][j] === 0) q.push([i,j]);\n    while (q.length) {\n        const [r,c] = q.shift();\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = r+di, nj = c+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] === 2147483647) {\n                rooms[ni][nj] = rooms[r][c] + 1;\n                q.push([ni,nj]);\n            }\n        }\n    }\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Each cell is enqueued at most once because it is marked the moment its distance is set, so the whole grid is traversed once regardless of how many gates there are. Seeding with k gates costs O(M*N) to find them, not O(k) traversals — which is the entire saving over the brute force."
+      },
+      "dryRun": "rooms:  INF = empty, W = wall, 0 = gate\n\n       c0   c1   c2   c3\n  r0   INF   W    0   INF\n  r1   INF  INF  INF   W\n  r2   INF   W   INF   W\n  r3    0    W   INF  INF\n\nSeed the queue with EVERY gate at once: (0,2) and (3,0).\n\n  distance 1:  (1,2) (0,3) (2,0)\n  distance 2:  (2,2) (1,1) (1,0)\n  distance 3:  (3,2) (0,0)\n  distance 4:  (3,3)\n\nfinal:\n\n       c0   c1   c2   c3\n  r0    3    W    0    1\n  r1    2    2    1    W\n  r2    1    W    2    W\n  r3    0    W    3    4\n\nFollow (1,0). It gets distance 2 — reached from the gate at (3,0) via\n(2,0), not from the gate at (0,2), which is further away through the\nwalls. Seeding both gates together is what makes the frontier arrive\nfrom whichever is nearer, with no comparison needed anywhere in the\ncode.\n\nAnd (3,3) takes 4 steps even though it is close to (3,2) — the walls\nforce the path round. The answer is a shortest *path* distance, not a\nstraight-line one.\n\nEvery room is assigned exactly once, at the moment it is enqueued.\nAssign on dequeue instead and several neighbours can enqueue the same\nroom, and a later one may overwrite a smaller distance with a larger.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Running BFS from one gate at a time and taking the minimum. That is correct but back to O(gates * M * N); the point is to seed them all together.",
+        "Marking a room visited on dequeue rather than when its distance is assigned, which lets several neighbours enqueue it and can assign it a larger distance later.",
+        "Overwriting walls or gates. Only empty rooms get distances.",
+        "Assuming every room is reachable. A room walled off entirely keeps its infinity, and that is the correct answer.",
+        "Tracking the step count with a separate counter but forgetting the level snapshot, so all distances come out as the final depth."
+      ],
+      "edgeCases": [
+        "no gates at all -> every room stays at infinity",
+        "no empty rooms -> nothing to do",
+        "a room completely enclosed by walls",
+        "every cell a gate -> all distances 0",
+        "a 1xN grid",
+        "an empty grid"
+      ],
+      "followUps": [
+        {
+          "q": "Why is the first visit guaranteed to be the shortest?",
+          "a": "BFS dequeues nodes in non-decreasing order of distance from the source set. So when a room is first reached, no shorter path to it exists from any source — if one did, that path's nodes would have been dequeued earlier and reached the room sooner. This is the property that makes BFS a shortest-path algorithm on unweighted graphs."
+        },
+        {
+          "q": "What if moving through different cells cost different amounts?",
+          "a": "BFS no longer works, because the first arrival is no longer the cheapest. You need Dijkstra with a priority queue — see Swim in Rising Water and Network Delay Time. With costs restricted to 0 and 1, a deque-based 0-1 BFS gets you back to linear."
+        },
+        {
+          "q": "How is this different from Rotting Oranges?",
+          "a": "Structurally identical — multi-source BFS where levels are time steps. Rotting Oranges asks for the final level count rather than per-cell distances, and additionally has to report -1 when something is unreachable."
+        },
+        {
+          "q": "Could you do it with DFS?",
+          "a": "Not straightforwardly. DFS does not visit in distance order, so a cell's first assignment may not be its minimum — you would have to allow revisits whenever a shorter distance is found, which degrades past linear. The ordering guarantee is specifically BFS's."
+        }
+      ],
+      "related": [
+        "rotting-oranges",
+        "number-of-islands",
+        "network-delay-time"
+      ],
       "core": false
     },
     {
@@ -179,25 +466,118 @@
         "leetcode": "https://leetcode.com/problems/rotting-oranges/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=y704fEOx0s0"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Multi-Source BFS",
+      "patternTriggers": [
+        "Something **spreads simultaneously** from several starting points, one step per unit of time.",
+        "You need the time until everything is affected, which is the number of BFS levels.",
+        "The possibility that some items are never reached, which must be reported rather than ignored."
+      ],
       "keyInsight": "Multi-source BFS from all rotten oranges. Each BFS level = 1 minute. Track fresh count. If fresh remain after BFS, return -1.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Simulate minute by minute: scan the whole grid, rot every fresh orange adjacent to a rotten one, and repeat until nothing changes.",
+        "time": "O((M*N)^2)",
+        "space": "O(1)",
+        "whyItFails": "Each minute rescans the entire grid even though only the cells adjacent to last minute's new rot can change. BFS keeps exactly that frontier in a queue, so each cell is examined a constant number of times in total."
+      },
+      "approach": [
+        "Scan the grid once, enqueueing every rotten orange and counting the fresh ones.",
+        "If there are no fresh oranges, return 0 immediately — nothing needs to happen.",
+        "Process the queue one level at a time; each level is one minute.",
+        "For each rotten orange, check its four neighbours. A fresh neighbour becomes rotten, is enqueued, and the fresh count drops by one.",
+        "Increment the minute counter once per level, not once per orange.",
+        "Only count a minute if that level actually rotted something, or you will overcount by one at the end.",
+        "After the queue empties, return the minutes if the fresh count is zero, otherwise -1 — the remaining oranges are unreachable."
+      ],
       "code": {
         "python": "def orangesRotting(grid):\n    rows, cols = len(grid), len(grid[0])\n    queue, fresh = deque(), 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == 2: queue.append((r, c))\n            elif grid[r][c] == 1: fresh += 1\n    time = 0\n    while queue and fresh:\n        for _ in range(len(queue)):\n            r, c = queue.popleft()\n            for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n                nr, nc = r+dr, c+dc\n                if 0<=nr<rows and 0<=nc<cols and grid[nr][nc]==1:\n                    grid[nr][nc] = 2\n                    fresh -= 1\n                    queue.append((nr, nc))\n        time += 1\n    return time if fresh == 0 else -1",
         "cpp": "class Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size(), n = grid[0].size(), fresh = 0, time = 0;\n        queue<pair<int,int>> q;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) q.push({i, j});\n                else if (grid[i][j] == 1) fresh++;\n            }\n        int dirs[] = {0,1,0,-1,0};\n        while (!q.empty() && fresh > 0) {\n            int sz = q.size();\n            while (sz--) {\n                auto [r, c] = q.front(); q.pop();\n                for (int d = 0; d < 4; d++) {\n                    int ni = r+dirs[d], nj = c+dirs[d+1];\n                    if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]==1) {\n                        grid[ni][nj] = 2; fresh--; q.push({ni, nj});\n                    }\n                }\n            }\n            time++;\n        }\n        return fresh == 0 ? time : -1;\n    }\n};",
         "java": "class Solution {\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length, fresh = 0, time = 0;\n        Queue<int[]> q = new LinkedList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) q.offer(new int[]{i,j});\n                else if (grid[i][j] == 1) fresh++;\n            }\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!q.isEmpty() && fresh > 0) {\n            int sz = q.size();\n            while (sz-- > 0) {\n                int[] cell = q.poll();\n                for (int[] d : dirs) {\n                    int ni = cell[0]+d[0], nj = cell[1]+d[1];\n                    if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]==1) {\n                        grid[ni][nj] = 2; fresh--; q.offer(new int[]{ni,nj});\n                    }\n                }\n            }\n            time++;\n        }\n        return fresh == 0 ? time : -1;\n    }\n}",
         "js": "var orangesRotting = function(grid) {\n    const m = grid.length, n = grid[0].length, q = [];\n    let fresh = 0, time = 0;\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++) {\n            if (grid[i][j] === 2) q.push([i,j]);\n            else if (grid[i][j] === 1) fresh++;\n        }\n    while (q.length && fresh > 0) {\n        const sz = q.length;\n        for (let s = 0; s < sz; s++) {\n            const [r,c] = q.shift();\n            for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n                const ni = r+di, nj = c+dj;\n                if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]===1) {\n                    grid[ni][nj] = 2; fresh--; q.push([ni,nj]);\n                }\n            }\n        }\n        time++;\n    }\n    return fresh === 0 ? time : -1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Every cell is enqueued at most once, since it is marked rotten when enqueued. The queue can hold O(M*N) cells if the whole grid rots at once. Seeding all the sources together is what keeps this to a single traversal rather than one per rotten orange."
+      },
+      "dryRun": "grid:  2 = rotten, 1 = fresh, 0 = empty\n\n       c0 c1 c2\n  r0    2  1  1\n  r1    1  1  0\n  r2    0  1  1\n\nFirst pass: seed the queue with every rotten orange, count the fresh.\n\n  queue = [(0,0)],  fresh = 6\n\nThen one BFS level per minute:\n\n  minute 1:  rots (1,0) and (0,1)      fresh left = 4\n  minute 2:  rots (1,1) and (0,2)      fresh left = 2\n  minute 3:  rots (2,1)                fresh left = 1\n  minute 4:  rots (2,2)                fresh left = 0\n\n  queue empties, fresh == 0  ->  answer 4\n\nWatch (2,2). It is adjacent to (2,1), which only rots at minute 3, so\nit cannot rot before minute 4 — even though (1,2) looks nearby, (1,2)\nis empty and rot cannot cross it. That is why this is a shortest-path\nproblem and not a distance formula.\n\nThe minute counter increments once per LEVEL, not once per orange.\nMinute 2 rots two oranges simultaneously, which is the whole point of\nprocessing a level at a time.\n\nNow the failure case:\n\n       c0 c1 c2\n  r0    2  1  1\n  r1    0  1  1\n  r2    1  0  1          (2,0) is fresh but sealed off by empties\n\n  The BFS drains with fresh still greater than 0  ->  return -1\n\nChecking the leftover fresh count is what distinguishes \"finished\" from\n\"got stuck\"; the level count alone cannot tell you.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2"
+          ],
+          "cells": [
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              1
+            ]
+          ],
+          "highlight": [
+            [
+              0,
+              0
+            ]
+          ]
+        },
+        "caption": "2 = rotten, 1 = fresh, 0 = empty. BFS from the single rotten cell at (0,0) takes 4 minutes to reach (2,2) — the path must route around the empty cells, which is why the answer is a shortest-path distance and not a straight-line one."
+      },
+      "pitfalls": [
+        "Returning the level count without checking for leftover fresh oranges, which reports success when some were walled off.",
+        "Counting a minute for the final level, when that level only confirmed there was nothing left to rot — guard the increment on whether anything actually changed.",
+        "Forgetting the zero-fresh-oranges case, which should return 0 and not -1 even if there are no rotten ones either.",
+        "Marking a cell rotten on dequeue rather than enqueue, which lets it be enqueued several times.",
+        "Treating empty cells as passable for rot. Rot spreads only through fresh oranges."
+      ],
+      "edgeCases": [
+        "no fresh oranges -> 0, regardless of rotten ones",
+        "no rotten oranges but some fresh -> -1",
+        "a fresh orange isolated by empty cells -> -1",
+        "an entirely empty grid -> 0",
+        "all oranges already rotten -> 0",
+        "a single cell"
+      ],
+      "followUps": [
+        {
+          "q": "Which oranges never rot, rather than just how many?",
+          "a": "After the BFS, any cell still holding a 1 is unreachable — scan and collect them. No extra traversal needed, which is a nice property of having mutated the grid in place."
+        },
+        {
+          "q": "What if rot spread diagonally too?",
+          "a": "Add the four diagonal offsets to the direction list. The complexity is unchanged; only the neighbour set grows — a good sign the directions were factored into one array rather than written out four times."
+        },
+        {
+          "q": "What if different oranges rotted at different rates?",
+          "a": "Levels are no longer uniform time steps, so BFS's ordering guarantee breaks. You would need Dijkstra with a priority queue keyed on arrival time, which is the general weighted version of this problem."
+        },
+        {
+          "q": "Why does seeding all sources at once give the right answer?",
+          "a": "Because BFS from a set of sources computes, for every cell, its distance to the *nearest* source — the frontier expands outward from all of them simultaneously. That is exactly \"how long until this orange rots\", since rot arrives from whichever rotten orange is closest."
+        }
+      ],
+      "related": [
+        "walls-and-gates",
+        "number-of-islands",
+        "word-ladder"
+      ],
+      "core": true
     },
     {
       "id": "417",
@@ -214,25 +594,78 @@
         "leetcode": "https://leetcode.com/problems/pacific-atlantic-water-flow/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=s-VkcjHqkGI"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Reverse DFS from Borders",
+      "patternTriggers": [
+        "Every cell asks the same question about reaching a **common destination** — so one search from the destination replaces many searches from the cells.",
+        "Two or more destinations, and you need the cells that can reach all of them, which is a set intersection.",
+        "The words *can flow to*, *reaches the border*, *escapes*."
+      ],
       "keyInsight": "DFS from ocean borders inward (reverse flow). Cell reachable from BOTH oceans is in the answer. Two visited sets, return intersection.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "From each cell, run a DFS downhill and check whether it reaches the Pacific border and whether it reaches the Atlantic border.",
+        "time": "O((M*N)^2)",
+        "space": "O(M*N)",
+        "whyItFails": "Every cell pays for its own traversal, and neighbouring cells repeat almost identical work. Reversing the direction fixes it: instead of asking \"can this cell flow to the ocean\", ask \"which cells can the ocean reach if water flowed uphill\" — one traversal per ocean answers it for every cell at once."
+      },
+      "approach": [
+        "Reverse the relation. Water flows from high to low, so start at each ocean's border cells and move only to neighbours that are **at least as high**.",
+        "Run a DFS or BFS from every Pacific border cell — the top row and left column — collecting everything reachable into a `pacific` set.",
+        "Do the same from every Atlantic border cell — the bottom row and right column — into an `atlantic` set.",
+        "Each traversal marks visited cells so no cell is explored twice per ocean.",
+        "The answer is the intersection: cells present in both sets.",
+        "Return them as coordinate pairs."
+      ],
       "code": {
         "python": "def pacificAtlantic(heights):\n    rows, cols = len(heights), len(heights[0])\n    pac, atl = set(), set()\n    def dfs(r, c, visit, prev_h):\n        if (r,c) in visit or r<0 or r>=rows or c<0 or c>=cols or heights[r][c]<prev_h:\n            return\n        visit.add((r,c))\n        for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            dfs(r+dr, c+dc, visit, heights[r][c])\n    for c in range(cols):\n        dfs(0, c, pac, 0); dfs(rows-1, c, atl, 0)\n    for r in range(rows):\n        dfs(r, 0, pac, 0); dfs(r, cols-1, atl, 0)\n    return list(pac & atl)",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {\n        int m = heights.size(), n = heights[0].size();\n        vector<vector<bool>> pac(m, vector<bool>(n)), atl(m, vector<bool>(n));\n        for (int i = 0; i < m; i++) { dfs(heights, pac, i, 0); dfs(heights, atl, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(heights, pac, 0, j); dfs(heights, atl, m-1, j); }\n        vector<vector<int>> result;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (pac[i][j] && atl[i][j]) result.push_back({i, j});\n        return result;\n    }\n    void dfs(vector<vector<int>>& h, vector<vector<bool>>& v, int i, int j) {\n        if (v[i][j]) return;\n        v[i][j] = true;\n        int dirs[] = {0,1,0,-1,0};\n        for (int d = 0; d < 4; d++) {\n            int ni = i+dirs[d], nj = j+dirs[d+1];\n            if (ni >= 0 && nj >= 0 && ni < h.size() && nj < h[0].size() && h[ni][nj] >= h[i][j])\n                dfs(h, v, ni, nj);\n        }\n    }\n};",
         "java": "class Solution {\n    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n    public List<List<Integer>> pacificAtlantic(int[][] heights) {\n        int m = heights.length, n = heights[0].length;\n        boolean[][] pac = new boolean[m][n], atl = new boolean[m][n];\n        for (int i = 0; i < m; i++) { dfs(heights, pac, i, 0); dfs(heights, atl, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(heights, pac, 0, j); dfs(heights, atl, m-1, j); }\n        List<List<Integer>> result = new ArrayList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (pac[i][j] && atl[i][j]) result.add(Arrays.asList(i, j));\n        return result;\n    }\n    void dfs(int[][] h, boolean[][] v, int i, int j) {\n        if (v[i][j]) return;\n        v[i][j] = true;\n        for (int[] d : dirs) {\n            int ni = i+d[0], nj = j+d[1];\n            if (ni >= 0 && nj >= 0 && ni < h.length && nj < h[0].length && h[ni][nj] >= h[i][j])\n                dfs(h, v, ni, nj);\n        }\n    }\n}",
         "js": "var pacificAtlantic = function(heights) {\n    const m = heights.length, n = heights[0].length;\n    const pac = Array.from({length:m}, () => new Array(n).fill(false));\n    const atl = Array.from({length:m}, () => new Array(n).fill(false));\n    const dfs = (vis, i, j) => {\n        if (vis[i][j]) return;\n        vis[i][j] = true;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && heights[ni][nj]>=heights[i][j]) dfs(vis,ni,nj);\n        }\n    };\n    for (let i = 0; i < m; i++) { dfs(pac,i,0); dfs(atl,i,n-1); }\n    for (let j = 0; j < n; j++) { dfs(pac,0,j); dfs(atl,m-1,j); }\n    const result = [];\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (pac[i][j] && atl[i][j]) result.push([i,j]);\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Two traversals, each visiting every cell at most once, plus the intersection scan. The two visited sets are the space. The quadratic brute force becomes linear purely by reversing the direction of the search — no cleverer traversal is needed."
+      },
+      "dryRun": "heights:\n\n       c0 c1 c2 c3 c4\n  r0    1  2  2  3  5\n  r1    3  2  3  4  4\n  r2    2  4  5  3  1\n  r3    6  7  1  4  5\n  r4    5  1  1  2  4\n\nPacific borders the top row and left column; Atlantic the bottom row\nand right column.\n\nThe search runs OUTWARD from each ocean, moving only to neighbours of\nGREATER OR EQUAL height — the reverse of water flowing downhill.\n\n  traversal from the Pacific border reaches 16 cells\n  traversal from the Atlantic border reaches 16 cells\n\n  intersection (7 cells):\n    (0,4) (1,3) (1,4) (2,2) (3,0) (3,1) (4,0)\n\nTake (2,2), height 5. Flowing downhill it can reach the Pacific via\n5 -> 2(1,1)... but easier to see reversed: the Pacific traversal climbs\nto it, and so does the Atlantic traversal. Being in both sets means\nboth oceans can climb to it, which means it can flow down to both.\n\nThe inequality direction is the thing to get right. Flowing downhill is\n\"neighbour <= current\"; climbing outward from the ocean is\n\"neighbour >= current\". Keep the downhill comparison after reversing\nthe search and the answer collapses to just the border cells.\n\nTwo separate visited sets are also essential. Share one and the second\ntraversal stops at cells the first already claimed, massively\nunder-reporting.\n\nThe brute force would run a traversal from each of the 25 cells. This\nruns two, for the same answer.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Keeping the comparison as \"strictly lower\" after reversing. Going *outward* from the ocean you move to cells of **greater or equal** height; flipping the inequality is the step people forget.",
+        "Using one shared visited set for both oceans, which makes the second traversal stop early and under-report.",
+        "Forgetting that corner cells belong to both oceans' border sets.",
+        "Comparing against the border cell's height rather than the current cell's, so the monotonic condition is checked against the wrong neighbour.",
+        "Not handling equal heights, which must be traversable — water can sit level."
+      ],
+      "edgeCases": [
+        "a 1x1 grid -> that cell touches both oceans",
+        "a single row or single column -> every cell touches both",
+        "all heights equal -> every cell reaches both oceans",
+        "a strictly increasing grid, where only the border cells qualify",
+        "an empty grid -> empty result"
+      ],
+      "followUps": [
+        {
+          "q": "Why is reversing the search valid?",
+          "a": "\"A can flow to B\" means there is a non-increasing path from A to B. Reversed, that is a non-decreasing path from B to A. So the set of cells that can flow to the ocean is exactly the set reachable from the ocean under the flipped inequality — the relation is the same, read backwards."
+        },
+        {
+          "q": "What if there were a third ocean?",
+          "a": "One more traversal and a three-way intersection. The cost is linear in the number of destinations rather than the number of cells, which is precisely why reversing scales."
+        },
+        {
+          "q": "Where else does this trick apply?",
+          "a": "Anywhere many sources share few destinations. Surrounded Regions flood-fills inward from the border instead of testing each region for enclosure. Walls and Gates seeds BFS at the gates rather than the rooms. The question to ask is always: are there fewer destinations than sources?"
+        },
+        {
+          "q": "DFS or BFS for the traversals?",
+          "a": "Either — you are computing reachability, not distance, so the order does not matter. BFS avoids deep recursion on a large grid, which is the only practical consideration."
+        }
+      ],
+      "related": [
+        "surrounded-regions",
+        "number-of-islands",
+        "walls-and-gates"
+      ],
+      "core": true
     },
     {
       "id": "130",
@@ -249,24 +682,78 @@
         "leetcode": "https://leetcode.com/problems/surrounded-regions/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=9z2BunfoZ5Y"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Border DFS + Mark Safe",
+      "patternTriggers": [
+        "A region qualifies based on **not** touching something — enclosed, surrounded, trapped.",
+        "Proving a negative for each region is awkward; proving the positive for the few exceptions is easy.",
+        "The words *surrounded*, *enclosed*, *does not reach the border*."
+      ],
       "keyInsight": "DFS from border 'O's, mark them as safe. Then flip all remaining 'O' to 'X' (they're surrounded). Restore safe ones.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each region of 'O's, traverse it and check whether any of its cells lies on the border; if not, flip the whole region.",
+        "time": "O(M*N)",
+        "space": "O(M*N)",
+        "whyItFails": "This one actually works and is the same complexity — it is a legitimate solution. The border-first version is preferred because it needs no per-region bookkeeping: instead of collecting each region and then deciding, you mark the exceptions once and flip everything else unconditionally."
+      },
+      "approach": [
+        "Observe that a region is safe exactly when it touches the border, so identify the safe ones directly.",
+        "Traverse from every 'O' on the border — top and bottom rows, left and right columns.",
+        "Mark every cell reached with a temporary sentinel such as '#'. These are the regions connected to the outside.",
+        "Then sweep the whole grid: every remaining 'O' is enclosed, so flip it to 'X'.",
+        "Every '#' is a safe cell, so restore it to 'O'.",
+        "Both passes are unconditional, which is what makes this simpler than deciding per region."
+      ],
       "code": {
         "python": "def solve(board):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or board[r][c]!=\"O\": return\n        board[r][c] = \"S\"  # safe\n        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1)\n    for r in range(rows):\n        for c in range(cols):\n            if (r in [0,rows-1] or c in [0,cols-1]) and board[r][c]==\"O\":\n                dfs(r, c)\n    for r in range(rows):\n        for c in range(cols):\n            if board[r][c] == \"O\": board[r][c] = \"X\"\n            elif board[r][c] == \"S\": board[r][c] = \"O\"",
         "cpp": "class Solution {\npublic:\n    void solve(vector<vector<char>>& board) {\n        int m = board.size(), n = board[0].size();\n        for (int i = 0; i < m; i++) { dfs(board, i, 0); dfs(board, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(board, 0, j); dfs(board, m-1, j); }\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                board[i][j] = board[i][j] == 'T' ? 'O' : 'X';\n    }\n    void dfs(vector<vector<char>>& b, int i, int j) {\n        if (i < 0 || j < 0 || i >= b.size() || j >= b[0].size() || b[i][j] != 'O') return;\n        b[i][j] = 'T';\n        dfs(b,i+1,j); dfs(b,i-1,j); dfs(b,i,j+1); dfs(b,i,j-1);\n    }\n};",
         "java": "class Solution {\n    public void solve(char[][] board) {\n        int m = board.length, n = board[0].length;\n        for (int i = 0; i < m; i++) { dfs(board,i,0); dfs(board,i,n-1); }\n        for (int j = 0; j < n; j++) { dfs(board,0,j); dfs(board,m-1,j); }\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                board[i][j] = board[i][j] == 'T' ? 'O' : 'X';\n    }\n    void dfs(char[][] b, int i, int j) {\n        if (i < 0 || j < 0 || i >= b.length || j >= b[0].length || b[i][j] != 'O') return;\n        b[i][j] = 'T';\n        dfs(b,i+1,j); dfs(b,i-1,j); dfs(b,i,j+1); dfs(b,i,j-1);\n    }\n}",
         "js": "var solve = function(board) {\n    const m = board.length, n = board[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] !== 'O') return;\n        board[i][j] = 'T';\n        dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1);\n    };\n    for (let i = 0; i < m; i++) { dfs(i,0); dfs(i,n-1); }\n    for (let j = 0; j < n; j++) { dfs(0,j); dfs(m-1,j); }\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            board[i][j] = board[i][j] === 'T' ? 'O' : 'X';\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M * N)",
+        "note": "Two linear sweeps plus the border traversals, each cell visited a constant number of times. Space is the recursion or queue for the flood fill; the sentinel marking means no separate visited grid is needed."
+      },
+      "dryRun": "board:\n\n       c0 c1 c2 c3\n  r0    X  X  X  X\n  r1    X  O  O  X\n  r2    X  X  O  X\n  r3    X  O  X  X\n\nStep 1 — find the 'O's on the border. Only (3,1) qualifies.\n\nStep 2 — flood fill from it, marking with '#':\n\n       c0 c1 c2 c3\n  r0    X  X  X  X\n  r1    X  O  O  X\n  r2    X  X  O  X\n  r3    X  #  X  X\n\n(3,1) has no 'O' neighbours, so its region is just itself. The three\n'O's at (1,1) (1,2) (2,2) were never reached — they are enclosed.\n\nStep 3 — one unconditional sweep:  every 'O' becomes 'X', every '#'\nbecomes 'O'.\n\n       c0 c1 c2 c3\n  r0    X  X  X  X\n  r1    X  X  X  X\n  r2    X  X  X  X\n  r3    X  O  X  X\n\nThe interior region is captured; the border-connected one survives.\n\nThe third symbol is what makes the final sweep unconditional. With only\n'X' and 'O' there would be no way to distinguish a safe 'O' from an\nenclosed one, and you would be back to deciding region by region.\n\nNote the direction of reasoning. \"Enclosed\" is a property of a whole\nregion and awkward to test; \"connected to the border\" is testable from\na known starting point. Marking the exceptions and flipping the rest by\nelimination is the reusable move — the same one behind Pacific Atlantic\nWater Flow.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Choosing a sentinel that collides with real values. It must be a third symbol — reusing 'X' makes safe cells indistinguishable from captured ones.",
+        "Forgetting to restore the sentinels in the final sweep, leaving '#' in the output.",
+        "Starting the traversal from interior cells, which defeats the point — only border 'O's seed it.",
+        "Missing one of the four borders, or double-handling the corners, which is harmless but a sign the loop bounds were not thought through.",
+        "Flipping during the first traversal instead of marking, which loses the information needed by the second sweep."
+      ],
+      "edgeCases": [
+        "a grid with no 'O's -> unchanged",
+        "all 'O's -> all safe, since the border ones connect everything",
+        "a single row or column -> every cell is on the border, so nothing is captured",
+        "an 'O' region touching the border at exactly one cell -> entirely safe",
+        "a 1x1 grid",
+        "an empty grid"
+      ],
+      "followUps": [
+        {
+          "q": "Why mark the exceptions rather than find the enclosed regions?",
+          "a": "Because \"enclosed\" is a property of a whole region, so testing it directly means collecting the region first and then deciding. \"Connected to the border\" is testable from a known starting point, so one traversal settles it and everything unmarked is enclosed by elimination. Turning a negative into a positive is the reusable move."
+        },
+        {
+          "q": "Could you use union-find?",
+          "a": "Yes — union every adjacent pair of 'O's, plus a virtual node representing the outside that all border 'O's union with. Then any cell not connected to the virtual node is captured. Slightly more machinery, but it is the natural choice if cells could change over time."
+        },
+        {
+          "q": "How does this relate to Number of Islands?",
+          "a": "Same flood fill, different seeding. Islands starts from every unvisited land cell to count components; this starts only from the border to identify a specific set. Noticing that the seeding is the variable part is what makes grid problems quick."
+        },
+        {
+          "q": "What if diagonal connectivity counted?",
+          "a": "Add the diagonal offsets. Far more regions would then touch the border, so fewer get captured — worth stating as a clarifying question, since the problem's answer changes substantially."
+        }
+      ],
+      "related": [
+        "pacific-atlantic-water-flow",
+        "number-of-islands",
+        "max-area-of-island"
+      ],
       "core": false
     },
     {
@@ -284,25 +771,80 @@
         "leetcode": "https://leetcode.com/problems/course-schedule/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=EgI5nU9etnU"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Cycle Detection / Topological Sort",
+      "patternTriggers": [
+        "**Dependencies** — prerequisites, build order, task ordering. That is a directed graph.",
+        "The question is whether a valid order exists, which is exactly \"is this graph acyclic\".",
+        "The words *can you finish*, *is it possible to complete*, *circular dependency*."
+      ],
       "keyInsight": "Cycle detection in directed graph. If cycle exists, can't finish all courses. Use DFS with 3 states: unvisited, in-progress, completed.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every ordering of the courses and check whether any satisfies all the prerequisites.",
+        "time": "O(N! * E)",
+        "space": "O(N)",
+        "whyItFails": "Hopeless beyond a handful of courses, and it answers a harder question than asked. You do not need to *find* an order, only to know one exists — and that is true precisely when the graph has no cycle, which one traversal can determine."
+      },
+      "approach": [
+        "Build an adjacency list: an edge from each prerequisite to the course that depends on it.",
+        "Run a DFS with **three** states per node: unvisited, in-progress, and finished.",
+        "Mark a node in-progress on entry, then recurse into its neighbours.",
+        "Encountering an in-progress node means you have returned to something on the current path — a cycle. Return false.",
+        "Encountering a finished node means it was explored on an earlier path and led to no cycle, so skip it.",
+        "Mark the node finished on exit. Skipping finished nodes is what keeps this linear rather than exponential.",
+        "Alternatively use Kahn's algorithm: repeatedly remove a node with in-degree 0, and if fewer than N nodes come out, a cycle exists."
+      ],
       "code": {
         "python": "def canFinish(numCourses, prerequisites):\n    adj = defaultdict(list)\n    for crs, pre in prerequisites:\n        adj[crs].append(pre)\n    # 0=unvisited, 1=in-progress, 2=done\n    state = [0] * numCourses\n    def dfs(crs):\n        if state[crs] == 1: return False  # cycle!\n        if state[crs] == 2: return True   # already verified\n        state[crs] = 1\n        for pre in adj[crs]:\n            if not dfs(pre): return False\n        state[crs] = 2\n        return True\n    return all(dfs(c) for c in range(numCourses))",
         "cpp": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> indegree(numCourses, 0);\n        for (auto& p : prerequisites) { graph[p[1]].push_back(p[0]); indegree[p[0]]++; }\n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.push(i);\n        int count = 0;\n        while (!q.empty()) {\n            int cur = q.front(); q.pop(); count++;\n            for (int next : graph[cur]) if (--indegree[next] == 0) q.push(next);\n        }\n        return count == numCourses;\n    }\n};",
         "java": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> graph = new ArrayList<>();\n        int[] indegree = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());\n        for (int[] p : prerequisites) { graph.get(p[1]).add(p[0]); indegree[p[0]]++; }\n        Queue<Integer> q = new LinkedList<>();\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.offer(i);\n        int count = 0;\n        while (!q.isEmpty()) {\n            int cur = q.poll(); count++;\n            for (int next : graph.get(cur)) if (--indegree[next] == 0) q.offer(next);\n        }\n        return count == numCourses;\n    }\n}",
         "js": "var canFinish = function(numCourses, prerequisites) {\n    const graph = Array.from({length: numCourses}, () => []);\n    const indegree = new Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) { graph[b].push(a); indegree[a]++; }\n    const q = [];\n    for (let i = 0; i < numCourses; i++) if (indegree[i] === 0) q.push(i);\n    let count = 0;\n    while (q.length) {\n        const cur = q.shift(); count++;\n        for (const next of graph[cur]) if (--indegree[next] === 0) q.push(next);\n    }\n    return count === numCourses;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(V + E)",
+        "space": "O(V + E)",
+        "note": "Every node and edge is examined once, because the finished state prevents re-exploration. The space is the adjacency list plus the state array and recursion stack. V is the course count and E the number of prerequisite pairs."
+      },
+      "dryRun": "Using Kahn's algorithm. A pair [a, b] means \"b must be taken before a\",\nso the edge runs b -> a.\n\nAcyclic case:  n = 4, prereqs = [[1,0], [2,1], [3,2]]\n\n  edges prereq -> course:  0 -> 1,  1 -> 2,  2 -> 3\n  in-degrees:              [0, 1, 1, 1]\n  start queue:             [0]        (only course 0 needs nothing)\n\n    take 0   in-degrees now [0, 0, 1, 1]   frees 1\n    take 1   in-degrees now [0, 0, 0, 1]   frees 2\n    take 2   in-degrees now [0, 0, 0, 0]   frees 3\n    take 3\n\n  4 courses came out of 4  ->  true\n\n\nCyclic case:  n = 2, prereqs = [[1,0], [0,1]]\n\n  edges:        0 -> 1  and  1 -> 0\n  in-degrees:   [1, 1]\n  start queue:  []          nothing has in-degree 0\n\n  0 courses came out of 2  ->  false\n\nThe cycle test is just the count. Nothing had in-degree 0, so nothing\ncould ever start, and the queue was empty before the loop began.\n\nWith the DFS formulation instead, the three states matter:\n\n  unvisited    not yet explored\n  in-progress  on the CURRENT path — reaching it again closes a cycle\n  finished     fully explored below, no cycle found, safe to skip\n\nWith only two states, a node reachable by two different paths looks\nlike a cycle on the second visit, and a diamond-shaped prerequisite\ngraph is wrongly rejected. Distinguishing \"on my current path\" from\n\"already done\" is the entire reason for three.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using only two states, visited and not. Then a node reachable by two different paths looks like a cycle, and the answer is wrongly false — the distinction between \"on the current path\" and \"already finished\" is the whole point.",
+        "Forgetting to clear the in-progress mark, or rather to promote it to finished, so later paths misread it.",
+        "Building the edges in the wrong direction. It does not affect cycle detection, but it does affect the order in Course Schedule II, so get it right from the start.",
+        "Not handling courses with no prerequisites at all, which may never appear in the edge list but still exist.",
+        "Recursing on a graph with 10^5 nodes, which can overflow the stack — Kahn's iterative version avoids it."
+      ],
+      "edgeCases": [
+        "no prerequisites at all -> true",
+        "a self-dependency, a course requiring itself -> false",
+        "two courses requiring each other -> false",
+        "a disconnected graph, where each component must be checked",
+        "duplicate prerequisite pairs",
+        "a long chain with no branching -> true"
+      ],
+      "followUps": [
+        {
+          "q": "Produce the actual order.",
+          "a": "That is Course Schedule II. With DFS, append each node to a list when it *finishes* and reverse at the end — postorder gives the reverse topological order. With Kahn's, the order in which nodes leave the queue is already a valid topological order."
+        },
+        {
+          "q": "DFS or Kahn's algorithm?",
+          "a": "Kahn's is iterative, so no stack overflow, and the cycle check falls out for free from the output count. DFS is shorter and the three-state idea transfers to other cycle problems. Both are O(V+E) — say which you are choosing and why."
+        },
+        {
+          "q": "What if there were a limit on courses per semester?",
+          "a": "Now you need the *minimum number of semesters*, which is the longest path in the DAG when unlimited, and a harder scheduling problem when capped. The unlimited case is still linear; the capped case is NP-hard in general."
+        },
+        {
+          "q": "Why exactly three states?",
+          "a": "Unvisited means not yet explored. In-progress means on the current DFS path, so reaching it again closes a cycle. Finished means fully explored with no cycle found below it, so it can be skipped safely. Collapse the last two and correctness breaks; collapse the first two and you never start."
+        }
+      ],
+      "related": [
+        "course-schedule-ii",
+        "graph-valid-tree",
+        "alien-dictionary"
+      ],
+      "core": true
     },
     {
       "id": "210",
@@ -319,25 +861,80 @@
         "leetcode": "https://leetcode.com/problems/course-schedule-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Akt3glAwyfY"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Topological Sort",
+      "patternTriggers": [
+        "You need a concrete **ordering** that respects dependencies, not just whether one exists.",
+        "Any valid order is acceptable, which signals topological sort rather than a search for a specific sequence.",
+        "The words *order to take courses*, *build order*, *valid sequence*."
+      ],
       "keyInsight": "Same as Course Schedule but collect the order. Add to result in postorder (after all prerequisites are processed).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate permutations of the courses and return the first that satisfies every prerequisite.",
+        "time": "O(N! * E)",
+        "space": "O(N)",
+        "whyItFails": "Exponential for no reason. A topological order can be built directly: repeatedly take any course whose prerequisites are all already taken, which is always safe and never needs backtracking."
+      },
+      "approach": [
+        "Build the adjacency list with edges from prerequisite to dependent course, and count each course's in-degree — how many prerequisites it still needs.",
+        "Seed a queue with every course of in-degree 0: those with no prerequisites.",
+        "Pop a course, append it to the order, and for each course depending on it, decrement that course's in-degree.",
+        "When a course's in-degree reaches 0, all its prerequisites are satisfied, so enqueue it.",
+        "Continue until the queue empties.",
+        "If the order contains fewer than N courses, a cycle blocked the rest — return an empty array.",
+        "Otherwise return the order."
+      ],
       "code": {
         "python": "def findOrder(numCourses, prerequisites):\n    adj = defaultdict(list)\n    for crs, pre in prerequisites:\n        adj[crs].append(pre)\n    result, state = [], [0] * numCourses\n    def dfs(crs):\n        if state[crs] == 1: return False\n        if state[crs] == 2: return True\n        state[crs] = 1\n        for pre in adj[crs]:\n            if not dfs(pre): return False\n        state[crs] = 2\n        result.append(crs)\n        return True\n    for c in range(numCourses):\n        if not dfs(c): return []\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> indegree(numCourses, 0);\n        for (auto& p : prerequisites) { graph[p[1]].push_back(p[0]); indegree[p[0]]++; }\n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.push(i);\n        vector<int> order;\n        while (!q.empty()) {\n            int cur = q.front(); q.pop();\n            order.push_back(cur);\n            for (int next : graph[cur]) if (--indegree[next] == 0) q.push(next);\n        }\n        return order.size() == numCourses ? order : vector<int>();\n    }\n};",
         "java": "class Solution {\n    public int[] findOrder(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> graph = new ArrayList<>();\n        int[] indegree = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());\n        for (int[] p : prerequisites) { graph.get(p[1]).add(p[0]); indegree[p[0]]++; }\n        Queue<Integer> q = new LinkedList<>();\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.offer(i);\n        int[] order = new int[numCourses];\n        int idx = 0;\n        while (!q.isEmpty()) {\n            int cur = q.poll();\n            order[idx++] = cur;\n            for (int next : graph.get(cur)) if (--indegree[next] == 0) q.offer(next);\n        }\n        return idx == numCourses ? order : new int[]{};\n    }\n}",
         "js": "var findOrder = function(numCourses, prerequisites) {\n    const graph = Array.from({length: numCourses}, () => []);\n    const indegree = new Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) { graph[b].push(a); indegree[a]++; }\n    const q = [], order = [];\n    for (let i = 0; i < numCourses; i++) if (indegree[i] === 0) q.push(i);\n    while (q.length) {\n        const cur = q.shift();\n        order.push(cur);\n        for (const next of graph[cur]) if (--indegree[next] === 0) q.push(next);\n    }\n    return order.length === numCourses ? order : [];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(V + E)",
+        "space": "O(V + E)",
+        "note": "Each node is enqueued and dequeued once; each edge is relaxed once when its source is processed. The in-degree array and adjacency list dominate the space. The cycle check is free: it is just comparing the output length with V."
+      },
+      "dryRun": "n = 4, prereqs = [[1,0], [2,1], [3,2]]\n  pair [a, b] means b before a, so edges run prereq -> course.\n\n  adjacency:    0 -> [1],  1 -> [2],  2 -> [3]\n  in-degrees:   [0, 1, 1, 1]\n\n  queue [0]\n    take 0   ->  order [0]            in-deg [0,0,1,1]   enqueue 1\n    take 1   ->  order [0,1]          in-deg [0,0,0,1]   enqueue 2\n    take 2   ->  order [0,1,2]        in-deg [0,0,0,0]   enqueue 3\n    take 3   ->  order [0,1,2,3]      queue empty\n\n  4 of 4 produced  ->  return [0, 1, 2, 3]\n\nThis chain has exactly one valid order. A branching graph would have\nseveral, and any of them is acceptable — which is the signal that this\nis topological sort rather than a search for one specific sequence.\n\nIf a cycle existed, fewer than n courses would come out and the answer\nwould be an empty array — the same count check as Course Schedule, so\ncycle detection costs nothing extra.\n\nThe edge direction is the thing to fix before writing any code. An edge\nmust run FROM the prerequisite TO the course that needs it, so that\ntaking the prerequisite decrements the dependent's in-degree. Reverse\nit and the algorithm still runs happily, producing a valid topological\norder of the reversed graph — which is the exact opposite of the answer.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Reversing the edge direction. An edge must go from the prerequisite to the course that needs it, so that completing the prerequisite decrements the dependent's count. Reversed, you get a valid topological order of the *reverse* graph, which is the wrong answer.",
+        "Returning the partial order when a cycle exists, instead of an empty array.",
+        "With the DFS variant, appending nodes in preorder rather than postorder, and forgetting to reverse. Postorder-then-reverse is the correct recipe.",
+        "Omitting courses that appear in no prerequisite pair — they have in-degree 0 and belong in the output.",
+        "Assuming the answer is unique. Several valid orders usually exist, so a test must accept any of them."
+      ],
+      "edgeCases": [
+        "no prerequisites -> any permutation is valid, so [0, 1, ..., n-1] works",
+        "a cycle anywhere -> empty array",
+        "a single course",
+        "a linear chain -> exactly one valid order",
+        "a disconnected graph, where components can be interleaved arbitrarily",
+        "duplicate edges, which must not double-count the in-degree in a way that strands a node"
+      ],
+      "followUps": [
+        {
+          "q": "Produce the lexicographically smallest valid order.",
+          "a": "Replace the queue with a min-heap, so among the currently available courses you always take the smallest. O((V + E) log V). A useful demonstration that the queue's discipline is a free parameter."
+        },
+        {
+          "q": "How do you know taking any in-degree-0 node is safe?",
+          "a": "Because it has no unmet prerequisites, so placing it next violates nothing. And removing it cannot strand anything — it only decreases other nodes' in-degrees. That is why topological sort needs no backtracking, which is the structural difference from the permutation brute force."
+        },
+        {
+          "q": "What does a non-empty queue with nodes left over mean?",
+          "a": "That the remaining nodes all have in-degree at least 1 from each other — a cycle. Counting the output is therefore a complete cycle test, with no separate detection pass."
+        },
+        {
+          "q": "Where is this used in practice?",
+          "a": "Build systems (make, bazel) ordering compilation units, package managers resolving install order, spreadsheet engines recalculating dependent cells, and database migration runners. A cycle is the 'circular dependency' error all of them report."
+        }
+      ],
+      "related": [
+        "course-schedule",
+        "alien-dictionary",
+        "graph-valid-tree"
+      ],
+      "core": true
     },
     {
       "id": "261",
@@ -354,25 +951,79 @@
         "leetcode": "https://leetcode.com/problems/graph-valid-tree/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=bXsUuownnoQ"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Union-Find",
+      "patternTriggers": [
+        "A structural question about a graph: is it a tree, a forest, connected, acyclic.",
+        "Edges are given as a list and processed one at a time, which is union-find's natural shape.",
+        "The words *valid tree*, *no cycles and fully connected*."
+      ],
       "keyInsight": "A valid tree has exactly N-1 edges and is fully connected. Use Union-Find: if unite returns false (already connected), there's a cycle.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Run DFS from node 0, checking for a cycle by tracking the parent, then verify every node was visited.",
+        "time": "O(V + E)",
+        "space": "O(V + E)",
+        "whyItFails": "This is a perfectly good solution with the same complexity — worth offering. Union-find is preferred mainly because it is shorter, needs no adjacency list, and generalises to edges arriving over time. The DFS version must also remember to skip the edge back to the parent, which is an easy thing to get wrong on an undirected graph."
+      },
+      "approach": [
+        "Use the two defining properties of a tree on n nodes: exactly n-1 edges, and no cycles. Together these imply connectivity, so you need not check it separately.",
+        "Reject immediately if the edge count is not n-1 — too few cannot connect, too many must contain a cycle.",
+        "Initialise union-find with each node as its own component.",
+        "For each edge, attempt to union its endpoints.",
+        "If the union returns false, both endpoints were already connected, so this edge closes a cycle — return false.",
+        "If every union succeeds, there is no cycle, and with n-1 edges the graph must be connected. Return true."
+      ],
       "code": {
         "python": "def validTree(n, edges):\n    if len(edges) != n - 1: return False\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb: return False\n        parent[ra] = rb\n    return True",
         "cpp": "class Solution {\npublic:\n    bool validTree(int n, vector<vector<int>>& edges) {\n        if (edges.size() != n - 1) return false;\n        vector<int> parent(n);\n        iota(parent.begin(), parent.end(), 0);\n        function<int(int)> find = [&](int x) {\n            return parent[x] == x ? x : parent[x] = find(parent[x]);\n        };\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return false;\n            parent[a] = b;\n        }\n        return true;\n    }\n};",
         "java": "class Solution {\n    int[] parent;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public boolean validTree(int n, int[][] edges) {\n        if (edges.length != n - 1) return false;\n        parent = new int[n];\n        for (int i = 0; i < n; i++) parent[i] = i;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return false;\n            parent[a] = b;\n        }\n        return true;\n    }\n}",
         "js": "var validTree = function(n, edges) {\n    if (edges.length !== n - 1) return false;\n    const parent = Array.from({length: n}, (_, i) => i);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    for (const [a, b] of edges) {\n        const pa = find(a), pb = find(b);\n        if (pa === pb) return false;\n        parent[pa] = pb;\n    }\n    return true;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(V + E * α(V))",
+        "space": "O(V)",
+        "note": "α is the inverse Ackermann function, which is below 5 for any realistic input, so each union and find is effectively constant. The edge-count shortcut means you never need a separate connectivity pass — which is the elegant part of this solution."
+      },
+      "dryRun": "A tree on n nodes has exactly n-1 edges and no cycles. Those two\ntogether imply connectivity, so only two checks are needed.\n\nValid case:  n = 5, edges = [[0,1], [0,2], [0,3], [1,4]]\n\n  edge count 4 == n-1 = 4   ->  passes the first check\n\n    union(0,1)  ->  merged\n    union(0,2)  ->  merged\n    union(0,3)  ->  merged\n    union(1,4)  ->  merged\n\n  every union succeeded, so no cycle; with n-1 edges it must be\n  connected  ->  true\n\n\nCyclic case:  n = 5, edges = [[0,1], [1,2], [2,3], [1,3], [1,4]]\n\n    union(0,1)  ->  merged\n    union(1,2)  ->  merged\n    union(2,3)  ->  merged\n    union(1,3)  ->  ALREADY CONNECTED\n                    1 and 3 share a root via 1-2-3, so this edge\n                    creates a second path between them: a cycle\n                                                       ->  false\n\n  (the edge count here is 5, not 4, so the first check would also have\n   rejected it — but the union failure is what localises the problem)\n\n\nThe forest counterexample, which cycle-detection alone would miss:\n\n  n = 4, edges = [[0,1], [2,3]]\n    no cycles — both unions succeed\n    but the edge count is 2, not n-1 = 3   ->  false\n\n  Two disconnected pairs. Acyclic, but not a tree. This is why the edge\n  count is not a shortcut you can skip.\n\nWhy n-1 edges plus acyclic gives connectivity: an acyclic graph is a\nforest, and a forest with c components has exactly n - c edges. Setting\nn - c = n - 1 gives c = 1.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Checking for cycles but not the edge count. A graph can be acyclic and disconnected — a forest — which is not a tree.",
+        "Checking connectivity and the edge count but not cycles, which is actually sufficient given n-1 edges, but only if you argue why. Be clear about which two of the three properties you are verifying.",
+        "In the DFS version, failing to skip the parent edge. Every undirected edge looks like a 2-cycle otherwise.",
+        "Implementing find without path compression, which can degrade to O(V) per operation on a long chain.",
+        "Mishandling n = 1 with no edges, which is a valid tree."
+      ],
+      "edgeCases": [
+        "n = 1 with no edges -> true",
+        "n = 2 with one edge -> true",
+        "n nodes with n-1 edges but disconnected, e.g. a triangle plus an isolated node -> false",
+        "a self-loop -> false",
+        "duplicate edges between the same pair -> a cycle, so false",
+        "no edges with n > 1 -> false"
+      ],
+      "followUps": [
+        {
+          "q": "Why do n-1 edges plus no cycles imply connectivity?",
+          "a": "An acyclic graph is a forest, and a forest with c components has exactly n - c edges. If the edge count is n - 1 then c = 1, so it is connected. That is why two checks suffice for three properties, and it is the argument the question is fishing for."
+        },
+        {
+          "q": "When would you prefer DFS?",
+          "a": "When you also need something the traversal produces anyway — the tree's depth, its structure, a parent array. Union-find answers connectivity and nothing else, which is why it is the better fit when connectivity is all you want."
+        },
+        {
+          "q": "What makes union-find near-constant time?",
+          "a": "Two optimisations together. Path compression flattens the tree as you search it, and union by size or rank keeps the shallower tree beneath the deeper one. Either alone gives O(log V); both together give the inverse Ackermann bound."
+        },
+        {
+          "q": "How would you handle edges being removed?",
+          "a": "Union-find cannot undo a union, so deletion breaks it. Either rebuild, or process the problem offline in reverse so deletions become insertions, or use a link-cut tree for true dynamic connectivity. Knowing union-find's limitation is as useful as knowing its strength."
+        }
+      ],
+      "related": [
+        "number-of-connected-components",
+        "redundant-connection",
+        "course-schedule"
+      ],
+      "core": true
     },
     {
       "id": "323",
@@ -389,25 +1040,78 @@
         "leetcode": "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=8f1XPm4WOUc"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Union-Find",
+      "patternTriggers": [
+        "Count **connected components** in an undirected graph.",
+        "Edges are a list, and their order does not matter — which is union-find's natural input.",
+        "The words *connected components*, *groups*, *how many separate*, *friend circles*."
+      ],
+      "keyInsight": "Start with n separate components and merge as you process edges. Every edge that successfully joins two **different** components reduces the count by one; an edge within a component changes nothing. So the answer is `n` minus the number of successful unions — no traversal needed, and the edges can arrive in any order. The same problem also falls to DFS, counting how many times you have to start a traversal, exactly as in Number of Islands.",
+      "bruteForce": {
+        "idea": "For every pair of nodes, test whether a path connects them, then group the nodes into equivalence classes.",
+        "time": "O(V^2 * (V + E))",
+        "space": "O(V + E)",
+        "whyItFails": "It recomputes reachability for every pair. One pass over the edges, merging as you go, settles all of it — and the component count can be maintained incrementally rather than derived at the end."
+      },
+      "approach": [
+        "Initialise union-find with each of the n nodes as its own component, and set the count to n.",
+        "For each edge, attempt to union its two endpoints.",
+        "If the union succeeds, two components just became one, so decrement the count.",
+        "If it fails, the endpoints were already connected and the count is unchanged.",
+        "Return the count after all edges are processed.",
+        "Equivalently with DFS: walk every node, and each time you find an unvisited one, increment the count and flood-fill its whole component."
+      ],
       "code": {
         "python": "def countComponents(n, edges):\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    components = n\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra != rb:\n            parent[ra] = rb\n            components -= 1\n    return components",
         "cpp": "class Solution {\npublic:\n    int countComponents(int n, vector<vector<int>>& edges) {\n        vector<int> parent(n);\n        iota(parent.begin(), parent.end(), 0);\n        function<int(int)> find = [&](int x) {\n            return parent[x] == x ? x : parent[x] = find(parent[x]);\n        };\n        int components = n;\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a != b) { parent[a] = b; components--; }\n        }\n        return components;\n    }\n};",
         "java": "class Solution {\n    int[] parent;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public int countComponents(int n, int[][] edges) {\n        parent = new int[n];\n        for (int i = 0; i < n; i++) parent[i] = i;\n        int components = n;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a != b) { parent[a] = b; components--; }\n        }\n        return components;\n    }\n}",
         "js": "var countComponents = function(n, edges) {\n    const parent = Array.from({length: n}, (_, i) => i);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    let components = n;\n    for (const [a, b] of edges) {\n        const pa = find(a), pb = find(b);\n        if (pa !== pb) { parent[pa] = pb; components--; }\n    }\n    return components;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(V + E * α(V))",
+        "space": "O(V)",
+        "note": "Effectively linear — α(V) is below 5 for any practical n. The DFS alternative is O(V + E) with O(V + E) space for the adjacency list, so union-find wins slightly on space and, more importantly, supports edges arriving over time."
+      },
+      "dryRun": "n = 5, edges = [[0,1], [1,2], [3,4]]\n\nStart with 5 components — every node alone. Each SUCCESSFUL union\nmerges two into one, so the count drops by one.\n\n  count = 5\n    union(0,1)  ->  merged      count = 4\n    union(1,2)  ->  merged      count = 3\n    union(3,4)  ->  merged      count = 2\n\n  answer: 2       components {0,1,2} and {3,4}\n\nNow add a redundant edge to see the difference:\n\n  edges = [[0,1], [1,2], [0,2], [3,4]]\n\n  count = 5\n    union(0,1)  ->  merged                 count = 4\n    union(1,2)  ->  merged                 count = 3\n    union(0,2)  ->  ALREADY CONNECTED      count = 3   (unchanged)\n    union(3,4)  ->  merged                 count = 2\n\n  answer: still 2\n\nThe third edge changes nothing, because 0 and 2 were already in the\nsame component. Decrementing the count on every edge rather than only\non successful unions would answer 1 here — which is the mistake this\ncase is designed to catch.\n\nIsolated nodes are handled for free. With n = 5 and edges = [], no\nunion ever runs and the count stays at 5, which is correct — a node in\nno edge is still a component. A DFS driven by the edge list alone would\nmiss them entirely; initialising the count to n is what avoids it.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Decrementing the count for every edge rather than only for successful unions, which undercounts whenever the graph has cycles.",
+        "Forgetting isolated nodes. A node in no edge is still a component, which the initialise-to-n approach handles for free but a DFS over the edge list alone would miss.",
+        "Implementing find without path compression and then being surprised by the runtime on a chain-shaped input.",
+        "Treating the graph as directed. Connectivity here ignores direction; for directed graphs you would need strongly connected components, which is a different algorithm entirely."
+      ],
+      "edgeCases": [
+        "no edges -> n components",
+        "a single node -> 1",
+        "all nodes in one chain -> 1",
+        "duplicate edges, which must not decrement the count twice",
+        "a self-loop, which never merges anything",
+        "n = 0 -> 0"
+      ],
+      "followUps": [
+        {
+          "q": "What if edges arrive one at a time and you must report the count after each?",
+          "a": "This is where union-find is not just convenient but necessary — it is already incremental, so each edge costs effectively O(1). DFS would mean re-running the whole traversal after every addition."
+        },
+        {
+          "q": "What about strongly connected components in a directed graph?",
+          "a": "Union-find does not apply, because directed reachability is not symmetric. Use Tarjan's or Kosaraju's algorithm, both O(V + E). Worth knowing that the undirected and directed versions are genuinely different problems."
+        },
+        {
+          "q": "Return the size of the largest component.",
+          "a": "Union by size already tracks each root's size, so take the maximum over the roots at the end. Free information you have already computed."
+        },
+        {
+          "q": "Would you choose union-find or DFS here?",
+          "a": "For a one-off count on a static graph, either — DFS needs no new data structure. Union-find wins when edges stream in, when connectivity is queried repeatedly, or when you want to avoid building an adjacency list at all."
+        }
+      ],
+      "related": [
+        "graph-valid-tree",
+        "redundant-connection",
+        "number-of-islands"
+      ],
+      "core": true
     },
     {
       "id": "684",
@@ -424,25 +1128,78 @@
         "leetcode": "https://leetcode.com/problems/redundant-connection/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=FXWRE67PLL0"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Union-Find",
+      "patternTriggers": [
+        "Edges are added **in order**, and you need the first one that creates a cycle.",
+        "\"Already connected\" is the exact condition, which is what a failed union reports.",
+        "The words *redundant*, *remove one edge to make it a tree*, *the last edge that can be removed*."
+      ],
       "keyInsight": "Add edges one by one with Union-Find. The first edge that connects two already-connected nodes is the redundant one.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Remove each edge in turn and check whether the remaining graph is a valid tree.",
+        "time": "O(N^2)",
+        "space": "O(N)",
+        "whyItFails": "Every candidate removal costs a full traversal. Processing the edges in order and watching for the first failed union finds the answer in a single pass — and the problem's own wording, asking for the *last* such edge in the input, matches that ordering exactly."
+      },
+      "approach": [
+        "Initialise union-find over the n nodes.",
+        "Process the edges in the order given.",
+        "For each edge, attempt to union its endpoints.",
+        "A successful union means the edge joined two previously separate components — it is part of the tree.",
+        "A failed union means both endpoints were already connected, so this edge closes a cycle. It is the answer.",
+        "Return it immediately. Since the input has exactly one extra edge, there is exactly one such failure."
+      ],
       "code": {
         "python": "def findRedundantConnection(edges):\n    parent = list(range(len(edges) + 1))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb: return [a, b]\n        parent[ra] = rb",
         "cpp": "class Solution {\n    vector<int> parent, rank_;\n    int find(int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); }\npublic:\n    vector<int> findRedundantConnection(vector<vector<int>>& edges) {\n        int n = edges.size();\n        parent.resize(n + 1); rank_.resize(n + 1, 0);\n        iota(parent.begin(), parent.end(), 0);\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return e;\n            if (rank_[a] < rank_[b]) swap(a, b);\n            parent[b] = a;\n            if (rank_[a] == rank_[b]) rank_[a]++;\n        }\n        return {};\n    }\n};",
         "java": "class Solution {\n    int[] parent, rank;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public int[] findRedundantConnection(int[][] edges) {\n        int n = edges.length;\n        parent = new int[n + 1]; rank = new int[n + 1];\n        for (int i = 0; i <= n; i++) parent[i] = i;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return e;\n            if (rank[a] < rank[b]) { int t = a; a = b; b = t; }\n            parent[b] = a;\n            if (rank[a] == rank[b]) rank[a]++;\n        }\n        return new int[]{};\n    }\n}",
         "js": "var findRedundantConnection = function(edges) {\n    const n = edges.length, parent = Array.from({length: n+1}, (_, i) => i);\n    const rank = new Array(n+1).fill(0);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    for (const [a, b] of edges) {\n        let pa = find(a), pb = find(b);\n        if (pa === pb) return [a, b];\n        if (rank[pa] < rank[pb]) [pa, pb] = [pb, pa];\n        parent[pb] = pa;\n        if (rank[pa] === rank[pb]) rank[pa]++;\n    }\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * α(N))",
+        "space": "O(N)",
+        "note": "A single pass with effectively constant-time operations, so linear in practice. The problem guarantees exactly one redundant edge, which is why you can return on the first failure rather than collecting candidates."
+      },
+      "dryRun": "edges = [[1,2], [1,3], [2,3]]      (nodes labelled from 1)\n\nProcess in the given order and watch for the first failed union.\n\n    union(1,2)  ->  merged.    components: {1,2}  {3}\n    union(1,3)  ->  merged.    components: {1,2,3}\n    union(2,3)  ->  ALREADY CONNECTED\n\n  2 and 3 already share a root, reachable via 2-1-3. Adding a direct\n  edge between them creates a second path, which is exactly a cycle.\n\n  return [2, 3]\n\nThe order of the input is load-bearing. The cycle here is the triangle\n1-2-3, so any one of the three edges could be removed to leave a tree —\nbut the problem asks for the one that occurs LAST in the input, and\nprocessing in order means the first failed union is precisely that edge.\nSorting the edges first, or iterating backwards, would give a different\nand wrong answer.\n\nNote what the failed union does NOT tell you: which earlier edges form\nthe rest of the cycle. It only identifies the edge that closed it, which\nhappens to be exactly what was asked.\n\nThis is Kruskal's algorithm with the rejection step kept and the\nacceptance step discarded — Kruskal adds every edge whose union\nsucceeds and skips the rest; here you only care about the first skip.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning the first edge of the cycle rather than the one that closed it. The failed union identifies the closing edge, which is what is asked for.",
+        "Processing the edges in a different order — sorting them, say. The answer depends on input order, so it must be preserved.",
+        "Continuing after the first failure. There is only one redundant edge, so the first failure is the answer.",
+        "Node labels starting at 1 rather than 0, which is the convention here — size the parent array accordingly or you will index out of range.",
+        "Using DFS cycle detection and reporting an arbitrary edge of the cycle, which may not be the one the problem wants."
+      ],
+      "edgeCases": [
+        "the redundant edge being the very last in the input",
+        "the redundant edge being early, with a cycle formed among the first three nodes",
+        "a self-loop, if permitted — it always fails the union",
+        "the smallest case, a triangle of three nodes and three edges",
+        "a long chain with the final edge closing it into a ring"
+      ],
+      "followUps": [
+        {
+          "q": "What if the graph were directed?",
+          "a": "Much harder. In a directed graph the redundant edge might create a cycle *or* give a node two parents, and the two cases need different handling — find any node with two parents, then test which of its two incoming edges can be removed. That is Redundant Connection II, and it is a genuine step up."
+        },
+        {
+          "q": "What if several edges were redundant?",
+          "a": "Collect every edge whose union fails rather than returning on the first. Each one closes a cycle at the moment it is processed, which is the natural generalisation."
+        },
+        {
+          "q": "Why does a failed union mean a cycle?",
+          "a": "A failed union means both endpoints already share a root, so a path between them exists using earlier edges. Adding a direct edge creates a second path, and two distinct paths between two nodes is exactly a cycle."
+        },
+        {
+          "q": "How is this related to Kruskal's algorithm?",
+          "a": "It is Kruskal's rejection step. Kruskal sorts edges by weight and adds each one whose union succeeds, skipping those that would form a cycle. Here you are not building a spanning tree, just identifying the first rejected edge — so you are running half of Kruskal's and stopping."
+        }
+      ],
+      "related": [
+        "graph-valid-tree",
+        "number-of-connected-components",
+        "min-cost-to-connect-all-points"
+      ],
+      "core": true
     },
     {
       "id": "127",
@@ -459,25 +1216,80 @@
         "leetcode": "https://leetcode.com/problems/word-ladder/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=h9iTnkgv05E"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "BFS on Implicit Graph",
+      "patternTriggers": [
+        "The nodes are **states** rather than given objects — a word, a board position, a configuration — and edges are legal transitions.",
+        "You need the **shortest** number of transitions, which is BFS on an unweighted graph.",
+        "Building the adjacency list naively is itself the bottleneck, so the neighbour relation needs a cheaper formulation."
+      ],
       "keyInsight": "BFS for shortest transformation. Build adjacency using wildcard patterns: \"hot\" -> \"*ot\", \"h*t\", \"ho*\". Words sharing a pattern are neighbors.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Build the graph by comparing every pair of words to see whether they differ in exactly one letter, then BFS.",
+        "time": "O(N^2 * L) to build the graph",
+        "space": "O(N^2)",
+        "whyItFails": "With 5,000 words the pairwise comparison is 25 million checks before the search even starts. Bucketing by wildcard pattern replaces it: \"hot\" generates \"*ot\", \"h*t\", \"ho*\", and any two words sharing a pattern differ in exactly one position. That is O(N * L^2) to build and finds the same neighbours."
+      },
+      "approach": [
+        "Put the word list into a set for O(1) membership, and return 0 immediately if the end word is absent.",
+        "Precompute buckets: for every word and every position, replace that letter with '*' and map the resulting pattern to the list of words matching it.",
+        "BFS from the begin word, tracking the number of transformations as the level count.",
+        "For the current word, generate its L wildcard patterns and look up each bucket to get all its neighbours in O(1) per pattern.",
+        "Skip words already visited, mark each on enqueue, and return the level the moment the end word appears.",
+        "Return 0 if the queue empties without reaching it.",
+        "Count levels as words in the sequence, not edges, so the begin word counts as 1."
+      ],
       "code": {
         "python": "def ladderLength(beginWord, endWord, wordList):\n    wordSet = set(wordList)\n    if endWord not in wordSet: return 0\n    queue = deque([(beginWord, 1)])\n    visited = {beginWord}\n    while queue:\n        word, steps = queue.popleft()\n        for i in range(len(word)):\n            for c in \"abcdefghijklmnopqrstuvwxyz\":\n                new_word = word[:i] + c + word[i+1:]\n                if new_word == endWord: return steps + 1\n                if new_word in wordSet and new_word not in visited:\n                    visited.add(new_word)\n                    queue.append((new_word, steps + 1))\n    return 0",
         "cpp": "class Solution {\npublic:\n    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {\n        unordered_set<string> dict(wordList.begin(), wordList.end());\n        if (!dict.count(endWord)) return 0;\n        queue<string> q;\n        q.push(beginWord);\n        int steps = 1;\n        while (!q.empty()) {\n            int sz = q.size();\n            while (sz--) {\n                string word = q.front(); q.pop();\n                for (int i = 0; i < word.size(); i++) {\n                    char orig = word[i];\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        word[i] = c;\n                        if (word == endWord) return steps + 1;\n                        if (dict.count(word)) { q.push(word); dict.erase(word); }\n                    }\n                    word[i] = orig;\n                }\n            }\n            steps++;\n        }\n        return 0;\n    }\n};",
         "java": "class Solution {\n    public int ladderLength(String beginWord, String endWord, List<String> wordList) {\n        Set<String> dict = new HashSet<>(wordList);\n        if (!dict.contains(endWord)) return 0;\n        Queue<String> q = new LinkedList<>();\n        q.offer(beginWord);\n        int steps = 1;\n        while (!q.isEmpty()) {\n            int sz = q.size();\n            while (sz-- > 0) {\n                char[] word = q.poll().toCharArray();\n                for (int i = 0; i < word.length; i++) {\n                    char orig = word[i];\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        word[i] = c;\n                        String s = new String(word);\n                        if (s.equals(endWord)) return steps + 1;\n                        if (dict.contains(s)) { q.offer(s); dict.remove(s); }\n                    }\n                    word[i] = orig;\n                }\n            }\n            steps++;\n        }\n        return 0;\n    }\n}",
         "js": "var ladderLength = function(beginWord, endWord, wordList) {\n    const dict = new Set(wordList);\n    if (!dict.has(endWord)) return 0;\n    const q = [beginWord];\n    let steps = 1;\n    while (q.length) {\n        const sz = q.length;\n        for (let s = 0; s < sz; s++) {\n            const word = q.shift().split('');\n            for (let i = 0; i < word.length; i++) {\n                const orig = word[i];\n                for (let c = 97; c <= 122; c++) {\n                    word[i] = String.fromCharCode(c);\n                    const str = word.join('');\n                    if (str === endWord) return steps + 1;\n                    if (dict.has(str)) { q.push(str); dict.delete(str); }\n                }\n                word[i] = orig;\n            }\n        }\n        steps++;\n    }\n    return 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * L^2)",
+        "space": "O(N * L^2)",
+        "note": "N words of length L. Building the buckets generates L patterns per word, each costing O(L) to construct — hence L^2 per word. The BFS itself visits each word once and does L bucket lookups per word, which is the same bound. The space is dominated by the buckets, which hold N * L entries of length L."
+      },
+      "dryRun": "begin = \"hit\", end = \"cog\"\nwordList = [hot, dot, dog, lot, log, cog]\n\nBuild wildcard buckets — every word with each position blanked:\n\n  *ot  ->  [hot, dot, lot]\n  *og  ->  [dog, log, cog]\n  do*  ->  [dot, dog]\n  lo*  ->  [lot, log]\n  h*t  ->  [hot]          (singleton buckets are harmless)\n  d*t  ->  [dot]\n  ...\n\nTwo words share a bucket exactly when they differ in one position, so\nthe buckets ARE the adjacency list — built in O(N*L^2) rather than the\nO(N^2*L) of comparing every pair.\n\nBFS, counting words in the sequence (so the begin word is level 1):\n\n  level 1   at \"hit\"\n            patterns *it, h*t, hi* -> h*t gives [hot]\n            new: hot\n  level 2   at \"hot\"\n            *ot gives [dot, lot]  (hot itself already seen)\n            new: dot, lot\n  level 3   at \"dot\"   ->  do* gives [dog]        new: dog\n  level 3   at \"lot\"   ->  lo* gives [log]        new: log\n  level 4   at \"dog\"   ->  *og gives [cog]        new: cog\n\n  \"cog\" first appears at level 5  ->  answer 5\n\nThe sequence is  hit -> hot -> dot -> dog -> cog  — five words, four\ntransformations. The answer counts WORDS, so a one-letter change gives\n2, not 1. Returning the edge count is the most common off-by-one here.\n\nNote \"lot\" and \"log\" were explored but led nowhere useful; BFS reached\nthem at the same level as the winning branch and simply did not get to\n\"cog\" through them first. Since BFS expands in hop order, the first\narrival at \"cog\" is guaranteed to be via a shortest chain.\n\nIf \"cog\" had been absent from the wordList, the answer would be 0 — and\nthat check belongs at the very top, before any work.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning the edge count instead of the word count. The answer includes both endpoints, so a one-letter change gives 2, not 1.",
+        "Forgetting to check that the end word is in the list. If it is not, no transformation can reach it and the answer is 0.",
+        "Marking words visited on dequeue rather than enqueue, which lets the same word be queued many times and can blow up the queue.",
+        "Rebuilding patterns by string concatenation inside the inner loop in a language with immutable strings, which quietly adds a factor of L.",
+        "Assuming the begin word is in the word list. It need not be, and that does not affect the answer."
+      ],
+      "edgeCases": [
+        "the end word absent from the list -> 0",
+        "begin and end words identical -> 1, though check the problem's convention",
+        "no possible transformation chain -> 0",
+        "begin and end differing by one letter -> 2",
+        "an empty word list -> 0",
+        "words of length 1, where every word is adjacent to every other"
+      ],
+      "followUps": [
+        {
+          "q": "Return all shortest transformation sequences, not just the length.",
+          "a": "That is Word Ladder II. BFS to compute each word's distance layer by layer, recording all parents at the minimal distance, then DFS backwards from the end word through those parent links. Trying to collect paths during the BFS itself blows up the memory, which is the trap."
+        },
+        {
+          "q": "How would bidirectional BFS help?",
+          "a": "Search from both ends simultaneously, always expanding the smaller frontier, and stop when they meet. The frontier grows exponentially with depth, so two searches of depth d/2 are far cheaper than one of depth d — often the difference between seconds and minutes on large inputs."
+        },
+        {
+          "q": "Why is the wildcard bucketing correct?",
+          "a": "Two words differ in exactly one position if and only if they agree everywhere else — which is precisely the condition for sharing a pattern with '*' at that position. So the buckets enumerate the adjacency relation exactly, with no false positives beyond a word matching itself."
+        },
+        {
+          "q": "What if transformations had different costs?",
+          "a": "BFS's shortest-path guarantee depends on uniform edge weights, so it no longer applies. You would need Dijkstra with a priority queue — the same shift as going from Rotting Oranges to Network Delay Time."
+        }
+      ],
+      "related": [
+        "rotting-oranges",
+        "clone-graph",
+        "course-schedule"
+      ],
+      "core": true
     }
   ]
 }
