@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens, carried over from the legacy single-file guide so the new app
+ * looks like a refinement of it rather than a different product.
+ * The app commits to a single dark look — this is a tool for long study sessions.
+ */
+@theme {
+  --color-canvas: #0c0e1a;
+  --color-raised: #12152a;
+  --color-card: #12162e;
+  --color-codebg: #0a0c16;
+
+  --color-ink: #c8cdd8;
+  --color-ink-dim: #6b7280;
+  --color-ink-bright: #eef0f6;
+
+  --color-line: #ffffff0f;
+  --color-line-strong: #ffffff1f;
+
+  --color-accent: #7c5cfc;
+  --color-accent-soft: #a78bfa;
+
+  --color-easy: #34d399;
+  --color-medium: #fbbf24;
+  --color-hard: #f87171;
+  --color-info: #60a5fa;
+  --color-grape: #c084fc;
+  --color-cyan: #22d3ee;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
+  --font-display: var(--font-outfit), var(--font-inter), sans-serif;
+
+  --radius-card: 14px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Offset anchor jumps so headings clear the sticky header. */
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus stays visible everywhere; pointer clicks stay quiet. */
+:focus-visible {
+  outline: 2px solid var(--color-accent-soft);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 40%, transparent);
+  color: var(--color-ink-bright);
+}
+
+/* Scrollbars that don't fight the dark surface. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff1f transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #ffffff1a;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #ffffff2e;
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Review mode. `data-review` is set on <html> before first paint by the inline
+ * script in the root layout, so gated content is never briefly visible.
+ */
+.review-only {
+  display: none;
+}
+html[data-review="1"] .review-only {
+  display: block;
+}
+html[data-review="1"] .review-gated {
+  display: none;
+}
+
+@utility card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+/* Code blocks: preserve the author's whitespace, scroll rather than wrap. */
+@utility codeblock {
+  background: var(--color-codebg);
+  border: 1px solid var(--color-line);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-x: auto;
+  tab-size: 4;
+}
