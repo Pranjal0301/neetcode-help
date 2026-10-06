@@ -1,0 +1,248 @@
+{
+  "slug": "sliding-window",
+  "title": "Sliding Window",
+  "icon": "🖼",
+  "order": 3,
+  "concept": {
+    "heading": "Core Pattern",
+    "body": "Maintain a window [left, right] that expands right and contracts left. Two types:",
+    "bullets": [
+      "**Fixed size:** Window is always K. Slide by moving both pointers together.",
+      "**Variable size:** Expand right, shrink left when window becomes invalid. Track the best valid window."
+    ],
+    "legacySvg": "<svg width=\"480\" height=\"80\" viewBox=\"0 0 480 80\">\n                    <style>text{font-family:'Inter',sans-serif;fill:#e2e8f0}</style>\n                    <!-- Array -->\n                    <rect x=\"40\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"60\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">a</text>\n                    <rect x=\"85\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"105\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">b</text>\n                    <rect x=\"130\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"150\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">c</text>\n                    <rect x=\"175\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"195\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">d</text>\n                    <rect x=\"220\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"240\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">e</text>\n                    <rect x=\"265\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"285\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">f</text>\n                    <!-- Window bracket -->\n                    <text x=\"105\" y=\"70\" text-anchor=\"middle\" font-size=\"11\" fill=\"#6366f1\" font-weight=\"700\">L</text>\n                    <text x=\"195\" y=\"70\" text-anchor=\"middle\" font-size=\"11\" fill=\"#ef4444\" font-weight=\"700\">R</text>\n                    <line x1=\"85\" y1=\"55\" x2=\"215\" y2=\"55\" stroke=\"#6366f1\" stroke-width=\"2\"/>\n                    <text x=\"340\" y=\"35\" font-size=\"11\" fill=\"#94a3b8\">expand R &#x2192;</text>\n                    <text x=\"340\" y=\"52\" font-size=\"11\" fill=\"#94a3b8\">shrink L &#x2192; (when invalid)</text>\n                    <text x=\"340\" y=\"69\" font-size=\"11\" fill=\"#22c55e\">update answer each step</text>\n                </svg>"
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "121",
+      "slug": "best-time-to-buy-and-sell-stock",
+      "title": "Best Time to Buy and Sell Stock",
+      "difficulty": "easy",
+      "category": "sliding-window",
+      "order": 1,
+      "tags": [
+        "sliding-window",
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=1pkOgXD63yU"
+      },
+      "pattern": "Sliding Window",
+      "patternTriggers": [],
+      "keyInsight": "Track the minimum price seen so far. At each day, profit = current price - min so far. Keep max profit.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxProfit(prices):\n    min_price = float('inf')\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit",
+        "cpp": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        int minPrice = INT_MAX, maxProfit = 0;\n        for (int price : prices) {\n            minPrice = min(minPrice, price);\n            maxProfit = max(maxProfit, price - minPrice);\n        }\n        return maxProfit;\n    }\n};",
+        "java": "class Solution {\n    public int maxProfit(int[] prices) {\n        int minPrice = Integer.MAX_VALUE, maxProfit = 0;\n        for (int price : prices) {\n            minPrice = Math.min(minPrice, price);\n            maxProfit = Math.max(maxProfit, price - minPrice);\n        }\n        return maxProfit;\n    }\n}",
+        "js": "var maxProfit = function(prices) {\n    let minPrice = Infinity, maxProfit = 0;\n    for (const price of prices) {\n        minPrice = Math.min(minPrice, price);\n        maxProfit = Math.max(maxProfit, price - minPrice);\n    }\n    return maxProfit;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)"
+      },
+      "dryRun": "prices = [7, 1, 5, 3, 6, 4]\n\nprice=7: min=7, profit=0\nprice=1: min=1, profit=0\nprice=5: min=1, profit=4  ← buy at 1, sell at 5\nprice=3: min=1, profit=4\nprice=6: min=1, profit=5  ← buy at 1, sell at 6 ✓\nprice=4: min=1, profit=5\nAnswer: 5",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "3",
+      "slug": "longest-substring-without-repeating-characters",
+      "title": "Longest Substring Without Repeating Characters",
+      "difficulty": "medium",
+      "category": "sliding-window",
+      "order": 2,
+      "tags": [
+        "sliding-window",
+        "hash-set"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=wiGpQwVHdE0"
+      },
+      "pattern": "Sliding Window",
+      "patternTriggers": [],
+      "keyInsight": "Expand right pointer. If char already in window (set), shrink from left until it's removed. Window always contains unique chars.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def lengthOfLongestSubstring(s):\n    char_set = set()\n    l = 0\n    result = 0\n    for r in range(len(s)):\n        while s[r] in char_set:\n            char_set.remove(s[l])\n            l += 1\n        char_set.add(s[r])\n        result = max(result, r - l + 1)\n    return result",
+        "cpp": "class Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        unordered_set<char> chars;\n        int l = 0, result = 0;\n        for (int r = 0; r < s.size(); r++) {\n            while (chars.count(s[r])) {\n                chars.erase(s[l]);\n                l++;\n            }\n            chars.insert(s[r]);\n            result = max(result, r - l + 1);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        Set<Character> chars = new HashSet<>();\n        int l = 0, result = 0;\n        for (int r = 0; r < s.length(); r++) {\n            while (chars.contains(s.charAt(r))) {\n                chars.remove(s.charAt(l));\n                l++;\n            }\n            chars.add(s.charAt(r));\n            result = Math.max(result, r - l + 1);\n        }\n        return result;\n    }\n}",
+        "js": "var lengthOfLongestSubstring = function(s) {\n    const chars = new Set();\n    let l = 0, result = 0;\n    for (let r = 0; r < s.length; r++) {\n        while (chars.has(s[r])) {\n            chars.delete(s[l]);\n            l++;\n        }\n        chars.add(s[r]);\n        result = Math.max(result, r - l + 1);\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(min(N, 26))"
+      },
+      "dryRun": "s = \"abcabcbb\"\n\nr=0 'a': set={a}, len=1\nr=1 'b': set={a,b}, len=2\nr=2 'c': set={a,b,c}, len=3  ← max so far\nr=3 'a': 'a' in set! remove 'a', l=1. set={b,c,a}, len=3\nr=4 'b': 'b' in set! remove 'b', l=2. set={c,a,b}, len=3\nr=5 'c': 'c' in set! remove 'c', l=3. set={a,b,c}, len=3\nr=6 'b': 'b' in set! remove 'a',l=4. still in! remove 'b',l=5. set={c,b}, len=2\nr=7 'b': 'b' in set! remove 'c',l=6. remove 'b',l=7. set={b}, len=1\nAnswer: 3",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "424",
+      "slug": "longest-repeating-character-replacement",
+      "title": "Longest Repeating Character Replacement",
+      "difficulty": "medium",
+      "category": "sliding-window",
+      "order": 3,
+      "tags": [
+        "sliding-window",
+        "frequency"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-repeating-character-replacement/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=gqXU1UyA8pk"
+      },
+      "pattern": "Sliding Window",
+      "patternTriggers": [],
+      "keyInsight": "In a valid window, (window_length - count_of_most_frequent_char) ≤ k. This is the number of chars we need to replace. If invalid, shrink from left.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def characterReplacement(s, k):\n    count = {}\n    l = 0\n    max_freq = 0\n    result = 0\n    for r in range(len(s)):\n        count[s[r]] = count.get(s[r], 0) + 1\n        max_freq = max(max_freq, count[s[r]])\n        # Window is invalid if replacements needed > k\n        while (r - l + 1) - max_freq > k:\n            count[s[l]] -= 1\n            l += 1\n        result = max(result, r - l + 1)\n    return result",
+        "cpp": "class Solution {\npublic:\n    int characterReplacement(string s, int k) {\n        int count[26] = {}, l = 0, maxFreq = 0, result = 0;\n        for (int r = 0; r < s.size(); r++) {\n            maxFreq = max(maxFreq, ++count[s[r] - 'A']);\n            while (r - l + 1 - maxFreq > k) {\n                count[s[l] - 'A']--;\n                l++;\n            }\n            result = max(result, r - l + 1);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int characterReplacement(String s, int k) {\n        int[] count = new int[26];\n        int l = 0, maxFreq = 0, result = 0;\n        for (int r = 0; r < s.length(); r++) {\n            maxFreq = Math.max(maxFreq, ++count[s.charAt(r) - 'A']);\n            while (r - l + 1 - maxFreq > k) {\n                count[s.charAt(l) - 'A']--;\n                l++;\n            }\n            result = Math.max(result, r - l + 1);\n        }\n        return result;\n    }\n}",
+        "js": "var characterReplacement = function(s, k) {\n    const count = {};\n    let l = 0, maxFreq = 0, result = 0;\n    for (let r = 0; r < s.length; r++) {\n        count[s[r]] = (count[s[r]] || 0) + 1;\n        maxFreq = Math.max(maxFreq, count[s[r]]);\n        while (r - l + 1 - maxFreq > k) {\n            count[s[l]]--;\n            l++;\n        }\n        result = Math.max(result, r - l + 1);\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(26) = O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "567",
+      "slug": "permutation-in-string",
+      "title": "Permutation in String",
+      "difficulty": "medium",
+      "category": "sliding-window",
+      "order": 4,
+      "tags": [
+        "sliding-window",
+        "frequency",
+        "fixed-window"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/permutation-in-string/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=UbyhOgBN834"
+      },
+      "pattern": "Fixed Sliding Window",
+      "patternTriggers": [],
+      "keyInsight": "Use a fixed window of size len(s1). Track how many character frequencies match between the window and s1. When all 26 match, we found a permutation.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def checkInclusion(s1, s2):\n    if len(s1) > len(s2):\n        return False\n    s1_count = [0] * 26\n    window = [0] * 26\n    for c in s1:\n        s1_count[ord(c) - ord('a')] += 1\n    \n    for i in range(len(s2)):\n        window[ord(s2[i]) - ord('a')] += 1\n        if i >= len(s1):  # remove leftmost from window\n            window[ord(s2[i - len(s1)]) - ord('a')] -= 1\n        if window == s1_count:\n            return True\n    return False",
+        "cpp": "class Solution {\npublic:\n    bool checkInclusion(string s1, string s2) {\n        if (s1.size() > s2.size()) return false;\n        int count[26] = {};\n        for (char c : s1) count[c - 'a']++;\n        for (int i = 0; i < s2.size(); i++) {\n            count[s2[i] - 'a']--;\n            if (i >= s1.size()) count[s2[i - s1.size()] - 'a']++;\n            bool allZero = true;\n            for (int j = 0; j < 26; j++) if (count[j]) { allZero = false; break; }\n            if (allZero) return true;\n        }\n        return false;\n    }\n};",
+        "java": "class Solution {\n    public boolean checkInclusion(String s1, String s2) {\n        if (s1.length() > s2.length()) return false;\n        int[] count = new int[26];\n        for (char c : s1.toCharArray()) count[c - 'a']++;\n        int matches = 0;\n        for (int i = 0; i < 26; i++) if (count[i] == 0) matches++;\n        int l = 0;\n        for (int r = 0; r < s2.length(); r++) {\n            int idx = s2.charAt(r) - 'a';\n            count[idx]--;\n            if (count[idx] == 0) matches++;\n            else if (count[idx] == -1) matches--;\n            if (r >= s1.length()) {\n                idx = s2.charAt(l) - 'a';\n                count[idx]++;\n                if (count[idx] == 0) matches++;\n                else if (count[idx] == 1) matches--;\n                l++;\n            }\n            if (matches == 26) return true;\n        }\n        return false;\n    }\n}",
+        "js": "var checkInclusion = function(s1, s2) {\n    if (s1.length > s2.length) return false;\n    const count = new Array(26).fill(0);\n    const a = 'a'.charCodeAt(0);\n    for (const c of s1) count[c.charCodeAt(0) - a]++;\n    for (let i = 0; i < s2.length; i++) {\n        count[s2.charCodeAt(i) - a]--;\n        if (i >= s1.length) count[s2.charCodeAt(i - s1.length) - a]++;\n        if (count.every(c => c === 0)) return true;\n    }\n    return false;\n};"
+      },
+      "complexity": {
+        "time": "O(N) where N=len(s2)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "76",
+      "slug": "minimum-window-substring",
+      "title": "Minimum Window Substring",
+      "difficulty": "hard",
+      "category": "sliding-window",
+      "order": 5,
+      "tags": [
+        "sliding-window",
+        "hash-map"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/minimum-window-substring/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=jSto1m652Dw"
+      },
+      "pattern": "Sliding Window",
+      "patternTriggers": [],
+      "keyInsight": "Expand right to include all chars of t. Once valid, shrink from left to find minimum. Track \"have\" (matched chars) vs \"need\" (required chars).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minWindow(s, t):\n    if not t: return \"\"\n    need = {}\n    for c in t:\n        need[c] = need.get(c, 0) + 1\n    \n    window = {}\n    have, required = 0, len(need)  # unique chars needed\n    result, result_len = [-1, -1], float('inf')\n    l = 0\n\n    for r in range(len(s)):\n        window[s[r]] = window.get(s[r], 0) + 1\n        if s[r] in need and window[s[r]] == need[s[r]]:\n            have += 1\n\n        while have == required:\n            # Update result\n            if (r - l + 1) < result_len:\n                result = [l, r]\n                result_len = r - l + 1\n            # Shrink from left\n            window[s[l]] -= 1\n            if s[l] in need and window[s[l]] < need[s[l]]:\n                have -= 1\n            l += 1\n\n    l, r = result\n    return s[l:r+1] if result_len != float('inf') else \"\"",
+        "cpp": "class Solution {\npublic:\n    string minWindow(string s, string t) {\n        unordered_map<char, int> need, have;\n        for (char c : t) need[c]++;\n        int required = need.size(), formed = 0;\n        int l = 0, minLen = INT_MAX, minL = 0;\n        for (int r = 0; r < s.size(); r++) {\n            have[s[r]]++;\n            if (need.count(s[r]) && have[s[r]] == need[s[r]]) formed++;\n            while (formed == required) {\n                if (r - l + 1 < minLen) { minLen = r - l + 1; minL = l; }\n                have[s[l]]--;\n                if (need.count(s[l]) && have[s[l]] < need[s[l]]) formed--;\n                l++;\n            }\n        }\n        return minLen == INT_MAX ? \"\" : s.substr(minL, minLen);\n    }\n};",
+        "java": "class Solution {\n    public String minWindow(String s, String t) {\n        Map<Character, Integer> need = new HashMap<>(), have = new HashMap<>();\n        for (char c : t.toCharArray()) need.merge(c, 1, Integer::sum);\n        int required = need.size(), formed = 0;\n        int l = 0, minLen = Integer.MAX_VALUE, minL = 0;\n        for (int r = 0; r < s.length(); r++) {\n            char c = s.charAt(r);\n            have.merge(c, 1, Integer::sum);\n            if (need.containsKey(c) && have.get(c).intValue() == need.get(c).intValue())\n                formed++;\n            while (formed == required) {\n                if (r - l + 1 < minLen) { minLen = r - l + 1; minL = l; }\n                char lc = s.charAt(l);\n                have.merge(lc, -1, Integer::sum);\n                if (need.containsKey(lc) && have.get(lc) < need.get(lc)) formed--;\n                l++;\n            }\n        }\n        return minLen == Integer.MAX_VALUE ? \"\" : s.substring(minL, minL + minLen);\n    }\n}",
+        "js": "var minWindow = function(s, t) {\n    const need = {}, have = {};\n    for (const c of t) need[c] = (need[c] || 0) + 1;\n    let required = Object.keys(need).length, formed = 0;\n    let l = 0, minLen = Infinity, minL = 0;\n    for (let r = 0; r < s.length; r++) {\n        have[s[r]] = (have[s[r]] || 0) + 1;\n        if (need[s[r]] && have[s[r]] === need[s[r]]) formed++;\n        while (formed === required) {\n            if (r - l + 1 < minLen) { minLen = r - l + 1; minL = l; }\n            have[s[l]]--;\n            if (need[s[l]] && have[s[l]] < need[s[l]]) formed--;\n            l++;\n        }\n    }\n    return minLen === Infinity ? \"\" : s.substring(minL, minL + minLen);\n};"
+      },
+      "complexity": {
+        "time": "O(N + M)",
+        "space": "O(N + M)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "239",
+      "slug": "sliding-window-maximum",
+      "title": "Sliding Window Maximum",
+      "difficulty": "hard",
+      "category": "sliding-window",
+      "order": 6,
+      "tags": [
+        "sliding-window",
+        "monotonic-deque"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/sliding-window-maximum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=DfljaUwZsOk"
+      },
+      "pattern": "Monotonic Deque",
+      "patternTriggers": [],
+      "keyInsight": "Maintain a decreasing deque of indices. Front = index of max in current window. Remove from back if smaller than new element (they'll never be the max). Remove from front if outside window.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "from collections import deque\n\ndef maxSlidingWindow(nums, k):\n    dq = deque()  # stores indices, values are decreasing\n    result = []\n    for i in range(len(nums)):\n        # Remove indices outside window\n        while dq and dq[0] < i - k + 1:\n            dq.popleft()\n        # Remove smaller elements from back\n        while dq and nums[dq[-1]] < nums[i]:\n            dq.pop()\n        dq.append(i)\n        if i >= k - 1:\n            result.append(nums[dq[0]])\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> maxSlidingWindow(vector<int>& nums, int k) {\n        deque<int> dq;\n        vector<int> result;\n        for (int i = 0; i < nums.size(); i++) {\n            while (!dq.empty() && dq.front() < i - k + 1) dq.pop_front();\n            while (!dq.empty() && nums[dq.back()] < nums[i]) dq.pop_back();\n            dq.push_back(i);\n            if (i >= k - 1) result.push_back(nums[dq.front()]);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[] maxSlidingWindow(int[] nums, int k) {\n        Deque<Integer> dq = new ArrayDeque<>();\n        int[] result = new int[nums.length - k + 1];\n        int idx = 0;\n        for (int i = 0; i < nums.length; i++) {\n            while (!dq.isEmpty() && dq.peekFirst() < i - k + 1) dq.pollFirst();\n            while (!dq.isEmpty() && nums[dq.peekLast()] < nums[i]) dq.pollLast();\n            dq.offerLast(i);\n            if (i >= k - 1) result[idx++] = nums[dq.peekFirst()];\n        }\n        return result;\n    }\n}",
+        "js": "var maxSlidingWindow = function(nums, k) {\n    const dq = [], result = [];\n    for (let i = 0; i < nums.length; i++) {\n        while (dq.length && dq[0] < i - k + 1) dq.shift();\n        while (dq.length && nums[dq[dq.length - 1]] < nums[i]) dq.pop();\n        dq.push(i);\n        if (i >= k - 1) result.push(nums[dq[0]]);\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(K)"
+      },
+      "dryRun": "nums = [1,3,-1,-3,5,3,6,7], k=3\n\ni=0: dq=[0]           (val 1)\ni=1: remove 0 (1<3), dq=[1]   (val 3)\ni=2: dq=[1,2]         → result=[3]  (max=nums[1]=3)\ni=3: dq=[1,2,3]       → result=[3,3]\ni=4: pop all (5>all), dq=[4]  → result=[3,3,5]\ni=5: dq=[4,5]         → result=[3,3,5,5]\ni=6: pop all, dq=[6]  → result=[3,3,5,5,6]\ni=7: pop all, dq=[7]  → result=[3,3,5,5,6,7]",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

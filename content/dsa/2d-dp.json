@@ -1,0 +1,397 @@
+{
+  "slug": "2d-dp",
+  "title": "2-D Dynamic Programming",
+  "icon": "🧩",
+  "order": 14,
+  "concept": null,
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "62",
+      "slug": "unique-paths",
+      "title": "Unique Paths",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 1,
+      "tags": [
+        "dp",
+        "grid"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/unique-paths/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=IlEsdxuD4lY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def uniquePaths(m, n):\n    dp = [1] * n\n    for _ in range(m - 1):\n        for j in range(1, n):\n            dp[j] += dp[j - 1]\n    return dp[-1]",
+        "cpp": "class Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<int> dp(n, 1);\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++) dp[j] += dp[j-1];\n        return dp[n-1];\n    }\n};",
+        "java": "class Solution {\n    public int uniquePaths(int m, int n) {\n        int[] dp = new int[n];\n        Arrays.fill(dp, 1);\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++) dp[j] += dp[j-1];\n        return dp[n-1];\n    }\n}",
+        "js": "var uniquePaths = function(m, n) {\n    const dp = new Array(n).fill(1);\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++) dp[j] += dp[j-1];\n    return dp[n-1];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1143",
+      "slug": "longest-common-subsequence",
+      "title": "Longest Common Subsequence",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 2,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-common-subsequence/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Ua0GhsJSlWM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "If chars match: dp[i][j] = 1 + dp[i-1][j-1]. If not: dp[i][j] = max(dp[i-1][j], dp[i][j-1]).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def longestCommonSubsequence(text1, text2):\n    m, n = len(text1), len(text2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(m - 1, -1, -1):\n        for j in range(n - 1, -1, -1):\n            if text1[i] == text2[j]:\n                dp[i][j] = 1 + dp[i+1][j+1]\n            else:\n                dp[i][j] = max(dp[i+1][j], dp[i][j+1])\n    return dp[0][0]",
+        "cpp": "class Solution {\npublic:\n    int longestCommonSubsequence(string text1, string text2) {\n        int m = text1.size(), n = text2.size();\n        vector<int> dp(n + 1, 0);\n        for (int i = 1; i <= m; i++) {\n            int prev = 0;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                dp[j] = text1[i-1] == text2[j-1] ? prev + 1 : max(dp[j], dp[j-1]);\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n};",
+        "java": "class Solution {\n    public int longestCommonSubsequence(String text1, String text2) {\n        int m = text1.length(), n = text2.length();\n        int[] dp = new int[n + 1];\n        for (int i = 1; i <= m; i++) {\n            int prev = 0;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                dp[j] = text1.charAt(i-1) == text2.charAt(j-1) ? prev + 1 : Math.max(dp[j], dp[j-1]);\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n}",
+        "js": "var longestCommonSubsequence = function(text1, text2) {\n    const m = text1.length, n = text2.length;\n    const dp = new Array(n + 1).fill(0);\n    for (let i = 1; i <= m; i++) {\n        let prev = 0;\n        for (let j = 1; j <= n; j++) {\n            const tmp = dp[j];\n            dp[j] = text1[i-1] === text2[j-1] ? prev + 1 : Math.max(dp[j], dp[j-1]);\n            prev = tmp;\n        }\n    }\n    return dp[n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "309",
+      "slug": "best-time-to-buy-sell-stock-with-cooldown",
+      "title": "Best Time to Buy/Sell Stock with Cooldown",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 3,
+      "tags": [
+        "dp",
+        "state-machine"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=I7j0F7AHpb8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "State machine: hold, sold, rest. hold = max(hold, rest-price). sold = hold+price. rest = max(rest, sold).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxProfit(prices):\n    sold, hold, rest = 0, float('-inf'), 0\n    for p in prices:\n        prev_sold = sold\n        sold = hold + p\n        hold = max(hold, rest - p)\n        rest = max(rest, prev_sold)\n    return max(sold, rest)",
+        "cpp": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        int sold = 0, held = INT_MIN, rest = 0;\n        for (int p : prices) {\n            int prevSold = sold;\n            sold = held + p;\n            held = max(held, rest - p);\n            rest = max(rest, prevSold);\n        }\n        return max(sold, rest);\n    }\n};",
+        "java": "class Solution {\n    public int maxProfit(int[] prices) {\n        int sold = 0, held = Integer.MIN_VALUE, rest = 0;\n        for (int p : prices) {\n            int prevSold = sold;\n            sold = held + p;\n            held = Math.max(held, rest - p);\n            rest = Math.max(rest, prevSold);\n        }\n        return Math.max(sold, rest);\n    }\n}",
+        "js": "var maxProfit = function(prices) {\n    let sold = 0, held = -Infinity, rest = 0;\n    for (const p of prices) {\n        const prevSold = sold;\n        sold = held + p;\n        held = Math.max(held, rest - p);\n        rest = Math.max(rest, prevSold);\n    }\n    return Math.max(sold, rest);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "518",
+      "slug": "coin-change-ii",
+      "title": "Coin Change II",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 4,
+      "tags": [
+        "dp",
+        "unbounded-knapsack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/coin-change-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Mjy4hd2xgrs"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Count combinations (not permutations). Iterate coins in outer loop. dp[a] += dp[a - coin].",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def change(amount, coins):\n    dp = [0] * (amount + 1)\n    dp[0] = 1\n    for coin in coins:\n        for a in range(coin, amount + 1):\n            dp[a] += dp[a - coin]\n    return dp[amount]",
+        "cpp": "class Solution {\npublic:\n    int change(int amount, vector<int>& coins) {\n        vector<int> dp(amount + 1, 0);\n        dp[0] = 1;\n        for (int c : coins)\n            for (int i = c; i <= amount; i++) dp[i] += dp[i - c];\n        return dp[amount];\n    }\n};",
+        "java": "class Solution {\n    public int change(int amount, int[] coins) {\n        int[] dp = new int[amount + 1];\n        dp[0] = 1;\n        for (int c : coins)\n            for (int i = c; i <= amount; i++) dp[i] += dp[i - c];\n        return dp[amount];\n    }\n}",
+        "js": "var change = function(amount, coins) {\n    const dp = new Array(amount + 1).fill(0);\n    dp[0] = 1;\n    for (const c of coins)\n        for (let i = c; i <= amount; i++) dp[i] += dp[i - c];\n    return dp[amount];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "494",
+      "slug": "target-sum",
+      "title": "Target Sum",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 5,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/target-sum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=g0npyaQtAQM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findTargetSumWays(nums, target):\n    dp = defaultdict(int)\n    dp[0] = 1\n    for num in nums:\n        new_dp = defaultdict(int)\n        for s, count in dp.items():\n            new_dp[s + num] += count\n            new_dp[s - num] += count\n        dp = new_dp\n    return dp[target]",
+        "cpp": "class Solution {\npublic:\n    int findTargetSumWays(vector<int>& nums, int target) {\n        int sum = accumulate(nums.begin(), nums.end(), 0);\n        if ((sum + target) % 2 || abs(target) > sum) return 0;\n        int t = (sum + target) / 2;\n        vector<int> dp(t + 1, 0);\n        dp[0] = 1;\n        for (int n : nums)\n            for (int j = t; j >= n; j--) dp[j] += dp[j - n];\n        return dp[t];\n    }\n};",
+        "java": "class Solution {\n    public int findTargetSumWays(int[] nums, int target) {\n        int sum = Arrays.stream(nums).sum();\n        if ((sum + target) % 2 != 0 || Math.abs(target) > sum) return 0;\n        int t = (sum + target) / 2;\n        int[] dp = new int[t + 1];\n        dp[0] = 1;\n        for (int n : nums)\n            for (int j = t; j >= n; j--) dp[j] += dp[j - n];\n        return dp[t];\n    }\n}",
+        "js": "var findTargetSumWays = function(nums, target) {\n    const sum = nums.reduce((a, b) => a + b, 0);\n    if ((sum + target) % 2 || Math.abs(target) > sum) return 0;\n    const t = (sum + target) / 2;\n    const dp = new Array(t + 1).fill(0);\n    dp[0] = 1;\n    for (const n of nums)\n        for (let j = t; j >= n; j--) dp[j] += dp[j - n];\n    return dp[t];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "97",
+      "slug": "interleaving-string",
+      "title": "Interleaving String",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 6,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/interleaving-string/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=3Rw3nDVAMSs"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isInterleave(s1, s2, s3):\n    if len(s1) + len(s2) != len(s3): return False\n    dp = [[False]*(len(s2)+1) for _ in range(len(s1)+1)]\n    dp[0][0] = True\n    for i in range(len(s1)+1):\n        for j in range(len(s2)+1):\n            if i > 0 and s1[i-1] == s3[i+j-1]:\n                dp[i][j] |= dp[i-1][j]\n            if j > 0 and s2[j-1] == s3[i+j-1]:\n                dp[i][j] |= dp[i][j-1]\n    return dp[-1][-1]",
+        "cpp": "class Solution {\npublic:\n    bool isInterleave(string s1, string s2, string s3) {\n        int m = s1.size(), n = s2.size();\n        if (m + n != s3.size()) return false;\n        vector<bool> dp(n + 1, false);\n        for (int i = 0; i <= m; i++)\n            for (int j = 0; j <= n; j++) {\n                if (i == 0 && j == 0) dp[j] = true;\n                else if (i == 0) dp[j] = dp[j-1] && s2[j-1] == s3[j-1];\n                else if (j == 0) dp[j] = dp[j] && s1[i-1] == s3[i-1];\n                else dp[j] = (dp[j] && s1[i-1] == s3[i+j-1]) || (dp[j-1] && s2[j-1] == s3[i+j-1]);\n            }\n        return dp[n];\n    }\n};",
+        "java": "class Solution {\n    public boolean isInterleave(String s1, String s2, String s3) {\n        int m = s1.length(), n = s2.length();\n        if (m + n != s3.length()) return false;\n        boolean[] dp = new boolean[n + 1];\n        for (int i = 0; i <= m; i++)\n            for (int j = 0; j <= n; j++) {\n                if (i == 0 && j == 0) dp[j] = true;\n                else if (i == 0) dp[j] = dp[j-1] && s2.charAt(j-1) == s3.charAt(j-1);\n                else if (j == 0) dp[j] = dp[j] && s1.charAt(i-1) == s3.charAt(i-1);\n                else dp[j] = (dp[j] && s1.charAt(i-1) == s3.charAt(i+j-1)) || (dp[j-1] && s2.charAt(j-1) == s3.charAt(i+j-1));\n            }\n        return dp[n];\n    }\n}",
+        "js": "var isInterleave = function(s1, s2, s3) {\n    const m = s1.length, n = s2.length;\n    if (m + n !== s3.length) return false;\n    const dp = new Array(n + 1).fill(false);\n    for (let i = 0; i <= m; i++)\n        for (let j = 0; j <= n; j++) {\n            if (i === 0 && j === 0) dp[j] = true;\n            else if (i === 0) dp[j] = dp[j-1] && s2[j-1] === s3[j-1];\n            else if (j === 0) dp[j] = dp[j] && s1[i-1] === s3[i-1];\n            else dp[j] = (dp[j] && s1[i-1] === s3[i+j-1]) || (dp[j-1] && s2[j-1] === s3[i+j-1]);\n        }\n    return dp[n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "329",
+      "slug": "longest-increasing-path-in-a-matrix",
+      "title": "Longest Increasing Path in a Matrix",
+      "difficulty": "hard",
+      "category": "2d-dp",
+      "order": 7,
+      "tags": [
+        "dp",
+        "dfs",
+        "memo"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-increasing-path-in-a-matrix/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=wCc_nd-GiDw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def longestIncreasingPath(matrix):\n    rows, cols = len(matrix), len(matrix[0])\n    cache = {}\n    def dfs(r, c):\n        if (r,c) in cache: return cache[(r,c)]\n        result = 1\n        for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<rows and 0<=nc<cols and matrix[nr][nc]>matrix[r][c]:\n                result = max(result, 1 + dfs(nr, nc))\n        cache[(r,c)] = result\n        return result\n    return max(dfs(r,c) for r in range(rows) for c in range(cols))",
+        "cpp": "class Solution {\npublic:\n    int longestIncreasingPath(vector<vector<int>>& matrix) {\n        int m = matrix.size(), n = matrix[0].size(), result = 0;\n        vector<vector<int>> memo(m, vector<int>(n, 0));\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                result = max(result, dfs(matrix, memo, i, j));\n        return result;\n    }\n    int dfs(vector<vector<int>>& mat, vector<vector<int>>& memo, int i, int j) {\n        if (memo[i][j]) return memo[i][j];\n        int dirs[] = {0,1,0,-1,0};\n        memo[i][j] = 1;\n        for (int d = 0; d < 4; d++) {\n            int ni = i+dirs[d], nj = j+dirs[d+1];\n            if (ni>=0 && nj>=0 && ni<mat.size() && nj<mat[0].size() && mat[ni][nj] > mat[i][j])\n                memo[i][j] = max(memo[i][j], 1 + dfs(mat, memo, ni, nj));\n        }\n        return memo[i][j];\n    }\n};",
+        "java": "class Solution {\n    int[][] memo;\n    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n    public int longestIncreasingPath(int[][] matrix) {\n        int m = matrix.length, n = matrix[0].length, result = 0;\n        memo = new int[m][n];\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                result = Math.max(result, dfs(matrix, i, j));\n        return result;\n    }\n    int dfs(int[][] mat, int i, int j) {\n        if (memo[i][j] != 0) return memo[i][j];\n        memo[i][j] = 1;\n        for (int[] d : dirs) {\n            int ni = i+d[0], nj = j+d[1];\n            if (ni>=0 && nj>=0 && ni<mat.length && nj<mat[0].length && mat[ni][nj] > mat[i][j])\n                memo[i][j] = Math.max(memo[i][j], 1 + dfs(mat, ni, nj));\n        }\n        return memo[i][j];\n    }\n}",
+        "js": "var longestIncreasingPath = function(matrix) {\n    const m = matrix.length, n = matrix[0].length;\n    const memo = Array.from({length: m}, () => new Array(n).fill(0));\n    const dfs = (i, j) => {\n        if (memo[i][j]) return memo[i][j];\n        memo[i][j] = 1;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && matrix[ni][nj] > matrix[i][j])\n                memo[i][j] = Math.max(memo[i][j], 1 + dfs(ni, nj));\n        }\n        return memo[i][j];\n    };\n    let result = 0;\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) result = Math.max(result, dfs(i, j));\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "115",
+      "slug": "distinct-subsequences",
+      "title": "Distinct Subsequences",
+      "difficulty": "hard",
+      "category": "2d-dp",
+      "order": 8,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/distinct-subsequences/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=-RDzMJ33nx8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def numDistinct(s, t):\n    dp = [[0]*(len(t)+1) for _ in range(len(s)+1)]\n    for i in range(len(s)+1): dp[i][0] = 1\n    for i in range(1, len(s)+1):\n        for j in range(1, len(t)+1):\n            dp[i][j] = dp[i-1][j]\n            if s[i-1] == t[j-1]:\n                dp[i][j] += dp[i-1][j-1]\n    return dp[-1][-1]",
+        "cpp": "class Solution {\npublic:\n    int numDistinct(string s, string t) {\n        int m = s.size(), n = t.size();\n        vector<unsigned long> dp(n + 1, 0);\n        dp[0] = 1;\n        for (int i = 1; i <= m; i++)\n            for (int j = n; j >= 1; j--)\n                if (s[i-1] == t[j-1]) dp[j] += dp[j-1];\n        return dp[n];\n    }\n};",
+        "java": "class Solution {\n    public int numDistinct(String s, String t) {\n        int m = s.length(), n = t.length();\n        long[] dp = new long[n + 1];\n        dp[0] = 1;\n        for (int i = 1; i <= m; i++)\n            for (int j = n; j >= 1; j--)\n                if (s.charAt(i-1) == t.charAt(j-1)) dp[j] += dp[j-1];\n        return (int)dp[n];\n    }\n}",
+        "js": "var numDistinct = function(s, t) {\n    const m = s.length, n = t.length;\n    const dp = new Array(n + 1).fill(0);\n    dp[0] = 1;\n    for (let i = 1; i <= m; i++)\n        for (let j = n; j >= 1; j--)\n            if (s[i-1] === t[j-1]) dp[j] += dp[j-1];\n    return dp[n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "72",
+      "slug": "edit-distance",
+      "title": "Edit Distance",
+      "difficulty": "medium",
+      "category": "2d-dp",
+      "order": 9,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/edit-distance/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=XYi2-LPVdmI"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[i][j] = min edits to convert word1[0:i] to word2[0:j]. If chars match, skip. Else min of insert, delete, replace + 1.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minDistance(word1, word2):\n    m, n = len(word1), len(word2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = i\n    for j in range(n+1): dp[0][j] = j\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if word1[i-1] == word2[j-1]:\n                dp[i][j] = dp[i-1][j-1]\n            else:\n                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[m][n]",
+        "cpp": "class Solution {\npublic:\n    int minDistance(string word1, string word2) {\n        int m = word1.size(), n = word2.size();\n        vector<int> dp(n + 1);\n        iota(dp.begin(), dp.end(), 0);\n        for (int i = 1; i <= m; i++) {\n            int prev = dp[0]; dp[0] = i;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                if (word1[i-1] == word2[j-1]) dp[j] = prev;\n                else dp[j] = 1 + min({dp[j], dp[j-1], prev});\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n};",
+        "java": "class Solution {\n    public int minDistance(String word1, String word2) {\n        int m = word1.length(), n = word2.length();\n        int[] dp = new int[n + 1];\n        for (int j = 0; j <= n; j++) dp[j] = j;\n        for (int i = 1; i <= m; i++) {\n            int prev = dp[0]; dp[0] = i;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                if (word1.charAt(i-1) == word2.charAt(j-1)) dp[j] = prev;\n                else dp[j] = 1 + Math.min(dp[j], Math.min(dp[j-1], prev));\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n}",
+        "js": "var minDistance = function(word1, word2) {\n    const m = word1.length, n = word2.length;\n    const dp = Array.from({length: n+1}, (_, i) => i);\n    for (let i = 1; i <= m; i++) {\n        let prev = dp[0]; dp[0] = i;\n        for (let j = 1; j <= n; j++) {\n            const tmp = dp[j];\n            if (word1[i-1] === word2[j-1]) dp[j] = prev;\n            else dp[j] = 1 + Math.min(dp[j], dp[j-1], prev);\n            prev = tmp;\n        }\n    }\n    return dp[n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "312",
+      "slug": "burst-balloons",
+      "title": "Burst Balloons",
+      "difficulty": "hard",
+      "category": "2d-dp",
+      "order": 10,
+      "tags": [
+        "dp",
+        "interval"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/burst-balloons/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=VFskby7lUbw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Think of last balloon to burst in range [l,r]. dp[l][r] = max coins from bursting all between l and r. For each k as last burst: nums[l]*nums[k]*nums[r] + dp[l][k] + dp[k][r].",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxCoins(nums):\n    nums = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * n for _ in range(n)]\n    for length in range(2, n):\n        for l in range(n - length):\n            r = l + length\n            for k in range(l+1, r):\n                dp[l][r] = max(dp[l][r],\n                    nums[l]*nums[k]*nums[r] + dp[l][k] + dp[k][r])\n    return dp[0][n-1]",
+        "cpp": "class Solution {\npublic:\n    int maxCoins(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> a = {1};\n        a.insert(a.end(), nums.begin(), nums.end());\n        a.push_back(1);\n        vector<vector<int>> dp(n + 2, vector<int>(n + 2, 0));\n        for (int len = 1; len <= n; len++)\n            for (int l = 1; l <= n - len + 1; l++) {\n                int r = l + len - 1;\n                for (int k = l; k <= r; k++)\n                    dp[l][r] = max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n            }\n        return dp[1][n];\n    }\n};",
+        "java": "class Solution {\n    public int maxCoins(int[] nums) {\n        int n = nums.length;\n        int[] a = new int[n + 2];\n        a[0] = a[n + 1] = 1;\n        System.arraycopy(nums, 0, a, 1, n);\n        int[][] dp = new int[n + 2][n + 2];\n        for (int len = 1; len <= n; len++)\n            for (int l = 1; l <= n - len + 1; l++) {\n                int r = l + len - 1;\n                for (int k = l; k <= r; k++)\n                    dp[l][r] = Math.max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n            }\n        return dp[1][n];\n    }\n}",
+        "js": "var maxCoins = function(nums) {\n    const n = nums.length;\n    const a = [1, ...nums, 1];\n    const dp = Array.from({length: n+2}, () => new Array(n+2).fill(0));\n    for (let len = 1; len <= n; len++)\n        for (let l = 1; l <= n - len + 1; l++) {\n            const r = l + len - 1;\n            for (let k = l; k <= r; k++)\n                dp[l][r] = Math.max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n        }\n    return dp[1][n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "10",
+      "slug": "regular-expression-matching",
+      "title": "Regular Expression Matching",
+      "difficulty": "hard",
+      "category": "2d-dp",
+      "order": 11,
+      "tags": [
+        "dp",
+        "string",
+        "regex"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/regular-expression-matching/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=HAA8mgxlov8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isMatch(s, p):\n    cache = {}\n    def dfs(i, j):\n        if (i,j) in cache: return cache[(i,j)]\n        if j == len(p): return i == len(s)\n        match = i < len(s) and (s[i]==p[j] or p[j]=='.')\n        if j+1 < len(p) and p[j+1] == '*':\n            cache[(i,j)] = dfs(i, j+2) or (match and dfs(i+1, j))\n        else:\n            cache[(i,j)] = match and dfs(i+1, j+1)\n        return cache[(i,j)]\n    return dfs(0, 0)",
+        "cpp": "class Solution {\npublic:\n    bool isMatch(string s, string p) {\n        int m = s.size(), n = p.size();\n        vector<vector<bool>> dp(m+1, vector<bool>(n+1, false));\n        dp[0][0] = true;\n        for (int j = 2; j <= n; j++) if (p[j-1] == '*') dp[0][j] = dp[0][j-2];\n        for (int i = 1; i <= m; i++)\n            for (int j = 1; j <= n; j++) {\n                if (p[j-1] == '*') {\n                    dp[i][j] = dp[i][j-2] || ((p[j-2] == '.' || p[j-2] == s[i-1]) && dp[i-1][j]);\n                } else {\n                    dp[i][j] = dp[i-1][j-1] && (p[j-1] == '.' || p[j-1] == s[i-1]);\n                }\n            }\n        return dp[m][n];\n    }\n};",
+        "java": "class Solution {\n    public boolean isMatch(String s, String p) {\n        int m = s.length(), n = p.length();\n        boolean[][] dp = new boolean[m+1][n+1];\n        dp[0][0] = true;\n        for (int j = 2; j <= n; j++) if (p.charAt(j-1) == '*') dp[0][j] = dp[0][j-2];\n        for (int i = 1; i <= m; i++)\n            for (int j = 1; j <= n; j++) {\n                if (p.charAt(j-1) == '*')\n                    dp[i][j] = dp[i][j-2] || ((p.charAt(j-2) == '.' || p.charAt(j-2) == s.charAt(i-1)) && dp[i-1][j]);\n                else\n                    dp[i][j] = dp[i-1][j-1] && (p.charAt(j-1) == '.' || p.charAt(j-1) == s.charAt(i-1));\n            }\n        return dp[m][n];\n    }\n}",
+        "js": "var isMatch = function(s, p) {\n    const m = s.length, n = p.length;\n    const dp = Array.from({length: m+1}, () => new Array(n+1).fill(false));\n    dp[0][0] = true;\n    for (let j = 2; j <= n; j++) if (p[j-1] === '*') dp[0][j] = dp[0][j-2];\n    for (let i = 1; i <= m; i++)\n        for (let j = 1; j <= n; j++) {\n            if (p[j-1] === '*')\n                dp[i][j] = dp[i][j-2] || ((p[j-2] === '.' || p[j-2] === s[i-1]) && dp[i-1][j]);\n            else\n                dp[i][j] = dp[i-1][j-1] && (p[j-1] === '.' || p[j-1] === s[i-1]);\n        }\n    return dp[m][n];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

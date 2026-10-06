@@ -1,0 +1,257 @@
+{
+  "slug": "bit-manipulation",
+  "title": "Bit Manipulation",
+  "icon": "💻",
+  "order": 18,
+  "concept": {
+    "heading": "Key Operations",
+    "body": "",
+    "bullets": [],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "136",
+      "slug": "single-number",
+      "title": "Single Number",
+      "difficulty": "easy",
+      "category": "bit-manipulation",
+      "order": 1,
+      "tags": [
+        "bit",
+        "xor"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/single-number/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=qMPX1AOa83k"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "XOR all numbers. Pairs cancel out (a^a=0), leaving the single number.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def singleNumber(nums):\n    result = 0\n    for n in nums:\n        result ^= n\n    return result",
+        "cpp": "class Solution {\npublic:\n    int singleNumber(vector<int>& nums) {\n        int result = 0;\n        for (int n : nums) result ^= n;\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int singleNumber(int[] nums) {\n        int result = 0;\n        for (int n : nums) result ^= n;\n        return result;\n    }\n}",
+        "js": "var singleNumber = function(nums) {\n    return nums.reduce((a, b) => a ^ b, 0);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "191",
+      "slug": "number-of-1-bits",
+      "title": "Number of 1 Bits",
+      "difficulty": "easy",
+      "category": "bit-manipulation",
+      "order": 2,
+      "tags": [
+        "bit"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/number-of-1-bits/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=5Km3utixwZs"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def hammingWeight(n):\n    count = 0\n    while n:\n        count += n & 1\n        n >>= 1\n    return count\n# Or: n & (n-1) drops lowest set bit",
+        "cpp": "class Solution {\npublic:\n    int hammingWeight(uint32_t n) {\n        int count = 0;\n        while (n) { count++; n &= n - 1; }\n        return count;\n    }\n};",
+        "java": "class Solution {\n    public int hammingWeight(int n) {\n        int count = 0;\n        while (n != 0) { count++; n &= n - 1; }\n        return count;\n    }\n}",
+        "js": "var hammingWeight = function(n) {\n    let count = 0;\n    while (n) { count++; n &= n - 1; }\n    return count;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "338",
+      "slug": "counting-bits",
+      "title": "Counting Bits",
+      "difficulty": "easy",
+      "category": "bit-manipulation",
+      "order": 3,
+      "tags": [
+        "bit",
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/counting-bits/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=RyBM56RIWrM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def countBits(n):\n    dp = [0] * (n + 1)\n    for i in range(1, n + 1):\n        dp[i] = dp[i >> 1] + (i & 1)\n    return dp",
+        "cpp": "class Solution {\npublic:\n    vector<int> countBits(int n) {\n        vector<int> dp(n + 1, 0);\n        for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n        return dp;\n    }\n};",
+        "java": "class Solution {\n    public int[] countBits(int n) {\n        int[] dp = new int[n + 1];\n        for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n        return dp;\n    }\n}",
+        "js": "var countBits = function(n) {\n    const dp = new Array(n + 1).fill(0);\n    for (let i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n    return dp;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "190",
+      "slug": "reverse-bits",
+      "title": "Reverse Bits",
+      "difficulty": "easy",
+      "category": "bit-manipulation",
+      "order": 4,
+      "tags": [
+        "bit"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/reverse-bits/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=UcoN6UjAI64"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def reverseBits(n):\n    result = 0\n    for _ in range(32):\n        result = (result << 1) | (n & 1)\n        n >>= 1\n    return result",
+        "cpp": "class Solution {\npublic:\n    uint32_t reverseBits(uint32_t n) {\n        uint32_t result = 0;\n        for (int i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>= 1; }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int reverseBits(int n) {\n        int result = 0;\n        for (int i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>>= 1; }\n        return result;\n    }\n}",
+        "js": "var reverseBits = function(n) {\n    let result = 0;\n    for (let i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>>= 1; }\n    return result >>> 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "268",
+      "slug": "missing-number",
+      "title": "Missing Number",
+      "difficulty": "easy",
+      "category": "bit-manipulation",
+      "order": 5,
+      "tags": [
+        "bit",
+        "math"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/missing-number/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=WnPLSRLSANE"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def missingNumber(nums):\n    return len(nums) * (len(nums)+1) // 2 - sum(nums)\n# Or XOR: xor 0..n with all nums, result is missing",
+        "cpp": "class Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        int n = nums.size(), result = n;\n        for (int i = 0; i < n; i++) result ^= i ^ nums[i];\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int missingNumber(int[] nums) {\n        int n = nums.length, result = n;\n        for (int i = 0; i < n; i++) result ^= i ^ nums[i];\n        return result;\n    }\n}",
+        "js": "var missingNumber = function(nums) {\n    let result = nums.length;\n    for (let i = 0; i < nums.length; i++) result ^= i ^ nums[i];\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "371",
+      "slug": "sum-of-two-integers",
+      "title": "Sum of Two Integers",
+      "difficulty": "medium",
+      "category": "bit-manipulation",
+      "order": 6,
+      "tags": [
+        "bit"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/sum-of-two-integers/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=gVUrDV4tZfY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "XOR = sum without carry. AND << 1 = carry. Repeat until no carry.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def getSum(a, b):\n    mask = 0xFFFFFFFF\n    while b & mask:\n        carry = (a & b) << 1\n        a = a ^ b\n        b = carry\n    return a & mask if b > mask else a",
+        "cpp": "class Solution {\npublic:\n    int getSum(int a, int b) {\n        while (b != 0) {\n            int carry = a & b;\n            a = a ^ b;\n            b = carry << 1;\n        }\n        return a;\n    }\n};",
+        "java": "class Solution {\n    public int getSum(int a, int b) {\n        while (b != 0) { int carry = a & b; a = a ^ b; b = carry << 1; }\n        return a;\n    }\n}",
+        "js": "var getSum = function(a, b) {\n    while (b !== 0) { const carry = a & b; a = a ^ b; b = carry << 1; }\n    return a;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "7",
+      "slug": "reverse-integer",
+      "title": "Reverse Integer",
+      "difficulty": "medium",
+      "category": "bit-manipulation",
+      "order": 7,
+      "tags": [
+        "math"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/reverse-integer/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=HAgLH58IgJQ"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def reverse(x):\n    sign = 1 if x >= 0 else -1\n    x = abs(x)\n    result = 0\n    while x:\n        result = result * 10 + x % 10\n        x //= 10\n    result *= sign\n    return result if -2**31 <= result <= 2**31-1 else 0",
+        "cpp": "class Solution {\npublic:\n    int reverse(int x) {\n        int result = 0;\n        while (x) {\n            if (result > INT_MAX/10 || result < INT_MIN/10) return 0;\n            result = result * 10 + x % 10;\n            x /= 10;\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int reverse(int x) {\n        int result = 0;\n        while (x != 0) {\n            if (result > Integer.MAX_VALUE/10 || result < Integer.MIN_VALUE/10) return 0;\n            result = result * 10 + x % 10;\n            x /= 10;\n        }\n        return result;\n    }\n}",
+        "js": "var reverse = function(x) {\n    const sign = x < 0 ? -1 : 1;\n    let result = 0;\n    x = Math.abs(x);\n    while (x) { result = result * 10 + x % 10; x = Math.floor(x / 10); }\n    result *= sign;\n    return result >= -(2**31) && result <= 2**31 - 1 ? result : 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

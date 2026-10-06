@@ -1,0 +1,286 @@
+{
+  "slug": "stack",
+  "title": "Stack",
+  "icon": "📚",
+  "order": 4,
+  "concept": {
+    "heading": "Core Pattern",
+    "body": "Stack = LIFO. Use when you need to track **nested structures** (parentheses), **monotonic sequences** (next greater element), or **undo-like operations**.",
+    "bullets": [
+      "**Matching pairs:** Push opening, pop on closing, check match",
+      "**Monotonic stack:** Maintain increasing/decreasing order to find next greater/smaller",
+      "**Expression eval:** Two stacks (operands + operators)"
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "20",
+      "slug": "valid-parentheses",
+      "title": "Valid Parentheses",
+      "difficulty": "easy",
+      "category": "stack",
+      "order": 1,
+      "tags": [
+        "stack",
+        "matching"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/valid-parentheses/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=WTzjTskDFMg"
+      },
+      "pattern": "Stack",
+      "patternTriggers": [],
+      "keyInsight": "Push opening brackets onto stack. For closing brackets, pop and check if it matches. Stack must be empty at end.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isValid(s):\n    stack = []\n    match = {')': '(', ']': '[', '}': '{'}\n    for c in s:\n        if c in match:\n            if not stack or stack[-1] != match[c]:\n                return False\n            stack.pop()\n        else:\n            stack.append(c)\n    return len(stack) == 0",
+        "cpp": "class Solution {\npublic:\n    bool isValid(string s) {\n        stack<char> st;\n        unordered_map<char,char> m = {{')', '('}, {']', '['}, {'}', '{'}};\n        for (char c : s) {\n            if (m.count(c)) {\n                if (st.empty() || st.top() != m[c]) return false;\n                st.pop();\n            } else st.push(c);\n        }\n        return st.empty();\n    }\n};",
+        "java": "class Solution {\n    public boolean isValid(String s) {\n        Stack<Character> stack = new Stack<>();\n        for (char c : s.toCharArray()) {\n            if (c == '(') stack.push(')');\n            else if (c == '[') stack.push(']');\n            else if (c == '{') stack.push('}');\n            else if (stack.isEmpty() || stack.pop() != c) return false;\n        }\n        return stack.isEmpty();\n    }\n}",
+        "js": "var isValid = function(s) {\n    const stack = [], map = {')':'(', ']':'[', '}':'{'};\n    for (const c of s) {\n        if (map[c]) {\n            if (!stack.length || stack.pop() !== map[c]) return false;\n        } else stack.push(c);\n    }\n    return stack.length === 0;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "155",
+      "slug": "min-stack",
+      "title": "Min Stack",
+      "difficulty": "medium",
+      "category": "stack",
+      "order": 2,
+      "tags": [
+        "stack",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/min-stack/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=qkLl7nAwDPo"
+      },
+      "pattern": "Two Stacks",
+      "patternTriggers": [],
+      "keyInsight": "Keep a second stack that tracks the minimum at each level. When you push, also push the current min. When you pop, pop from both.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class MinStack:\n    def __init__(self):\n        self.stack = []\n        self.min_stack = []  # parallel min tracking\n\n    def push(self, val):\n        self.stack.append(val)\n        curr_min = min(val, self.min_stack[-1] if self.min_stack else val)\n        self.min_stack.append(curr_min)\n\n    def pop(self):\n        self.stack.pop()\n        self.min_stack.pop()\n\n    def top(self):\n        return self.stack[-1]\n\n    def getMin(self):\n        return self.min_stack[-1]",
+        "cpp": "class MinStack {\n    stack<pair<int,int>> st; // {val, currentMin}\npublic:\n    void push(int val) {\n        int curMin = st.empty() ? val : min(val, st.top().second);\n        st.push({val, curMin});\n    }\n    void pop() { st.pop(); }\n    int top() { return st.top().first; }\n    int getMin() { return st.top().second; }\n};",
+        "java": "class MinStack {\n    private Stack<int[]> stack = new Stack<>();\n    public void push(int val) {\n        int min = stack.isEmpty() ? val : Math.min(val, stack.peek()[1]);\n        stack.push(new int[]{val, min});\n    }\n    public void pop() { stack.pop(); }\n    public int top() { return stack.peek()[0]; }\n    public int getMin() { return stack.peek()[1]; }\n}",
+        "js": "var MinStack = function() { this.stack = []; };\nMinStack.prototype.push = function(val) {\n    const min = this.stack.length ? Math.min(val, this.getMin()) : val;\n    this.stack.push([val, min]);\n};\nMinStack.prototype.pop = function() { this.stack.pop(); };\nMinStack.prototype.top = function() { return this.stack[this.stack.length-1][0]; };\nMinStack.prototype.getMin = function() { return this.stack[this.stack.length-1][1]; };"
+      },
+      "complexity": {
+        "time": "O(1) all operations",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "150",
+      "slug": "evaluate-reverse-polish-notation",
+      "title": "Evaluate Reverse Polish Notation",
+      "difficulty": "medium",
+      "category": "stack",
+      "order": 3,
+      "tags": [
+        "stack",
+        "math"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/evaluate-reverse-polish-notation/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=iu0082c4HDE"
+      },
+      "pattern": "Stack",
+      "patternTriggers": [],
+      "keyInsight": "Numbers go on stack. When you hit an operator, pop two numbers, apply operator, push result back. Final answer is the only element left.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def evalRPN(tokens):\n    stack = []\n    for t in tokens:\n        if t in \"+-*/\":\n            b, a = stack.pop(), stack.pop()\n            if t == '+': stack.append(a + b)\n            elif t == '-': stack.append(a - b)\n            elif t == '*': stack.append(a * b)\n            else: stack.append(int(a / b))  # truncate toward zero\n        else:\n            stack.append(int(t))\n    return stack[0]",
+        "cpp": "class Solution {\npublic:\n    int evalRPN(vector<string>& tokens) {\n        stack<int> st;\n        for (const string& t : tokens) {\n            if (t == \"+\" || t == \"-\" || t == \"*\" || t == \"/\") {\n                int b = st.top(); st.pop();\n                int a = st.top(); st.pop();\n                if (t == \"+\") st.push(a + b);\n                else if (t == \"-\") st.push(a - b);\n                else if (t == \"*\") st.push(a * b);\n                else st.push(a / b);\n            } else st.push(stoi(t));\n        }\n        return st.top();\n    }\n};",
+        "java": "class Solution {\n    public int evalRPN(String[] tokens) {\n        Stack<Integer> stack = new Stack<>();\n        for (String t : tokens) {\n            switch (t) {\n                case \"+\": stack.push(stack.pop() + stack.pop()); break;\n                case \"-\": int b = stack.pop(); stack.push(stack.pop() - b); break;\n                case \"*\": stack.push(stack.pop() * stack.pop()); break;\n                case \"/\": int d = stack.pop(); stack.push(stack.pop() / d); break;\n                default: stack.push(Integer.parseInt(t));\n            }\n        }\n        return stack.peek();\n    }\n}",
+        "js": "var evalRPN = function(tokens) {\n    const stack = [];\n    for (const t of tokens) {\n        if (['+','-','*','/'].includes(t)) {\n            const b = stack.pop(), a = stack.pop();\n            if (t === '+') stack.push(a + b);\n            else if (t === '-') stack.push(a - b);\n            else if (t === '*') stack.push(a * b);\n            else stack.push(Math.trunc(a / b));\n        } else stack.push(Number(t));\n    }\n    return stack[0];\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "22",
+      "slug": "generate-parentheses",
+      "title": "Generate Parentheses",
+      "difficulty": "medium",
+      "category": "stack",
+      "order": 4,
+      "tags": [
+        "stack",
+        "backtracking"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/generate-parentheses/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=s9fokUqJ76A"
+      },
+      "pattern": "Backtracking",
+      "patternTriggers": [],
+      "keyInsight": "Two choices at each step: add '(' if open_count < n, add ')' if close_count < open_count. This ensures validity without checking.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def generateParenthesis(n):\n    result = []\n    def backtrack(curr, open_count, close_count):\n        if len(curr) == 2 * n:\n            result.append(curr)\n            return\n        if open_count < n:\n            backtrack(curr + \"(\", open_count + 1, close_count)\n        if close_count < open_count:\n            backtrack(curr + \")\", open_count, close_count + 1)\n    backtrack(\"\", 0, 0)\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        function<void(string&, int, int)> backtrack = [&](string& cur, int open, int close) {\n            if (cur.size() == 2 * n) { result.push_back(cur); return; }\n            if (open < n) { cur += '('; backtrack(cur, open+1, close); cur.pop_back(); }\n            if (close < open) { cur += ')'; backtrack(cur, open, close+1); cur.pop_back(); }\n        };\n        string s;\n        backtrack(s, 0, 0);\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<String> generateParenthesis(int n) {\n        List<String> result = new ArrayList<>();\n        backtrack(result, new StringBuilder(), 0, 0, n);\n        return result;\n    }\n    void backtrack(List<String> res, StringBuilder sb, int open, int close, int n) {\n        if (sb.length() == 2 * n) { res.add(sb.toString()); return; }\n        if (open < n) { sb.append('('); backtrack(res, sb, open+1, close, n); sb.deleteCharAt(sb.length()-1); }\n        if (close < open) { sb.append(')'); backtrack(res, sb, open, close+1, n); sb.deleteCharAt(sb.length()-1); }\n    }\n}",
+        "js": "var generateParenthesis = function(n) {\n    const result = [];\n    const backtrack = (cur, open, close) => {\n        if (cur.length === 2 * n) { result.push(cur); return; }\n        if (open < n) backtrack(cur + '(', open + 1, close);\n        if (close < open) backtrack(cur + ')', open, close + 1);\n    };\n    backtrack('', 0, 0);\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(4^n / sqrt(n)) Catalan number",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "739",
+      "slug": "daily-temperatures",
+      "title": "Daily Temperatures",
+      "difficulty": "medium",
+      "category": "stack",
+      "order": 5,
+      "tags": [
+        "stack",
+        "monotonic-stack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/daily-temperatures/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=cTBiBSnjO60"
+      },
+      "pattern": "Monotonic Stack",
+      "patternTriggers": [],
+      "keyInsight": "Maintain a decreasing stack of indices. When current temp is warmer than stack top, pop and record the difference in days. Classic \"next greater element\" pattern.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def dailyTemperatures(temperatures):\n    n = len(temperatures)\n    result = [0] * n\n    stack = []  # indices, decreasing temps\n\n    for i in range(n):\n        while stack and temperatures[i] > temperatures[stack[-1]]:\n            prev = stack.pop()\n            result[prev] = i - prev\n        stack.append(i)\n\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> dailyTemperatures(vector<int>& temperatures) {\n        int n = temperatures.size();\n        vector<int> result(n, 0);\n        stack<int> st;\n        for (int i = 0; i < n; i++) {\n            while (!st.empty() && temperatures[i] > temperatures[st.top()]) {\n                result[st.top()] = i - st.top();\n                st.pop();\n            }\n            st.push(i);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[] dailyTemperatures(int[] temperatures) {\n        int n = temperatures.length;\n        int[] result = new int[n];\n        Stack<Integer> stack = new Stack<>();\n        for (int i = 0; i < n; i++) {\n            while (!stack.isEmpty() && temperatures[i] > temperatures[stack.peek()])\n                result[stack.peek()] = i - stack.pop();\n            stack.push(i);\n        }\n        return result;\n    }\n}",
+        "js": "var dailyTemperatures = function(temperatures) {\n    const n = temperatures.length, result = new Array(n).fill(0);\n    const stack = [];\n    for (let i = 0; i < n; i++) {\n        while (stack.length && temperatures[i] > temperatures[stack[stack.length-1]]) {\n            const j = stack.pop();\n            result[j] = i - j;\n        }\n        stack.push(i);\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": "temps = [73, 74, 75, 71, 69, 72, 76, 73]\n\ni=0 (73): stack=[0]\ni=1 (74): 74>73, pop 0, res[0]=1. stack=[1]\ni=2 (75): 75>74, pop 1, res[1]=1. stack=[2]\ni=3 (71): stack=[2,3]\ni=4 (69): stack=[2,3,4]\ni=5 (72): 72>69, pop 4, res[4]=1. 72>71, pop 3, res[3]=2. stack=[2,5]\ni=6 (76): 76>72, pop 5, res[5]=1. 76>75, pop 2, res[2]=4. stack=[6]\ni=7 (73): stack=[6,7]\n\nResult: [1, 1, 4, 2, 1, 1, 0, 0]",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "853",
+      "slug": "car-fleet",
+      "title": "Car Fleet",
+      "difficulty": "medium",
+      "category": "stack",
+      "order": 6,
+      "tags": [
+        "stack",
+        "sorting"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/car-fleet/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Pr6T-3yB9QM"
+      },
+      "pattern": "Stack",
+      "patternTriggers": [],
+      "keyInsight": "Sort by position (closest to target first). Calculate time for each car to reach target. If a car behind takes LESS time, it merges into the fleet ahead. Count distinct fleets.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def carFleet(target, position, speed):\n    # Sort by position descending (closest to target first)\n    pairs = sorted(zip(position, speed), reverse=True)\n    stack = []  # arrival times\n    for pos, spd in pairs:\n        time = (target - pos) / spd\n        # If this car is slower (takes more time), it's a new fleet\n        if not stack or time > stack[-1]:\n            stack.append(time)\n    return len(stack)",
+        "cpp": "class Solution {\npublic:\n    int carFleet(int target, vector<int>& position, vector<int>& speed) {\n        int n = position.size();\n        vector<pair<int,double>> cars(n);\n        for (int i = 0; i < n; i++)\n            cars[i] = {position[i], (double)(target - position[i]) / speed[i]};\n        sort(cars.begin(), cars.end());\n        int fleets = 0;\n        double curTime = 0;\n        for (int i = n - 1; i >= 0; i--) {\n            if (cars[i].second > curTime) {\n                fleets++;\n                curTime = cars[i].second;\n            }\n        }\n        return fleets;\n    }\n};",
+        "java": "class Solution {\n    public int carFleet(int target, int[] position, int[] speed) {\n        int n = position.length;\n        double[][] cars = new double[n][2];\n        for (int i = 0; i < n; i++)\n            cars[i] = new double[]{position[i], (double)(target - position[i]) / speed[i]};\n        Arrays.sort(cars, (a, b) -> Double.compare(b[0], a[0]));\n        int fleets = 0;\n        double curTime = 0;\n        for (double[] car : cars) {\n            if (car[1] > curTime) { fleets++; curTime = car[1]; }\n        }\n        return fleets;\n    }\n}",
+        "js": "var carFleet = function(target, position, speed) {\n    const cars = position.map((p, i) => [p, (target - p) / speed[i]])\n        .sort((a, b) => b[0] - a[0]);\n    let fleets = 0, curTime = 0;\n    for (const [_, time] of cars) {\n        if (time > curTime) { fleets++; curTime = time; }\n    }\n    return fleets;\n};"
+      },
+      "complexity": {
+        "time": "O(N log N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "84",
+      "slug": "largest-rectangle-in-histogram",
+      "title": "Largest Rectangle in Histogram",
+      "difficulty": "hard",
+      "category": "stack",
+      "order": 7,
+      "tags": [
+        "stack",
+        "monotonic-stack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/largest-rectangle-in-histogram/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=zx5Sw9mr8FE"
+      },
+      "pattern": "Monotonic Stack",
+      "patternTriggers": [],
+      "keyInsight": "Maintain an increasing stack of indices. When a shorter bar comes, pop and calculate area using the popped height. Width extends from current position back to new stack top.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def largestRectangleArea(heights):\n    stack = []  # (index, height)\n    max_area = 0\n\n    for i, h in enumerate(heights):\n        start = i\n        while stack and stack[-1][1] > h:\n            idx, height = stack.pop()\n            max_area = max(max_area, height * (i - idx))\n            start = idx  # extend back\n        stack.append((start, h))\n\n    # Remaining bars extend to the end\n    for idx, height in stack:\n        max_area = max(max_area, height * (len(heights) - idx))\n\n    return max_area",
+        "cpp": "class Solution {\npublic:\n    int largestRectangleArea(vector<int>& heights) {\n        stack<int> st;\n        int maxArea = 0, n = heights.size();\n        for (int i = 0; i <= n; i++) {\n            int h = (i == n) ? 0 : heights[i];\n            while (!st.empty() && h < heights[st.top()]) {\n                int height = heights[st.top()]; st.pop();\n                int width = st.empty() ? i : i - st.top() - 1;\n                maxArea = max(maxArea, height * width);\n            }\n            st.push(i);\n        }\n        return maxArea;\n    }\n};",
+        "java": "class Solution {\n    public int largestRectangleArea(int[] heights) {\n        Stack<Integer> stack = new Stack<>();\n        int maxArea = 0, n = heights.length;\n        for (int i = 0; i <= n; i++) {\n            int h = (i == n) ? 0 : heights[i];\n            while (!stack.isEmpty() && h < heights[stack.peek()]) {\n                int height = heights[stack.pop()];\n                int width = stack.isEmpty() ? i : i - stack.peek() - 1;\n                maxArea = Math.max(maxArea, height * width);\n            }\n            stack.push(i);\n        }\n        return maxArea;\n    }\n}",
+        "js": "var largestRectangleArea = function(heights) {\n    const stack = [];\n    let maxArea = 0;\n    const n = heights.length;\n    for (let i = 0; i <= n; i++) {\n        const h = i === n ? 0 : heights[i];\n        while (stack.length && h < heights[stack[stack.length-1]]) {\n            const height = heights[stack.pop()];\n            const width = stack.length ? i - stack[stack.length-1] - 1 : i;\n            maxArea = Math.max(maxArea, height * width);\n        }\n        stack.push(i);\n    }\n    return maxArea;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

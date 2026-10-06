@@ -1,0 +1,384 @@
+{
+  "slug": "arrays-hashing",
+  "title": "Arrays & Hashing",
+  "icon": "📦",
+  "order": 1,
+  "concept": {
+    "heading": "Core Concepts",
+    "body": "**Hash Maps** give O(1) average lookup - use them to trade space for time. **Frequency counting**, **complement finding**, and **grouping** are the 3 main patterns here.",
+    "bullets": [
+      "**When to hash:** Need O(1) lookup for complements, duplicates, or grouping",
+      "**Sorted array?** Consider two pointers instead of hash map",
+      "**Frequency problems:** Counter/defaultdict is your friend"
+    ],
+    "legacySvg": "<svg width=\"500\" height=\"120\" viewBox=\"0 0 500 120\">\n                    <style>text{font-family:'Inter',sans-serif;font-size:12px;fill:#e2e8f0}rect{rx:6}</style>\n                    <!-- Array -->\n                    <text x=\"10\" y=\"20\" fill=\"#94a3b8\" font-weight=\"600\">Array (O(N) search)</text>\n                    <rect x=\"10\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"28\" y=\"52\" text-anchor=\"middle\">2</text>\n                    <rect x=\"62\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"80\" y=\"52\" text-anchor=\"middle\">7</text>\n                    <rect x=\"114\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"132\" y=\"52\" text-anchor=\"middle\">11</text>\n                    <rect x=\"166\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"184\" y=\"52\" text-anchor=\"middle\">15</text>\n                    <!-- Arrow -->\n                    <text x=\"240\" y=\"52\" fill=\"#6366f1\" font-size=\"20\">&#x2192;</text>\n                    <!-- HashMap -->\n                    <text x=\"280\" y=\"20\" fill=\"#94a3b8\" font-weight=\"600\">HashMap (O(1) lookup)</text>\n                    <rect x=\"280\" y=\"30\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"325\" y=\"48\" text-anchor=\"middle\" fill=\"#a5b4fc\">2 &#x2192; 0</text>\n                    <rect x=\"280\" y=\"60\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"325\" y=\"78\" text-anchor=\"middle\" fill=\"#a5b4fc\">7 &#x2192; 1</text>\n                    <rect x=\"380\" y=\"30\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"425\" y=\"48\" text-anchor=\"middle\" fill=\"#a5b4fc\">11 &#x2192; 2</text>\n                    <rect x=\"380\" y=\"60\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"425\" y=\"78\" text-anchor=\"middle\" fill=\"#a5b4fc\">15 &#x2192; 3</text>\n                    <text x=\"280\" y=\"110\" fill=\"#22c55e\" font-size=\"11\">val &#x2192; index mapping</text>\n                </svg>"
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "217",
+      "slug": "contains-duplicate",
+      "title": "Contains Duplicate",
+      "difficulty": "easy",
+      "category": "arrays-hashing",
+      "order": 1,
+      "tags": [
+        "array",
+        "hash-set"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/contains-duplicate/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=3OamzN0UjO8"
+      },
+      "pattern": "Hash Set",
+      "patternTriggers": [],
+      "keyInsight": "A set automatically handles uniqueness. If we can't insert (already exists), we found a duplicate.",
+      "bruteForce": null,
+      "approach": [
+        "Create an empty hash set",
+        "For each number, check if it's already in the set",
+        "If yes, return true (duplicate found)",
+        "If no, add it to the set and continue"
+      ],
+      "code": {
+        "python": "def containsDuplicate(nums):\n    # Set stores unique elements seen so far\n    seen = set()\n    for num in nums:\n        if num in seen:\n            return True\n        seen.add(num)\n    return False",
+        "cpp": "class Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        unordered_set<int> seen;\n        for (int num : nums) {\n            if (seen.count(num)) return true;\n            seen.insert(num);\n        }\n        return false;\n    }\n};",
+        "java": "class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        Set<Integer> seen = new HashSet<>();\n        for (int num : nums) {\n            if (!seen.add(num)) return true;\n        }\n        return false;\n    }\n}",
+        "js": "var containsDuplicate = function(nums) {\n    const seen = new Set();\n    for (const num of nums) {\n        if (seen.has(num)) return true;\n        seen.add(num);\n    }\n    return false;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": "Input: [1, 2, 3, 1]\n\nStep 1: num=1, seen={},     1 not in seen → add → seen={1}\nStep 2: num=2, seen={1},    2 not in seen → add → seen={1,2}\nStep 3: num=3, seen={1,2},  3 not in seen → add → seen={1,2,3}\nStep 4: num=1, seen={1,2,3}, 1 IN seen → return True ✓",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "242",
+      "slug": "valid-anagram",
+      "title": "Valid Anagram",
+      "difficulty": "easy",
+      "category": "arrays-hashing",
+      "order": 2,
+      "tags": [
+        "hash-map",
+        "frequency-count",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/valid-anagram/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=9UtInBqnCgA"
+      },
+      "pattern": "Frequency Count",
+      "patternTriggers": [],
+      "keyInsight": "Two strings are anagrams if and only if their character frequency counts are identical.",
+      "bruteForce": null,
+      "approach": [
+        "If lengths differ, return false immediately",
+        "Count frequency of each char in both strings",
+        "Compare the two frequency maps"
+      ],
+      "code": {
+        "python": "def isAnagram(s, t):\n    if len(s) != len(t):\n        return False\n    # Count chars: increment for s, decrement for t\n    count = {}\n    for i in range(len(s)):\n        count[s[i]] = count.get(s[i], 0) + 1\n        count[t[i]] = count.get(t[i], 0) - 1\n    return all(v == 0 for v in count.values())",
+        "cpp": "class Solution {\npublic:\n    bool isAnagram(string s, string t) {\n        if (s.size() != t.size()) return false;\n        int count[26] = {};\n        for (int i = 0; i < s.size(); i++) {\n            count[s[i] - 'a']++;\n            count[t[i] - 'a']--;\n        }\n        for (int c : count) if (c != 0) return false;\n        return true;\n    }\n};",
+        "java": "class Solution {\n    public boolean isAnagram(String s, String t) {\n        if (s.length() != t.length()) return false;\n        int[] count = new int[26];\n        for (int i = 0; i < s.length(); i++) {\n            count[s.charAt(i) - 'a']++;\n            count[t.charAt(i) - 'a']--;\n        }\n        for (int c : count) if (c != 0) return false;\n        return true;\n    }\n}",
+        "js": "var isAnagram = function(s, t) {\n    if (s.length !== t.length) return false;\n    const count = {};\n    for (const c of s) count[c] = (count[c] || 0) + 1;\n    for (const c of t) {\n        if (!count[c]) return false;\n        count[c]--;\n    }\n    return true;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "at most 26 chars"
+      },
+      "dryRun": "s = \"anagram\", t = \"nagaram\"\n\nAfter counting: {'a':0, 'n':0, 'g':0, 'r':0, 'm':0}\nAll zeros → True ✓\n\ns = \"rat\", t = \"car\"\nAfter counting: {'r':0, 'a':0, 't':1, 'c':-1}\nNot all zeros → False ✓",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1",
+      "slug": "two-sum",
+      "title": "Two Sum",
+      "difficulty": "easy",
+      "category": "arrays-hashing",
+      "order": 3,
+      "tags": [
+        "hash-map",
+        "complement"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/two-sum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=KLlXCFG5TnA"
+      },
+      "pattern": "Hash Map",
+      "patternTriggers": [],
+      "keyInsight": "For each number x, we need (target - x). Store seen numbers in a hash map so we can check for complements in O(1).",
+      "bruteForce": null,
+      "approach": [
+        "Create hash map {value: index}",
+        "For each num, compute complement = target - num",
+        "If complement in map, return [map[complement], i]",
+        "Otherwise, store num:i in map"
+      ],
+      "code": {
+        "python": "def twoSum(nums, target):\n    seen = {}  # val -> index\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i",
+        "cpp": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        unordered_map<int, int> map;\n        for (int i = 0; i < nums.size(); i++) {\n            int complement = target - nums[i];\n            if (map.count(complement))\n                return {map[complement], i};\n            map[nums[i]] = i;\n        }\n        return {};\n    }\n};",
+        "java": "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int complement = target - nums[i];\n            if (map.containsKey(complement))\n                return new int[]{map.get(complement), i};\n            map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}",
+        "js": "var twoSum = function(nums, target) {\n    const map = new Map();\n    for (let i = 0; i < nums.length; i++) {\n        const complement = target - nums[i];\n        if (map.has(complement))\n            return [map.get(complement), i];\n        map.set(nums[i], i);\n    }\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "49",
+      "slug": "group-anagrams",
+      "title": "Group Anagrams",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 4,
+      "tags": [
+        "hash-map",
+        "sorting",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/group-anagrams/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=vzdNOK2oB2E"
+      },
+      "pattern": "Hash Map",
+      "patternTriggers": [],
+      "keyInsight": "Anagrams produce the same string when sorted. Use sorted string as hash map key to group them.",
+      "bruteForce": null,
+      "approach": [
+        "For each word, sort its characters to create a canonical key",
+        "Use this key in a hash map, value is list of original words",
+        "Return all values from the hash map"
+      ],
+      "code": {
+        "python": "def groupAnagrams(strs):\n    groups = {}  # sorted_str -> [original strings]\n    for s in strs:\n        key = tuple(sorted(s))  # or ''.join(sorted(s))\n        groups.setdefault(key, []).append(s)\n    return list(groups.values())\n\n# Alt: O(N*K) using char count as key (K=max word length)\ndef groupAnagrams(strs):\n    groups = {}\n    for s in strs:\n        count = [0] * 26\n        for c in s:\n            count[ord(c) - ord('a')] += 1\n        groups.setdefault(tuple(count), []).append(s)\n    return list(groups.values())",
+        "cpp": "class Solution {\npublic:\n    vector<vector<string>> groupAnagrams(vector<string>& strs) {\n        unordered_map<string, vector<string>> map;\n        for (string& s : strs) {\n            string key = s;\n            sort(key.begin(), key.end());\n            map[key].push_back(s);\n        }\n        vector<vector<string>> result;\n        for (auto& [k, v] : map) result.push_back(v);\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<List<String>> groupAnagrams(String[] strs) {\n        Map<String, List<String>> map = new HashMap<>();\n        for (String s : strs) {\n            char[] arr = s.toCharArray();\n            Arrays.sort(arr);\n            String key = new String(arr);\n            map.computeIfAbsent(key, k -> new ArrayList<>()).add(s);\n        }\n        return new ArrayList<>(map.values());\n    }\n}",
+        "js": "var groupAnagrams = function(strs) {\n    const map = new Map();\n    for (const s of strs) {\n        const key = s.split('').sort().join('');\n        if (!map.has(key)) map.set(key, []);\n        map.get(key).push(s);\n    }\n    return Array.from(map.values());\n};"
+      },
+      "complexity": {
+        "time": "O(N * K log K) or O(N * K)",
+        "space": "O(N * K)"
+      },
+      "dryRun": "Input: [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]\n\n\"eat\" → sorted \"aet\" → groups{\"aet\": [\"eat\"]}\n\"tea\" → sorted \"aet\" → groups{\"aet\": [\"eat\",\"tea\"]}\n\"tan\" → sorted \"ant\" → groups{\"aet\": [\"eat\",\"tea\"], \"ant\": [\"tan\"]}\n\"ate\" → sorted \"aet\" → groups{\"aet\": [\"eat\",\"tea\",\"ate\"], \"ant\": [\"tan\"]}\n\"nat\" → sorted \"ant\" → groups{\"aet\": [...], \"ant\": [\"tan\",\"nat\"]}\n\"bat\" → sorted \"abt\" → groups{..., \"abt\": [\"bat\"]}\n\nOutput: [[\"eat\",\"tea\",\"ate\"], [\"tan\",\"nat\"], [\"bat\"]]",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "347",
+      "slug": "top-k-frequent-elements",
+      "title": "Top K Frequent Elements",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 5,
+      "tags": [
+        "hash-map",
+        "heap",
+        "bucket-sort"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/top-k-frequent-elements/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=YPTqKIgVk-k"
+      },
+      "pattern": "Bucket Sort",
+      "patternTriggers": [],
+      "keyInsight": "Bucket sort by frequency! Index = frequency, value = list of nums with that frequency. Max frequency = N, so O(N) time.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def topKFrequent(nums, k):\n    count = {}\n    for n in nums:\n        count[n] = count.get(n, 0) + 1\n\n    # Bucket sort: index = frequency, value = list of nums\n    buckets = [[] for _ in range(len(nums) + 1)]\n    for num, freq in count.items():\n        buckets[freq].append(num)\n\n    # Collect from highest frequency bucket\n    result = []\n    for i in range(len(buckets) - 1, -1, -1):\n        for num in buckets[i]:\n            result.append(num)\n            if len(result) == k:\n                return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> topKFrequent(vector<int>& nums, int k) {\n        unordered_map<int, int> freq;\n        for (int n : nums) freq[n]++;\n        vector<vector<int>> bucket(nums.size() + 1);\n        for (auto& [num, cnt] : freq) bucket[cnt].push_back(num);\n        vector<int> result;\n        for (int i = bucket.size() - 1; i >= 0 && result.size() < k; i--)\n            for (int n : bucket[i]) {\n                result.push_back(n);\n                if (result.size() == k) break;\n            }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[] topKFrequent(int[] nums, int k) {\n        Map<Integer, Integer> freq = new HashMap<>();\n        for (int n : nums) freq.merge(n, 1, Integer::sum);\n        List<Integer>[] bucket = new List[nums.length + 1];\n        for (int i = 0; i < bucket.length; i++) bucket[i] = new ArrayList<>();\n        for (var e : freq.entrySet()) bucket[e.getValue()].add(e.getKey());\n        int[] result = new int[k];\n        int idx = 0;\n        for (int i = bucket.length - 1; i >= 0 && idx < k; i--)\n            for (int n : bucket[i]) { result[idx++] = n; if (idx == k) break; }\n        return result;\n    }\n}",
+        "js": "var topKFrequent = function(nums, k) {\n    const freq = new Map();\n    for (const n of nums) freq.set(n, (freq.get(n) || 0) + 1);\n    const bucket = Array.from({length: nums.length + 1}, () => []);\n    for (const [num, cnt] of freq) bucket[cnt].push(num);\n    const result = [];\n    for (let i = bucket.length - 1; i >= 0 && result.length < k; i--)\n        result.push(...bucket[i]);\n    return result.slice(0, k);\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "271",
+      "slug": "encode-and-decode-strings",
+      "title": "Encode and Decode Strings",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 6,
+      "tags": [
+        "string",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/encode-and-decode-strings/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=B1k_sxOSgv8"
+      },
+      "pattern": "Length Prefix",
+      "patternTriggers": [],
+      "keyInsight": "Prefix each string with its length + delimiter. E.g., \"hello\" becomes \"5#hello\". This way any character (including delimiter) inside the string is safe.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def encode(strs):\n    return \"\".join(str(len(s)) + \"#\" + s for s in strs)\n\ndef decode(s):\n    result, i = [], 0\n    while i < len(s):\n        j = s.index(\"#\", i)  # find delimiter\n        length = int(s[i:j])\n        result.append(s[j + 1 : j + 1 + length])\n        i = j + 1 + length\n    return result",
+        "cpp": "class Codec {\npublic:\n    string encode(vector<string>& strs) {\n        string result;\n        for (const string& s : strs)\n            result += to_string(s.size()) + \"#\" + s;\n        return result;\n    }\n    vector<string> decode(string s) {\n        vector<string> result;\n        int i = 0;\n        while (i < s.size()) {\n            int j = s.find('#', i);\n            int len = stoi(s.substr(i, j - i));\n            result.push_back(s.substr(j + 1, len));\n            i = j + 1 + len;\n        }\n        return result;\n    }\n};",
+        "java": "public class Codec {\n    public String encode(List<String> strs) {\n        StringBuilder sb = new StringBuilder();\n        for (String s : strs) sb.append(s.length()).append('#').append(s);\n        return sb.toString();\n    }\n    public List<String> decode(String s) {\n        List<String> result = new ArrayList<>();\n        int i = 0;\n        while (i < s.length()) {\n            int j = s.indexOf('#', i);\n            int len = Integer.parseInt(s.substring(i, j));\n            result.add(s.substring(j + 1, j + 1 + len));\n            i = j + 1 + len;\n        }\n        return result;\n    }\n}",
+        "js": "var encode = function(strs) {\n    return strs.map(s => s.length + '#' + s).join('');\n};\nvar decode = function(s) {\n    const result = [];\n    let i = 0;\n    while (i < s.length) {\n        let j = s.indexOf('#', i);\n        const len = parseInt(s.substring(i, j));\n        result.push(s.substring(j + 1, j + 1 + len));\n        i = j + 1 + len;\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N) total chars",
+        "space": "O(1) extra"
+      },
+      "dryRun": "encode([\"hello\",\"world\"]) → \"5#hello5#world\"\n\ndecode(\"5#hello5#world\"):\n  i=0: j=1 (pos of #), length=5, extract s[2:7]=\"hello\", i=7\n  i=7: j=8 (pos of #), length=5, extract s[9:14]=\"world\", i=14\n  Result: [\"hello\", \"world\"] ✓",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "238",
+      "slug": "product-of-array-except-self",
+      "title": "Product of Array Except Self",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 7,
+      "tags": [
+        "prefix-product",
+        "array"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/product-of-array-except-self/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=bNvIQI2wAjk"
+      },
+      "pattern": "Prefix & Suffix Products",
+      "patternTriggers": [],
+      "keyInsight": "Product except self = (product of everything to the LEFT) * (product of everything to the RIGHT). Build both in O(N) without division.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def productExceptSelf(nums):\n    n = len(nums)\n    result = [1] * n\n\n    # Left pass: result[i] = product of all elements to the left\n    prefix = 1\n    for i in range(n):\n        result[i] = prefix\n        prefix *= nums[i]\n\n    # Right pass: multiply by product of all elements to the right\n    suffix = 1\n    for i in range(n - 1, -1, -1):\n        result[i] *= suffix\n        suffix *= nums[i]\n\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> result(n, 1);\n        int prefix = 1;\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix *= nums[i];\n        }\n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] *= postfix;\n            postfix *= nums[i];\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        int n = nums.length;\n        int[] result = new int[n];\n        int prefix = 1;\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix *= nums[i];\n        }\n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] *= postfix;\n            postfix *= nums[i];\n        }\n        return result;\n    }\n}",
+        "js": "var productExceptSelf = function(nums) {\n    const n = nums.length, result = new Array(n).fill(1);\n    let prefix = 1;\n    for (let i = 0; i < n; i++) { result[i] = prefix; prefix *= nums[i]; }\n    let postfix = 1;\n    for (let i = n - 1; i >= 0; i--) { result[i] *= postfix; postfix *= nums[i]; }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1) extra (output doesn't count)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "36",
+      "slug": "valid-sudoku",
+      "title": "Valid Sudoku",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 8,
+      "tags": [
+        "hash-set",
+        "matrix"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/valid-sudoku/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=TjFXEUCMqI8"
+      },
+      "pattern": "Hash Set",
+      "patternTriggers": [],
+      "keyInsight": "Track seen numbers per row, per column, and per 3x3 box. Box index = (row // 3, col // 3).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isValidSudoku(board):\n    rows = [set() for _ in range(9)]\n    cols = [set() for _ in range(9)]\n    boxes = [set() for _ in range(9)]\n\n    for r in range(9):\n        for c in range(9):\n            if board[r][c] == \".\":\n                continue\n            val = board[r][c]\n            box_idx = (r // 3) * 3 + (c // 3)\n            if val in rows[r] or val in cols[c] or val in boxes[box_idx]:\n                return False\n            rows[r].add(val)\n            cols[c].add(val)\n            boxes[box_idx].add(val)\n    return True",
+        "cpp": "class Solution {\npublic:\n    bool isValidSudoku(vector<vector<char>>& board) {\n        unordered_set<string> seen;\n        for (int i = 0; i < 9; i++)\n            for (int j = 0; j < 9; j++) {\n                if (board[i][j] == '.') continue;\n                string d(1, board[i][j]);\n                if (!seen.insert(d + \"r\" + to_string(i)).second ||\n                    !seen.insert(d + \"c\" + to_string(j)).second ||\n                    !seen.insert(d + \"b\" + to_string(i/3) + to_string(j/3)).second)\n                    return false;\n            }\n        return true;\n    }\n};",
+        "java": "class Solution {\n    public boolean isValidSudoku(char[][] board) {\n        Set<String> seen = new HashSet<>();\n        for (int i = 0; i < 9; i++)\n            for (int j = 0; j < 9; j++) {\n                if (board[i][j] == '.') continue;\n                String d = String.valueOf(board[i][j]);\n                if (!seen.add(d + \"r\" + i) ||\n                    !seen.add(d + \"c\" + j) ||\n                    !seen.add(d + \"b\" + i/3 + j/3))\n                    return false;\n            }\n        return true;\n    }\n}",
+        "js": "var isValidSudoku = function(board) {\n    const seen = new Set();\n    for (let i = 0; i < 9; i++)\n        for (let j = 0; j < 9; j++) {\n            if (board[i][j] === '.') continue;\n            const d = board[i][j];\n            const row = d + 'r' + i, col = d + 'c' + j;\n            const box = d + 'b' + Math.floor(i/3) + Math.floor(j/3);\n            if (seen.has(row) || seen.has(col) || seen.has(box)) return false;\n            seen.add(row); seen.add(col); seen.add(box);\n        }\n    return true;\n};"
+      },
+      "complexity": {
+        "time": "O(81) = O(1)",
+        "space": "O(81) = O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "128",
+      "slug": "longest-consecutive-sequence",
+      "title": "Longest Consecutive Sequence",
+      "difficulty": "medium",
+      "category": "arrays-hashing",
+      "order": 9,
+      "tags": [
+        "hash-set"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-consecutive-sequence/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=P6RZZMu_maU"
+      },
+      "pattern": "Hash Set",
+      "patternTriggers": [],
+      "keyInsight": "A number is the START of a sequence only if (num - 1) is NOT in the set. Only start counting from sequence beginnings to avoid redundant work.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def longestConsecutive(nums):\n    num_set = set(nums)\n    longest = 0\n\n    for num in num_set:\n        # Only start counting from sequence beginning\n        if num - 1 not in num_set:\n            length = 1\n            while num + length in num_set:\n                length += 1\n            longest = max(longest, length)\n\n    return longest",
+        "cpp": "class Solution {\npublic:\n    int longestConsecutive(vector<int>& nums) {\n        unordered_set<int> s(nums.begin(), nums.end());\n        int longest = 0;\n        for (int n : s) {\n            if (!s.count(n - 1)) {\n                int len = 1;\n                while (s.count(n + len)) len++;\n                longest = max(longest, len);\n            }\n        }\n        return longest;\n    }\n};",
+        "java": "class Solution {\n    public int longestConsecutive(int[] nums) {\n        Set<Integer> set = new HashSet<>();\n        for (int n : nums) set.add(n);\n        int longest = 0;\n        for (int n : set) {\n            if (!set.contains(n - 1)) {\n                int len = 1;\n                while (set.contains(n + len)) len++;\n                longest = Math.max(longest, len);\n            }\n        }\n        return longest;\n    }\n}",
+        "js": "var longestConsecutive = function(nums) {\n    const set = new Set(nums);\n    let longest = 0;\n    for (const n of set) {\n        if (!set.has(n - 1)) {\n            let len = 1;\n            while (set.has(n + len)) len++;\n            longest = Math.max(longest, len);\n        }\n    }\n    return longest;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "note": "each num visited at most twice",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

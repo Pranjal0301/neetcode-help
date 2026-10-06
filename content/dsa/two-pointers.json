@@ -1,0 +1,206 @@
+{
+  "slug": "two-pointers",
+  "title": "Two Pointers",
+  "icon": "👉",
+  "order": 2,
+  "concept": {
+    "heading": "Core Pattern",
+    "body": "Use two pointers (usually **left** and **right**) that move towards each other or in the same direction. Works on **sorted arrays** or when you need to compare elements from both ends.",
+    "bullets": [],
+    "legacySvg": "<svg width=\"460\" height=\"80\" viewBox=\"0 0 460 80\">\n                    <style>text{font-family:'Inter',sans-serif;fill:#e2e8f0}</style>\n                    <text x=\"10\" y=\"16\" font-size=\"11\" fill=\"#94a3b8\" font-weight=\"600\">Sorted Array: Converging Pointers</text>\n                    <rect x=\"40\" y=\"30\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"60\" y=\"50\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">1</text>\n                    <rect x=\"85\" y=\"30\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"105\" y=\"50\" text-anchor=\"middle\" font-size=\"12\">3</text>\n                    <rect x=\"130\" y=\"30\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"150\" y=\"50\" text-anchor=\"middle\" font-size=\"12\">5</text>\n                    <rect x=\"175\" y=\"30\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"195\" y=\"50\" text-anchor=\"middle\" font-size=\"12\">7</text>\n                    <rect x=\"220\" y=\"30\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#312e81\" stroke=\"#ef4444\"/>\n                    <text x=\"240\" y=\"50\" text-anchor=\"middle\" font-size=\"12\" fill=\"#fca5a5\">9</text>\n                    <!-- Pointers -->\n                    <text x=\"60\" y=\"76\" text-anchor=\"middle\" font-size=\"11\" fill=\"#6366f1\" font-weight=\"700\">L &#x2192;</text>\n                    <text x=\"240\" y=\"76\" text-anchor=\"middle\" font-size=\"11\" fill=\"#ef4444\" font-weight=\"700\">&#x2190; R</text>\n                    <!-- Logic -->\n                    <text x=\"300\" y=\"40\" font-size=\"11\" fill=\"#94a3b8\">sum &lt; target: L++</text>\n                    <text x=\"300\" y=\"56\" font-size=\"11\" fill=\"#94a3b8\">sum &gt; target: R--</text>\n                    <text x=\"300\" y=\"72\" font-size=\"11\" fill=\"#22c55e\">sum == target: found!</text>\n                </svg>"
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "125",
+      "slug": "valid-palindrome",
+      "title": "Valid Palindrome",
+      "difficulty": "easy",
+      "category": "two-pointers",
+      "order": 1,
+      "tags": [
+        "two-pointers",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/valid-palindrome/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=jJXJ16kPFWg"
+      },
+      "pattern": "Two Pointers",
+      "patternTriggers": [],
+      "keyInsight": "Compare chars from both ends, skipping non-alphanumeric. If all match, it's a palindrome.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isPalindrome(s):\n    l, r = 0, len(s) - 1\n    while l < r:\n        while l < r and not s[l].isalnum():\n            l += 1\n        while l < r and not s[r].isalnum():\n            r -= 1\n        if s[l].lower() != s[r].lower():\n            return False\n        l += 1\n        r -= 1\n    return True",
+        "cpp": "class Solution {\npublic:\n    bool isPalindrome(string s) {\n        int l = 0, r = s.size() - 1;\n        while (l < r) {\n            while (l < r && !isalnum(s[l])) l++;\n            while (l < r && !isalnum(s[r])) r--;\n            if (tolower(s[l]) != tolower(s[r])) return false;\n            l++; r--;\n        }\n        return true;\n    }\n};",
+        "java": "class Solution {\n    public boolean isPalindrome(String s) {\n        int l = 0, r = s.length() - 1;\n        while (l < r) {\n            while (l < r && !Character.isLetterOrDigit(s.charAt(l))) l++;\n            while (l < r && !Character.isLetterOrDigit(s.charAt(r))) r--;\n            if (Character.toLowerCase(s.charAt(l)) != Character.toLowerCase(s.charAt(r)))\n                return false;\n            l++; r--;\n        }\n        return true;\n    }\n}",
+        "js": "var isPalindrome = function(s) {\n    const cleaned = s.toLowerCase().replace(/[^a-z0-9]/g, '');\n    let l = 0, r = cleaned.length - 1;\n    while (l < r) {\n        if (cleaned[l] !== cleaned[r]) return false;\n        l++; r--;\n    }\n    return true;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "167",
+      "slug": "two-sum-ii-input-array-is-sorted",
+      "title": "Two Sum II - Input Array Is Sorted",
+      "difficulty": "medium",
+      "category": "two-pointers",
+      "order": 2,
+      "tags": [
+        "two-pointers",
+        "sorted-array"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=cQ1Oz4ckceM"
+      },
+      "pattern": "Two Pointers",
+      "patternTriggers": [],
+      "keyInsight": "Since array is sorted, use two pointers from ends. Sum too small? Move left pointer right. Sum too big? Move right pointer left.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def twoSum(numbers, target):\n    l, r = 0, len(numbers) - 1\n    while l < r:\n        curr_sum = numbers[l] + numbers[r]\n        if curr_sum == target:\n            return [l + 1, r + 1]  # 1-indexed\n        elif curr_sum < target:\n            l += 1\n        else:\n            r -= 1",
+        "cpp": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& numbers, int target) {\n        int l = 0, r = numbers.size() - 1;\n        while (l < r) {\n            int sum = numbers[l] + numbers[r];\n            if (sum == target) return {l + 1, r + 1};\n            else if (sum < target) l++;\n            else r--;\n        }\n        return {};\n    }\n};",
+        "java": "class Solution {\n    public int[] twoSum(int[] numbers, int target) {\n        int l = 0, r = numbers.length - 1;\n        while (l < r) {\n            int sum = numbers[l] + numbers[r];\n            if (sum == target) return new int[]{l + 1, r + 1};\n            else if (sum < target) l++;\n            else r--;\n        }\n        return new int[]{};\n    }\n}",
+        "js": "var twoSum = function(numbers, target) {\n    let l = 0, r = numbers.length - 1;\n    while (l < r) {\n        const sum = numbers[l] + numbers[r];\n        if (sum === target) return [l + 1, r + 1];\n        else if (sum < target) l++;\n        else r--;\n    }\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "15",
+      "slug": "3sum",
+      "title": "3Sum",
+      "difficulty": "medium",
+      "category": "two-pointers",
+      "order": 3,
+      "tags": [
+        "two-pointers",
+        "sorting"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/3sum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=jzZsG8n2R9A"
+      },
+      "pattern": "Sort + Two Pointers",
+      "patternTriggers": [],
+      "keyInsight": "Sort array. Fix one number, then use Two Sum II (two pointers) on the rest. Skip duplicates at all levels to avoid duplicate triplets.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def threeSum(nums):\n    nums.sort()\n    result = []\n    for i in range(len(nums) - 2):\n        if i > 0 and nums[i] == nums[i - 1]:\n            continue  # skip duplicate first element\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            total = nums[i] + nums[l] + nums[r]\n            if total < 0:\n                l += 1\n            elif total > 0:\n                r -= 1\n            else:\n                result.append([nums[i], nums[l], nums[r]])\n                l += 1\n                while l < r and nums[l] == nums[l - 1]:\n                    l += 1  # skip duplicate second element\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        sort(nums.begin(), nums.end());\n        vector<vector<int>> result;\n        for (int i = 0; i < (int)nums.size() - 2; i++) {\n            if (i > 0 && nums[i] == nums[i-1]) continue;\n            int l = i + 1, r = nums.size() - 1;\n            while (l < r) {\n                int sum = nums[i] + nums[l] + nums[r];\n                if (sum == 0) {\n                    result.push_back({nums[i], nums[l], nums[r]});\n                    while (l < r && nums[l] == nums[l+1]) l++;\n                    while (l < r && nums[r] == nums[r-1]) r--;\n                    l++; r--;\n                } else if (sum < 0) l++;\n                else r--;\n            }\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        Arrays.sort(nums);\n        List<List<Integer>> result = new ArrayList<>();\n        for (int i = 0; i < nums.length - 2; i++) {\n            if (i > 0 && nums[i] == nums[i-1]) continue;\n            int l = i + 1, r = nums.length - 1;\n            while (l < r) {\n                int sum = nums[i] + nums[l] + nums[r];\n                if (sum == 0) {\n                    result.add(Arrays.asList(nums[i], nums[l], nums[r]));\n                    while (l < r && nums[l] == nums[l+1]) l++;\n                    while (l < r && nums[r] == nums[r-1]) r--;\n                    l++; r--;\n                } else if (sum < 0) l++;\n                else r--;\n            }\n        }\n        return result;\n    }\n}",
+        "js": "var threeSum = function(nums) {\n    nums.sort((a, b) => a - b);\n    const result = [];\n    for (let i = 0; i < nums.length - 2; i++) {\n        if (i > 0 && nums[i] === nums[i-1]) continue;\n        let l = i + 1, r = nums.length - 1;\n        while (l < r) {\n            const sum = nums[i] + nums[l] + nums[r];\n            if (sum === 0) {\n                result.push([nums[i], nums[l], nums[r]]);\n                while (l < r && nums[l] === nums[l+1]) l++;\n                while (l < r && nums[r] === nums[r-1]) r--;\n                l++; r--;\n            } else if (sum < 0) l++;\n            else r--;\n        }\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N²)",
+        "space": "O(1) extra"
+      },
+      "dryRun": "nums = [-1, 0, 1, 2, -1, -4] → sorted: [-4, -1, -1, 0, 1, 2]\n\ni=0, nums[i]=-4: l=1,r=5 → -4+-1+2=-3<0 → l++ ... no triplet\ni=1, nums[i]=-1: l=2,r=5 → -1+-1+2=0 ✓ add [-1,-1,2], l++\n                  l=3,r=4 → -1+0+1=0 ✓ add [-1,0,1]\ni=2, nums[i]=-1: skip (same as i=1)\n\nResult: [[-1,-1,2], [-1,0,1]]",
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "11",
+      "slug": "container-with-most-water",
+      "title": "Container With Most Water",
+      "difficulty": "medium",
+      "category": "two-pointers",
+      "order": 4,
+      "tags": [
+        "two-pointers",
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/container-with-most-water/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=UuiTKBwPgAo"
+      },
+      "pattern": "Two Pointers",
+      "patternTriggers": [],
+      "keyInsight": "Start with widest container (L=0, R=end). Always move the SHORTER side inward - moving the taller side can only make things worse (width shrinks & height can't increase).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxArea(height):\n    l, r = 0, len(height) - 1\n    max_water = 0\n    while l < r:\n        area = min(height[l], height[r]) * (r - l)\n        max_water = max(max_water, area)\n        if height[l] < height[r]:\n            l += 1\n        else:\n            r -= 1\n    return max_water",
+        "cpp": "class Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        int l = 0, r = height.size() - 1, maxWater = 0;\n        while (l < r) {\n            maxWater = max(maxWater, min(height[l], height[r]) * (r - l));\n            if (height[l] < height[r]) l++;\n            else r--;\n        }\n        return maxWater;\n    }\n};",
+        "java": "class Solution {\n    public int maxArea(int[] height) {\n        int l = 0, r = height.length - 1, maxWater = 0;\n        while (l < r) {\n            maxWater = Math.max(maxWater, Math.min(height[l], height[r]) * (r - l));\n            if (height[l] < height[r]) l++;\n            else r--;\n        }\n        return maxWater;\n    }\n}",
+        "js": "var maxArea = function(height) {\n    let l = 0, r = height.length - 1, maxWater = 0;\n    while (l < r) {\n        maxWater = Math.max(maxWater, Math.min(height[l], height[r]) * (r - l));\n        if (height[l] < height[r]) l++;\n        else r--;\n    }\n    return maxWater;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "42",
+      "slug": "trapping-rain-water",
+      "title": "Trapping Rain Water",
+      "difficulty": "hard",
+      "category": "two-pointers",
+      "order": 5,
+      "tags": [
+        "two-pointers",
+        "stack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/trapping-rain-water/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=ZI2z5pq0TqA"
+      },
+      "pattern": "Two Pointers",
+      "patternTriggers": [],
+      "keyInsight": "Water at position i = min(maxLeft, maxRight) - height[i]. Use two pointers to track maxLeft and maxRight without extra arrays. Process the side with the smaller max first.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def trap(height):\n    l, r = 0, len(height) - 1\n    left_max, right_max = height[l], height[r]\n    water = 0\n\n    while l < r:\n        if left_max < right_max:\n            l += 1\n            left_max = max(left_max, height[l])\n            water += left_max - height[l]\n        else:\n            r -= 1\n            right_max = max(right_max, height[r])\n            water += right_max - height[r]\n\n    return water",
+        "cpp": "class Solution {\npublic:\n    int trap(vector<int>& height) {\n        int l = 0, r = height.size() - 1;\n        int leftMax = 0, rightMax = 0, water = 0;\n        while (l < r) {\n            if (height[l] < height[r]) {\n                leftMax = max(leftMax, height[l]);\n                water += leftMax - height[l];\n                l++;\n            } else {\n                rightMax = max(rightMax, height[r]);\n                water += rightMax - height[r];\n                r--;\n            }\n        }\n        return water;\n    }\n};",
+        "java": "class Solution {\n    public int trap(int[] height) {\n        int l = 0, r = height.length - 1;\n        int leftMax = 0, rightMax = 0, water = 0;\n        while (l < r) {\n            if (height[l] < height[r]) {\n                leftMax = Math.max(leftMax, height[l]);\n                water += leftMax - height[l];\n                l++;\n            } else {\n                rightMax = Math.max(rightMax, height[r]);\n                water += rightMax - height[r];\n                r--;\n            }\n        }\n        return water;\n    }\n}",
+        "js": "var trap = function(height) {\n    let l = 0, r = height.length - 1;\n    let leftMax = 0, rightMax = 0, water = 0;\n    while (l < r) {\n        if (height[l] < height[r]) {\n            leftMax = Math.max(leftMax, height[l]);\n            water += leftMax - height[l];\n            l++;\n        } else {\n            rightMax = Math.max(rightMax, height[r]);\n            water += rightMax - height[r];\n            r--;\n        }\n    }\n    return water;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

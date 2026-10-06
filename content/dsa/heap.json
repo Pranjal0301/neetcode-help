@@ -1,0 +1,266 @@
+{
+  "slug": "heap",
+  "title": "Heap / Priority Queue",
+  "icon": "🏔",
+  "order": 9,
+  "concept": {
+    "heading": "Core Pattern",
+    "body": "Heap = O(log N) insert/delete, O(1) peek min/max. Use for: **Top K** problems, **streaming data**, **merge K sorted** things. Python heapq is a MIN heap.",
+    "bullets": [],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "703",
+      "slug": "kth-largest-element-in-a-stream",
+      "title": "Kth Largest Element in a Stream",
+      "difficulty": "easy",
+      "category": "heap",
+      "order": 1,
+      "tags": [
+        "heap",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/kth-largest-element-in-a-stream/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=hOjcdrqMoQ8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Keep a min-heap of size K. The root is always the Kth largest. If new element is bigger than root, replace it.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "import heapq\n\nclass KthLargest:\n    def __init__(self, k, nums):\n        self.k = k\n        self.heap = nums\n        heapq.heapify(self.heap)\n        while len(self.heap) > k:\n            heapq.heappop(self.heap)\n\n    def add(self, val):\n        heapq.heappush(self.heap, val)\n        if len(self.heap) > self.k:\n            heapq.heappop(self.heap)\n        return self.heap[0]",
+        "cpp": "class KthLargest {\n    priority_queue<int, vector<int>, greater<int>> pq;\n    int k;\npublic:\n    KthLargest(int k, vector<int>& nums) : k(k) {\n        for (int n : nums) add(n);\n    }\n    int add(int val) {\n        pq.push(val);\n        if (pq.size() > k) pq.pop();\n        return pq.top();\n    }\n};",
+        "java": "class KthLargest {\n    PriorityQueue<Integer> pq = new PriorityQueue<>();\n    int k;\n    public KthLargest(int k, int[] nums) {\n        this.k = k;\n        for (int n : nums) add(n);\n    }\n    public int add(int val) {\n        pq.offer(val);\n        if (pq.size() > k) pq.poll();\n        return pq.peek();\n    }\n}",
+        "js": "var KthLargest = function(k, nums) {\n    this.k = k;\n    this.nums = nums.sort((a, b) => a - b);\n    while (this.nums.length > k) this.nums.shift();\n};\nKthLargest.prototype.add = function(val) {\n    // Binary insert\n    let l = 0, r = this.nums.length;\n    while (l < r) { const m = (l + r) >> 1; this.nums[m] < val ? l = m + 1 : r = m; }\n    this.nums.splice(l, 0, val);\n    if (this.nums.length > this.k) this.nums.shift();\n    return this.nums[0];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1046",
+      "slug": "last-stone-weight",
+      "title": "Last Stone Weight",
+      "difficulty": "easy",
+      "category": "heap",
+      "order": 2,
+      "tags": [
+        "heap"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/last-stone-weight/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=B-QCq79-Vfw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Max-heap simulation. Pop two largest, push difference back if nonzero. Python: negate values for max-heap.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def lastStoneWeight(stones):\n    stones = [-s for s in stones]\n    heapq.heapify(stones)\n    while len(stones) > 1:\n        a = -heapq.heappop(stones)\n        b = -heapq.heappop(stones)\n        if a != b:\n            heapq.heappush(stones, -(a - b))\n    return -stones[0] if stones else 0",
+        "cpp": "class Solution {\npublic:\n    int lastStoneWeight(vector<int>& stones) {\n        priority_queue<int> pq(stones.begin(), stones.end());\n        while (pq.size() > 1) {\n            int a = pq.top(); pq.pop();\n            int b = pq.top(); pq.pop();\n            if (a != b) pq.push(a - b);\n        }\n        return pq.empty() ? 0 : pq.top();\n    }\n};",
+        "java": "class Solution {\n    public int lastStoneWeight(int[] stones) {\n        PriorityQueue<Integer> pq = new PriorityQueue<>(Collections.reverseOrder());\n        for (int s : stones) pq.offer(s);\n        while (pq.size() > 1) {\n            int a = pq.poll(), b = pq.poll();\n            if (a != b) pq.offer(a - b);\n        }\n        return pq.isEmpty() ? 0 : pq.peek();\n    }\n}",
+        "js": "var lastStoneWeight = function(stones) {\n    while (stones.length > 1) {\n        stones.sort((a, b) => b - a);\n        const a = stones.shift(), b = stones.shift();\n        if (a !== b) stones.push(a - b);\n    }\n    return stones.length ? stones[0] : 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "973",
+      "slug": "k-closest-points-to-origin",
+      "title": "K Closest Points to Origin",
+      "difficulty": "medium",
+      "category": "heap",
+      "order": 3,
+      "tags": [
+        "heap",
+        "math"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/k-closest-points-to-origin/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=rI2EBUEMfTk"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def kClosest(points, k):\n    heap = []\n    for x, y in points:\n        dist = x*x + y*y  # no need for sqrt\n        heapq.heappush(heap, (-dist, x, y))  # max-heap by negating\n        if len(heap) > k:\n            heapq.heappop(heap)\n    return [[x, y] for _, x, y in heap]",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {\n        sort(points.begin(), points.end(), [](auto& a, auto& b) {\n            return a[0]*a[0] + a[1]*a[1] < b[0]*b[0] + b[1]*b[1];\n        });\n        points.resize(k);\n        return points;\n    }\n};",
+        "java": "class Solution {\n    public int[][] kClosest(int[][] points, int k) {\n        Arrays.sort(points, (a, b) -> a[0]*a[0] + a[1]*a[1] - b[0]*b[0] - b[1]*b[1]);\n        return Arrays.copyOf(points, k);\n    }\n}",
+        "js": "var kClosest = function(points, k) {\n    return points.sort((a, b) => a[0]*a[0] + a[1]*a[1] - b[0]*b[0] - b[1]*b[1]).slice(0, k);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "215",
+      "slug": "kth-largest-element-in-an-array",
+      "title": "Kth Largest Element in an Array",
+      "difficulty": "medium",
+      "category": "heap",
+      "order": 4,
+      "tags": [
+        "heap",
+        "quickselect"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=XEmy13g1Qc8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Min-heap of size K, or use QuickSelect for O(N) average.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findKthLargest(nums, k):\n    heap = []\n    for num in nums:\n        heapq.heappush(heap, num)\n        if len(heap) > k:\n            heapq.heappop(heap)\n    return heap[0]",
+        "cpp": "class Solution {\npublic:\n    int findKthLargest(vector<int>& nums, int k) {\n        priority_queue<int, vector<int>, greater<int>> pq;\n        for (int n : nums) {\n            pq.push(n);\n            if (pq.size() > k) pq.pop();\n        }\n        return pq.top();\n    }\n};",
+        "java": "class Solution {\n    public int findKthLargest(int[] nums, int k) {\n        PriorityQueue<Integer> pq = new PriorityQueue<>();\n        for (int n : nums) {\n            pq.offer(n);\n            if (pq.size() > k) pq.poll();\n        }\n        return pq.peek();\n    }\n}",
+        "js": "var findKthLargest = function(nums, k) {\n    nums.sort((a, b) => b - a);\n    return nums[k - 1];\n};"
+      },
+      "complexity": {
+        "time": "O(N log K)",
+        "space": "O(K)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "621",
+      "slug": "task-scheduler",
+      "title": "Task Scheduler",
+      "difficulty": "medium",
+      "category": "heap",
+      "order": 5,
+      "tags": [
+        "heap",
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/task-scheduler/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=s8p8ukTyA2I"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Always process the most frequent task first. Use max-heap for frequencies and a cooldown queue. Time advances in cycles.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def leastInterval(tasks, n):\n    count = list(Counter(tasks).values())\n    heap = [-c for c in count]\n    heapq.heapify(heap)\n    time = 0\n    cooldown = deque()  # (remaining_count, available_time)\n\n    while heap or cooldown:\n        time += 1\n        if heap:\n            cnt = heapq.heappop(heap) + 1  # process one\n            if cnt: cooldown.append((cnt, time + n))\n        if cooldown and cooldown[0][1] == time:\n            heapq.heappush(heap, cooldown.popleft()[0])\n\n    return time",
+        "cpp": "class Solution {\npublic:\n    int leastInterval(vector<char>& tasks, int n) {\n        int freq[26] = {};\n        for (char c : tasks) freq[c - 'A']++;\n        int maxFreq = *max_element(freq, freq + 26);\n        int maxCount = count(freq, freq + 26, maxFreq);\n        return max((int)tasks.size(), (maxFreq - 1) * (n + 1) + maxCount);\n    }\n};",
+        "java": "class Solution {\n    public int leastInterval(char[] tasks, int n) {\n        int[] freq = new int[26];\n        for (char c : tasks) freq[c - 'A']++;\n        int maxFreq = Arrays.stream(freq).max().getAsInt();\n        int maxCount = (int) Arrays.stream(freq).filter(f -> f == maxFreq).count();\n        return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);\n    }\n}",
+        "js": "var leastInterval = function(tasks, n) {\n    const freq = new Array(26).fill(0);\n    for (const c of tasks) freq[c.charCodeAt(0) - 65]++;\n    const maxFreq = Math.max(...freq);\n    const maxCount = freq.filter(f => f === maxFreq).length;\n    return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "355",
+      "slug": "design-twitter",
+      "title": "Design Twitter",
+      "difficulty": "medium",
+      "category": "heap",
+      "order": 6,
+      "tags": [
+        "heap",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/design-twitter/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=pNichitDD2E"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Merge K sorted lists problem! Each user has a sorted list of tweets. Use a max-heap to merge the 10 most recent tweets from user + followees.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class Twitter:\n    def __init__(self):\n        self.time = 0\n        self.tweets = defaultdict(list)  # userId -> [(time, tweetId)]\n        self.follows = defaultdict(set)  # userId -> set of followeeIds\n\n    def postTweet(self, userId, tweetId):\n        self.tweets[userId].append((self.time, tweetId))\n        self.time -= 1  # negative for max-heap\n\n    def getNewsFeed(self, userId):\n        heap = []\n        self.follows[userId].add(userId)\n        for fid in self.follows[userId]:\n            if self.tweets[fid]:\n                idx = len(self.tweets[fid]) - 1\n                t, tid = self.tweets[fid][idx]\n                heapq.heappush(heap, (t, tid, fid, idx))\n        feed = []\n        while heap and len(feed) < 10:\n            t, tid, fid, idx = heapq.heappop(heap)\n            feed.append(tid)\n            if idx > 0:\n                nt, ntid = self.tweets[fid][idx-1]\n                heapq.heappush(heap, (nt, ntid, fid, idx-1))\n        return feed",
+        "cpp": "class Twitter {\n    int time = 0;\n    unordered_map<int, unordered_set<int>> follows;\n    unordered_map<int, vector<pair<int,int>>> tweets; // userId -> [{time, tweetId}]\npublic:\n    void postTweet(int userId, int tweetId) { tweets[userId].push_back({time++, tweetId}); }\n    vector<int> getNewsFeed(int userId) {\n        auto cmp = [](auto& a, auto& b) { return a.first < b.first; };\n        priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(cmp)> pq(cmp);\n        follows[userId].insert(userId);\n        for (int uid : follows[userId])\n            for (auto& t : tweets[uid]) pq.push(t);\n        vector<int> result;\n        while (!pq.empty() && result.size() < 10) { result.push_back(pq.top().second); pq.pop(); }\n        return result;\n    }\n    void follow(int followerId, int followeeId) { follows[followerId].insert(followeeId); }\n    void unfollow(int followerId, int followeeId) { follows[followerId].erase(followeeId); }\n};",
+        "java": "class Twitter {\n    int time = 0;\n    Map<Integer, Set<Integer>> follows = new HashMap<>();\n    Map<Integer, List<int[]>> tweets = new HashMap<>();\n    public void postTweet(int userId, int tweetId) {\n        tweets.computeIfAbsent(userId, k -> new ArrayList<>()).add(new int[]{time++, tweetId});\n    }\n    public List<Integer> getNewsFeed(int userId) {\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> b[0] - a[0]);\n        Set<Integer> users = follows.computeIfAbsent(userId, k -> new HashSet<>());\n        users.add(userId);\n        for (int uid : users)\n            if (tweets.containsKey(uid)) for (int[] t : tweets.get(uid)) pq.offer(t);\n        List<Integer> result = new ArrayList<>();\n        while (!pq.isEmpty() && result.size() < 10) result.add(pq.poll()[1]);\n        return result;\n    }\n    public void follow(int followerId, int followeeId) {\n        follows.computeIfAbsent(followerId, k -> new HashSet<>()).add(followeeId);\n    }\n    public void unfollow(int followerId, int followeeId) {\n        if (follows.containsKey(followerId)) follows.get(followerId).remove(followeeId);\n    }\n}",
+        "js": "var Twitter = function() { this.time = 0; this.tweets = new Map(); this.follows = new Map(); };\nTwitter.prototype.postTweet = function(userId, tweetId) {\n    if (!this.tweets.has(userId)) this.tweets.set(userId, []);\n    this.tweets.get(userId).push([this.time++, tweetId]);\n};\nTwitter.prototype.getNewsFeed = function(userId) {\n    const users = this.follows.get(userId) || new Set();\n    users.add(userId);\n    const all = [];\n    for (const uid of users)\n        if (this.tweets.has(uid)) all.push(...this.tweets.get(uid));\n    all.sort((a, b) => b[0] - a[0]);\n    return all.slice(0, 10).map(t => t[1]);\n};\nTwitter.prototype.follow = function(ferId, feeId) {\n    if (!this.follows.has(ferId)) this.follows.set(ferId, new Set());\n    this.follows.get(ferId).add(feeId);\n};\nTwitter.prototype.unfollow = function(ferId, feeId) {\n    if (this.follows.has(ferId)) this.follows.get(ferId).delete(feeId);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "295",
+      "slug": "find-median-from-data-stream",
+      "title": "Find Median from Data Stream",
+      "difficulty": "hard",
+      "category": "heap",
+      "order": 7,
+      "tags": [
+        "heap",
+        "two-heaps"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/find-median-from-data-stream/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=itmhHWaHupI"
+      },
+      "pattern": "Two Heaps",
+      "patternTriggers": [],
+      "keyInsight": "Split numbers into two halves: max-heap (left/smaller half) and min-heap (right/larger half). Median is at the tops. Keep sizes balanced (differ by at most 1).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class MedianFinder:\n    def __init__(self):\n        self.small = []  # max-heap (negated)\n        self.large = []  # min-heap\n\n    def addNum(self, num):\n        heapq.heappush(self.small, -num)\n        # Ensure small's max ≤ large's min\n        if self.small and self.large and -self.small[0] > self.large[0]:\n            heapq.heappush(self.large, -heapq.heappop(self.small))\n        # Balance sizes\n        if len(self.small) > len(self.large) + 1:\n            heapq.heappush(self.large, -heapq.heappop(self.small))\n        elif len(self.large) > len(self.small) + 1:\n            heapq.heappush(self.small, -heapq.heappop(self.large))\n\n    def findMedian(self):\n        if len(self.small) > len(self.large):\n            return -self.small[0]\n        if len(self.large) > len(self.small):\n            return self.large[0]\n        return (-self.small[0] + self.large[0]) / 2",
+        "cpp": "class MedianFinder {\n    priority_queue<int> lo; // max heap\n    priority_queue<int, vector<int>, greater<int>> hi; // min heap\npublic:\n    void addNum(int num) {\n        lo.push(num);\n        hi.push(lo.top()); lo.pop();\n        if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }\n    }\n    double findMedian() {\n        return lo.size() > hi.size() ? lo.top() : (lo.top() + hi.top()) / 2.0;\n    }\n};",
+        "java": "class MedianFinder {\n    PriorityQueue<Integer> lo = new PriorityQueue<>(Collections.reverseOrder());\n    PriorityQueue<Integer> hi = new PriorityQueue<>();\n    public void addNum(int num) {\n        lo.offer(num);\n        hi.offer(lo.poll());\n        if (hi.size() > lo.size()) lo.offer(hi.poll());\n    }\n    public double findMedian() {\n        return lo.size() > hi.size() ? lo.peek() : (lo.peek() + hi.peek()) / 2.0;\n    }\n}",
+        "js": "var MedianFinder = function() { this.lo = []; this.hi = []; }; // simplified with sorted arrays\nMedianFinder.prototype.addNum = function(num) {\n    // Insert into sorted lo (descending) or hi (ascending)\n    const insert = (arr, val, cmp) => {\n        let l = 0, r = arr.length;\n        while (l < r) { const m = (l + r) >> 1; cmp(arr[m], val) ? l = m + 1 : r = m; }\n        arr.splice(l, 0, val);\n    };\n    insert(this.lo, num, (a, b) => a > b);\n    this.hi.push(this.lo.shift());\n    this.hi.sort((a, b) => a - b);\n    if (this.hi.length > this.lo.length) this.lo.unshift(this.hi.shift());\n};\nMedianFinder.prototype.findMedian = function() {\n    return this.lo.length > this.hi.length ? this.lo[0] : (this.lo[0] + this.hi[0]) / 2;\n};"
+      },
+      "complexity": {
+        "time": "O(log N) add, O(1) find",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

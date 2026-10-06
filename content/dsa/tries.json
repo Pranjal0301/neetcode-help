@@ -1,0 +1,127 @@
+{
+  "slug": "tries",
+  "title": "Tries",
+  "icon": "🔤",
+  "order": 8,
+  "concept": {
+    "heading": "Core Concept",
+    "body": "A Trie (prefix tree) stores strings character by character. Each node has up to 26 children. Enables O(L) prefix search where L = word length.",
+    "bullets": [],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "208",
+      "slug": "implement-trie-prefix-tree",
+      "title": "Implement Trie (Prefix Tree)",
+      "difficulty": "medium",
+      "category": "tries",
+      "order": 1,
+      "tags": [
+        "trie",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/implement-trie-prefix-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=oobqoCJlHA0"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n\n    def insert(self, word):\n        node = self.root\n        for c in word:\n            if c not in node.children:\n                node.children[c] = TrieNode()\n            node = node.children[c]\n        node.is_end = True\n\n    def search(self, word):\n        node = self._find(word)\n        return node is not None and node.is_end\n\n    def startsWith(self, prefix):\n        return self._find(prefix) is not None\n\n    def _find(self, prefix):\n        node = self.root\n        for c in prefix:\n            if c not in node.children: return None\n            node = node.children[c]\n        return node",
+        "cpp": "class Trie {\n    struct TrieNode {\n        TrieNode* children[26] = {};\n        bool isEnd = false;\n    };\n    TrieNode* root = new TrieNode();\npublic:\n    void insert(string word) {\n        auto* node = root;\n        for (char c : word) {\n            if (!node->children[c-'a']) node->children[c-'a'] = new TrieNode();\n            node = node->children[c-'a'];\n        }\n        node->isEnd = true;\n    }\n    bool search(string word) {\n        auto* node = find(word);\n        return node && node->isEnd;\n    }\n    bool startsWith(string prefix) {\n        return find(prefix) != nullptr;\n    }\n    TrieNode* find(string& s) {\n        auto* node = root;\n        for (char c : s) {\n            if (!node->children[c-'a']) return nullptr;\n            node = node->children[c-'a'];\n        }\n        return node;\n    }\n};",
+        "java": "class Trie {\n    private Trie[] children = new Trie[26];\n    private boolean isEnd = false;\n    public void insert(String word) {\n        Trie node = this;\n        for (char c : word.toCharArray()) {\n            if (node.children[c-'a'] == null) node.children[c-'a'] = new Trie();\n            node = node.children[c-'a'];\n        }\n        node.isEnd = true;\n    }\n    public boolean search(String word) {\n        Trie node = find(word);\n        return node != null && node.isEnd;\n    }\n    public boolean startsWith(String prefix) { return find(prefix) != null; }\n    private Trie find(String s) {\n        Trie node = this;\n        for (char c : s.toCharArray()) {\n            if (node.children[c-'a'] == null) return null;\n            node = node.children[c-'a'];\n        }\n        return node;\n    }\n}",
+        "js": "var Trie = function() { this.children = {}; this.isEnd = false; };\nTrie.prototype.insert = function(word) {\n    let node = this;\n    for (const c of word) {\n        if (!node.children[c]) node.children[c] = new Trie();\n        node = node.children[c];\n    }\n    node.isEnd = true;\n};\nTrie.prototype.search = function(word) {\n    const node = this._find(word);\n    return node !== null && node.isEnd;\n};\nTrie.prototype.startsWith = function(prefix) { return this._find(prefix) !== null; };\nTrie.prototype._find = function(s) {\n    let node = this;\n    for (const c of s) {\n        if (!node.children[c]) return null;\n        node = node.children[c];\n    }\n    return node;\n};"
+      },
+      "complexity": {
+        "time": "O(L) per operation",
+        "space": "O(N * L) total"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "211",
+      "slug": "design-add-and-search-words-data-structure",
+      "title": "Design Add and Search Words Data Structure",
+      "difficulty": "medium",
+      "category": "tries",
+      "order": 2,
+      "tags": [
+        "trie",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/design-add-and-search-words-data-structure/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=BTf05gs_8iU"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Same as Trie but search handles '.' wildcard by trying ALL children at that position (DFS branching).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def search(self, word):\n    def dfs(node, i):\n        if i == len(word):\n            return node.is_end\n        if word[i] == '.':\n            return any(dfs(child, i+1) for child in node.children.values())\n        if word[i] not in node.children:\n            return False\n        return dfs(node.children[word[i]], i+1)\n    return dfs(self.root, 0)",
+        "cpp": "class WordDictionary {\n    struct Node {\n        Node* children[26] = {};\n        bool isEnd = false;\n    };\n    Node* root = new Node();\npublic:\n    void addWord(string word) {\n        auto* node = root;\n        for (char c : word) {\n            if (!node->children[c-'a']) node->children[c-'a'] = new Node();\n            node = node->children[c-'a'];\n        }\n        node->isEnd = true;\n    }\n    bool search(string word) { return dfs(word, 0, root); }\n    bool dfs(string& word, int i, Node* node) {\n        if (i == word.size()) return node->isEnd;\n        if (word[i] == '.') {\n            for (auto* ch : node->children)\n                if (ch && dfs(word, i+1, ch)) return true;\n            return false;\n        }\n        if (!node->children[word[i]-'a']) return false;\n        return dfs(word, i+1, node->children[word[i]-'a']);\n    }\n};",
+        "java": "class WordDictionary {\n    WordDictionary[] children = new WordDictionary[26];\n    boolean isEnd = false;\n    public void addWord(String word) {\n        WordDictionary node = this;\n        for (char c : word.toCharArray()) {\n            if (node.children[c-'a'] == null) node.children[c-'a'] = new WordDictionary();\n            node = node.children[c-'a'];\n        }\n        node.isEnd = true;\n    }\n    public boolean search(String word) { return dfs(word, 0, this); }\n    boolean dfs(String word, int i, WordDictionary node) {\n        if (i == word.length()) return node.isEnd;\n        if (word.charAt(i) == '.') {\n            for (var ch : node.children) if (ch != null && dfs(word, i+1, ch)) return true;\n            return false;\n        }\n        if (node.children[word.charAt(i)-'a'] == null) return false;\n        return dfs(word, i+1, node.children[word.charAt(i)-'a']);\n    }\n}",
+        "js": "var WordDictionary = function() { this.children = {}; this.isEnd = false; };\nWordDictionary.prototype.addWord = function(word) {\n    let node = this;\n    for (const c of word) {\n        if (!node.children[c]) node.children[c] = new WordDictionary();\n        node = node.children[c];\n    }\n    node.isEnd = true;\n};\nWordDictionary.prototype.search = function(word) {\n    const dfs = (i, node) => {\n        if (i === word.length) return node.isEnd;\n        if (word[i] === '.') {\n            for (const ch of Object.values(node.children))\n                if (dfs(i + 1, ch)) return true;\n            return false;\n        }\n        if (!node.children[word[i]]) return false;\n        return dfs(i + 1, node.children[word[i]]);\n    };\n    return dfs(0, this);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "212",
+      "slug": "word-search-ii",
+      "title": "Word Search II",
+      "difficulty": "hard",
+      "category": "tries",
+      "order": 3,
+      "tags": [
+        "trie",
+        "backtracking"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/word-search-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=asbcE9mZz_U"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Build Trie from words. DFS from each cell on board, following Trie nodes. Prune branches when no Trie children match. Remove found words to avoid duplicates.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findWords(board, words):\n    root = TrieNode()\n    for w in words:  # Build trie\n        node = root\n        for c in w:\n            node.children.setdefault(c, TrieNode())\n            node = node.children[c]\n        node.word = w  # store complete word at end\n\n    result = []\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, node):\n        if r<0 or r>=rows or c<0 or c>=cols: return\n        ch = board[r][c]\n        if ch not in node.children: return\n        node = node.children[ch]\n        if hasattr(node, 'word'):\n            result.append(node.word)\n            del node.word\n        board[r][c] = '#'  # mark visited\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            dfs(r+dr, c+dc, node)\n        board[r][c] = ch  # unmark\n\n    for r in range(rows):\n        for c in range(cols):\n            dfs(r, c, root)\n    return result",
+        "cpp": "class Solution {\n    struct TrieNode {\n        TrieNode* children[26] = {};\n        string word;\n    };\npublic:\n    vector<string> findWords(vector<vector<char>>& board, vector<string>& words) {\n        TrieNode* root = new TrieNode();\n        for (string& w : words) {\n            auto* node = root;\n            for (char c : w) {\n                if (!node->children[c-'a']) node->children[c-'a'] = new TrieNode();\n                node = node->children[c-'a'];\n            }\n            node->word = w;\n        }\n        vector<string> result;\n        int m = board.size(), n = board[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                dfs(board, root, i, j, result);\n        return result;\n    }\n    void dfs(vector<vector<char>>& board, TrieNode* node, int i, int j, vector<string>& result) {\n        if (i < 0 || j < 0 || i >= board.size() || j >= board[0].size() || board[i][j] == '#') return;\n        char c = board[i][j];\n        if (!node->children[c-'a']) return;\n        node = node->children[c-'a'];\n        if (!node->word.empty()) { result.push_back(node->word); node->word.clear(); }\n        board[i][j] = '#';\n        dfs(board, node, i+1, j, result); dfs(board, node, i-1, j, result);\n        dfs(board, node, i, j+1, result); dfs(board, node, i, j-1, result);\n        board[i][j] = c;\n    }\n};",
+        "java": "class Solution {\n    class TrieNode { TrieNode[] ch = new TrieNode[26]; String word; }\n    public List<String> findWords(char[][] board, String[] words) {\n        TrieNode root = new TrieNode();\n        for (String w : words) {\n            TrieNode node = root;\n            for (char c : w.toCharArray()) {\n                if (node.ch[c-'a'] == null) node.ch[c-'a'] = new TrieNode();\n                node = node.ch[c-'a'];\n            }\n            node.word = w;\n        }\n        List<String> result = new ArrayList<>();\n        for (int i = 0; i < board.length; i++)\n            for (int j = 0; j < board[0].length; j++)\n                dfs(board, root, i, j, result);\n        return result;\n    }\n    void dfs(char[][] board, TrieNode node, int i, int j, List<String> result) {\n        if (i < 0 || j < 0 || i >= board.length || j >= board[0].length || board[i][j] == '#') return;\n        char c = board[i][j];\n        if (node.ch[c-'a'] == null) return;\n        node = node.ch[c-'a'];\n        if (node.word != null) { result.add(node.word); node.word = null; }\n        board[i][j] = '#';\n        dfs(board, node, i+1, j, result); dfs(board, node, i-1, j, result);\n        dfs(board, node, i, j+1, result); dfs(board, node, i, j-1, result);\n        board[i][j] = c;\n    }\n}",
+        "js": "var findWords = function(board, words) {\n    const root = {};\n    for (const w of words) {\n        let node = root;\n        for (const c of w) { if (!node[c]) node[c] = {}; node = node[c]; }\n        node.word = w;\n    }\n    const result = [], m = board.length, n = board[0].length;\n    const dfs = (node, i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] === '#') return;\n        const c = board[i][j];\n        if (!node[c]) return;\n        node = node[c];\n        if (node.word) { result.push(node.word); node.word = null; }\n        board[i][j] = '#';\n        dfs(node, i+1, j); dfs(node, i-1, j); dfs(node, i, j+1); dfs(node, i, j-1);\n        board[i][j] = c;\n    };\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) dfs(root, i, j);\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(M*N*4^L)",
+        "space": "O(W*L) for trie"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

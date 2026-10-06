@@ -1,0 +1,128 @@
+[
+  {
+    "slug": "arrays-hashing",
+    "title": "Arrays & Hashing",
+    "icon": "📦",
+    "order": 1,
+    "count": 9
+  },
+  {
+    "slug": "two-pointers",
+    "title": "Two Pointers",
+    "icon": "👉",
+    "order": 2,
+    "count": 5
+  },
+  {
+    "slug": "sliding-window",
+    "title": "Sliding Window",
+    "icon": "🖼",
+    "order": 3,
+    "count": 6
+  },
+  {
+    "slug": "stack",
+    "title": "Stack",
+    "icon": "📚",
+    "order": 4,
+    "count": 7
+  },
+  {
+    "slug": "binary-search",
+    "title": "Binary Search",
+    "icon": "🔍",
+    "order": 5,
+    "count": 7
+  },
+  {
+    "slug": "linked-list",
+    "title": "Linked List",
+    "icon": "🔗",
+    "order": 6,
+    "count": 11
+  },
+  {
+    "slug": "trees",
+    "title": "Trees",
+    "icon": "🌳",
+    "order": 7,
+    "count": 15
+  },
+  {
+    "slug": "tries",
+    "title": "Tries",
+    "icon": "🔤",
+    "order": 8,
+    "count": 3
+  },
+  {
+    "slug": "heap",
+    "title": "Heap / Priority Queue",
+    "icon": "🏔",
+    "order": 9,
+    "count": 7
+  },
+  {
+    "slug": "backtracking",
+    "title": "Backtracking",
+    "icon": "🔀",
+    "order": 10,
+    "count": 9
+  },
+  {
+    "slug": "graphs",
+    "title": "Graphs",
+    "icon": "🕸",
+    "order": 11,
+    "count": 13
+  },
+  {
+    "slug": "advanced-graphs",
+    "title": "Advanced Graphs",
+    "icon": "🌍",
+    "order": 12,
+    "count": 6
+  },
+  {
+    "slug": "1d-dp",
+    "title": "1-D Dynamic Programming",
+    "icon": "📊",
+    "order": 13,
+    "count": 12
+  },
+  {
+    "slug": "2d-dp",
+    "title": "2-D Dynamic Programming",
+    "icon": "🧩",
+    "order": 14,
+    "count": 11
+  },
+  {
+    "slug": "greedy",
+    "title": "Greedy",
+    "icon": "🎯",
+    "order": 15,
+    "count": 8
+  },
+  {
+    "slug": "intervals",
+    "title": "Intervals",
+    "icon": "⏱",
+    "order": 16,
+    "count": 6
+  },
+  {
+    "slug": "math",
+    "title": "Math & Geometry",
+    "icon": "📐",
+    "order": 17,
+    "count": 8
+  },
+  {
+    "slug": "bit-manipulation",
+    "title": "Bit Manipulation",
+    "icon": "💻",
+    "order": 18,
+    "count": 7
+  }
+]

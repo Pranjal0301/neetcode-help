@@ -1,0 +1,483 @@
+{
+  "slug": "graphs",
+  "title": "Graphs",
+  "icon": "🕸",
+  "order": 11,
+  "concept": {
+    "heading": "Core Patterns",
+    "body": "",
+    "bullets": [
+      "**Grid DFS/BFS:** Flood fill, island problems. 4-directional neighbors.",
+      "**Graph BFS:** Shortest path in unweighted graphs.",
+      "**Topological Sort:** DAG ordering (course schedule).",
+      "**Union-Find:** Connected components, cycle detection in undirected."
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "200",
+      "slug": "number-of-islands",
+      "title": "Number of Islands",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 1,
+      "tags": [
+        "graph",
+        "grid",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/number-of-islands/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=pV2kpPD66nE"
+      },
+      "pattern": "DFS Flood Fill",
+      "patternTriggers": [],
+      "keyInsight": "For each unvisited '1', start DFS to mark all connected '1's as visited. Count how many times you start a DFS.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def numIslands(grid):\n    rows, cols = len(grid), len(grid[0])\n    count = 0\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or grid[r][c]!=\"1\":\n            return\n        grid[r][c] = \"0\"  # mark visited\n        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1)\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == \"1\":\n                dfs(r, c)\n                count += 1\n    return count",
+        "cpp": "class Solution {\npublic:\n    int numIslands(vector<vector<char>>& grid) {\n        int count = 0, m = grid.size(), n = grid[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (grid[i][j] == '1') { dfs(grid, i, j); count++; }\n        return count;\n    }\n    void dfs(vector<vector<char>>& grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.size() || j >= grid[0].size() || grid[i][j] != '1') return;\n        grid[i][j] = '0';\n        dfs(grid, i+1, j); dfs(grid, i-1, j); dfs(grid, i, j+1); dfs(grid, i, j-1);\n    }\n};",
+        "java": "class Solution {\n    public int numIslands(char[][] grid) {\n        int count = 0;\n        for (int i = 0; i < grid.length; i++)\n            for (int j = 0; j < grid[0].length; j++)\n                if (grid[i][j] == '1') { dfs(grid, i, j); count++; }\n        return count;\n    }\n    void dfs(char[][] grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.length || j >= grid[0].length || grid[i][j] != '1') return;\n        grid[i][j] = '0';\n        dfs(grid, i+1, j); dfs(grid, i-1, j); dfs(grid, i, j+1); dfs(grid, i, j-1);\n    }\n}",
+        "js": "var numIslands = function(grid) {\n    let count = 0;\n    const m = grid.length, n = grid[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || grid[i][j] !== '1') return;\n        grid[i][j] = '0';\n        dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1);\n    };\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (grid[i][j] === '1') { dfs(i, j); count++; }\n    return count;\n};"
+      },
+      "complexity": {
+        "time": "O(M*N)",
+        "space": "O(M*N) stack"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "695",
+      "slug": "max-area-of-island",
+      "title": "Max Area of Island",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 2,
+      "tags": [
+        "graph",
+        "grid",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/max-area-of-island/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=iJGr1OtmH0c"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxAreaOfIsland(grid):\n    rows, cols = len(grid), len(grid[0])\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or grid[r][c]!=1:\n            return 0\n        grid[r][c] = 0\n        return 1 + dfs(r+1,c) + dfs(r-1,c) + dfs(r,c+1) + dfs(r,c-1)\n    return max((dfs(r,c) for r in range(rows) for c in range(cols)), default=0)",
+        "cpp": "class Solution {\npublic:\n    int maxAreaOfIsland(vector<vector<int>>& grid) {\n        int maxArea = 0, m = grid.size(), n = grid[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (grid[i][j]) maxArea = max(maxArea, dfs(grid, i, j));\n        return maxArea;\n    }\n    int dfs(vector<vector<int>>& grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.size() || j >= grid[0].size() || !grid[i][j]) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(grid,i+1,j) + dfs(grid,i-1,j) + dfs(grid,i,j+1) + dfs(grid,i,j-1);\n    }\n};",
+        "java": "class Solution {\n    public int maxAreaOfIsland(int[][] grid) {\n        int maxArea = 0;\n        for (int i = 0; i < grid.length; i++)\n            for (int j = 0; j < grid[0].length; j++)\n                if (grid[i][j] == 1) maxArea = Math.max(maxArea, dfs(grid, i, j));\n        return maxArea;\n    }\n    int dfs(int[][] grid, int i, int j) {\n        if (i < 0 || j < 0 || i >= grid.length || j >= grid[0].length || grid[i][j] == 0) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(grid,i+1,j) + dfs(grid,i-1,j) + dfs(grid,i,j+1) + dfs(grid,i,j-1);\n    }\n}",
+        "js": "var maxAreaOfIsland = function(grid) {\n    const m = grid.length, n = grid[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || !grid[i][j]) return 0;\n        grid[i][j] = 0;\n        return 1 + dfs(i+1,j) + dfs(i-1,j) + dfs(i,j+1) + dfs(i,j-1);\n    };\n    let max = 0;\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (grid[i][j]) max = Math.max(max, dfs(i, j));\n    return max;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "133",
+      "slug": "clone-graph",
+      "title": "Clone Graph",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 3,
+      "tags": [
+        "graph",
+        "dfs",
+        "hash-map"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/clone-graph/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=mQeF6bN8hMk"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "DFS with a hashmap {old_node: new_node}. If already cloned, return existing. Otherwise create clone, recurse on neighbors.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def cloneGraph(node):\n    old_to_new = {}\n    def dfs(node):\n        if node in old_to_new:\n            return old_to_new[node]\n        clone = Node(node.val)\n        old_to_new[node] = clone\n        clone.neighbors = [dfs(n) for n in node.neighbors]\n        return clone\n    return dfs(node) if node else None",
+        "cpp": "class Solution {\npublic:\n    Node* cloneGraph(Node* node) {\n        if (!node) return nullptr;\n        unordered_map<Node*, Node*> map;\n        function<Node*(Node*)> dfs = [&](Node* n) -> Node* {\n            if (map.count(n)) return map[n];\n            map[n] = new Node(n->val);\n            for (auto* nb : n->neighbors) map[n]->neighbors.push_back(dfs(nb));\n            return map[n];\n        };\n        return dfs(node);\n    }\n};",
+        "java": "class Solution {\n    Map<Node, Node> map = new HashMap<>();\n    public Node cloneGraph(Node node) {\n        if (node == null) return null;\n        if (map.containsKey(node)) return map.get(node);\n        Node clone = new Node(node.val);\n        map.put(node, clone);\n        for (Node nb : node.neighbors) clone.neighbors.add(cloneGraph(nb));\n        return clone;\n    }\n}",
+        "js": "var cloneGraph = function(node) {\n    if (!node) return null;\n    const map = new Map();\n    const dfs = (n) => {\n        if (map.has(n)) return map.get(n);\n        const clone = new Node(n.val);\n        map.set(n, clone);\n        for (const nb of n.neighbors) clone.neighbors.push(dfs(nb));\n        return clone;\n    };\n    return dfs(node);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "286",
+      "slug": "walls-and-gates",
+      "title": "Walls and Gates",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 4,
+      "tags": [
+        "graph",
+        "bfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/walls-and-gates/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=e69C6xhiSQE"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Multi-source BFS starting from ALL gates simultaneously. Each empty room gets the distance to its nearest gate.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def wallsAndGates(rooms):\n    rows, cols = len(rooms), len(rooms[0])\n    queue = deque()\n    for r in range(rows):\n        for c in range(cols):\n            if rooms[r][c] == 0:\n                queue.append((r, c))\n    while queue:\n        r, c = queue.popleft()\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<rows and 0<=nc<cols and rooms[nr][nc]==2147483647:\n                rooms[nr][nc] = rooms[r][c] + 1\n                queue.append((nr, nc))",
+        "cpp": "class Solution {\npublic:\n    void wallsAndGates(vector<vector<int>>& rooms) {\n        int m = rooms.size(), n = rooms[0].size();\n        queue<pair<int,int>> q;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (rooms[i][j] == 0) q.push({i, j});\n        int dirs[] = {0,1,0,-1,0};\n        while (!q.empty()) {\n            auto [r, c] = q.front(); q.pop();\n            for (int d = 0; d < 4; d++) {\n                int ni = r+dirs[d], nj = c+dirs[d+1];\n                if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] == INT_MAX) {\n                    rooms[ni][nj] = rooms[r][c] + 1;\n                    q.push({ni, nj});\n                }\n            }\n        }\n    }\n};",
+        "java": "class Solution {\n    public void wallsAndGates(int[][] rooms) {\n        int m = rooms.length, n = rooms[0].length;\n        Queue<int[]> q = new LinkedList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (rooms[i][j] == 0) q.offer(new int[]{i,j});\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!q.isEmpty()) {\n            int[] cell = q.poll();\n            for (int[] d : dirs) {\n                int ni = cell[0]+d[0], nj = cell[1]+d[1];\n                if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] == Integer.MAX_VALUE) {\n                    rooms[ni][nj] = rooms[cell[0]][cell[1]] + 1;\n                    q.offer(new int[]{ni,nj});\n                }\n            }\n        }\n    }\n}",
+        "js": "var wallsAndGates = function(rooms) {\n    const m = rooms.length, n = rooms[0].length, q = [];\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            if (rooms[i][j] === 0) q.push([i,j]);\n    while (q.length) {\n        const [r,c] = q.shift();\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = r+di, nj = c+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && rooms[ni][nj] === 2147483647) {\n                rooms[ni][nj] = rooms[r][c] + 1;\n                q.push([ni,nj]);\n            }\n        }\n    }\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "994",
+      "slug": "rotting-oranges",
+      "title": "Rotting Oranges",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 5,
+      "tags": [
+        "graph",
+        "bfs",
+        "multi-source"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/rotting-oranges/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=y704fEOx0s0"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Multi-source BFS from all rotten oranges. Each BFS level = 1 minute. Track fresh count. If fresh remain after BFS, return -1.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def orangesRotting(grid):\n    rows, cols = len(grid), len(grid[0])\n    queue, fresh = deque(), 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == 2: queue.append((r, c))\n            elif grid[r][c] == 1: fresh += 1\n    time = 0\n    while queue and fresh:\n        for _ in range(len(queue)):\n            r, c = queue.popleft()\n            for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n                nr, nc = r+dr, c+dc\n                if 0<=nr<rows and 0<=nc<cols and grid[nr][nc]==1:\n                    grid[nr][nc] = 2\n                    fresh -= 1\n                    queue.append((nr, nc))\n        time += 1\n    return time if fresh == 0 else -1",
+        "cpp": "class Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size(), n = grid[0].size(), fresh = 0, time = 0;\n        queue<pair<int,int>> q;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) q.push({i, j});\n                else if (grid[i][j] == 1) fresh++;\n            }\n        int dirs[] = {0,1,0,-1,0};\n        while (!q.empty() && fresh > 0) {\n            int sz = q.size();\n            while (sz--) {\n                auto [r, c] = q.front(); q.pop();\n                for (int d = 0; d < 4; d++) {\n                    int ni = r+dirs[d], nj = c+dirs[d+1];\n                    if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]==1) {\n                        grid[ni][nj] = 2; fresh--; q.push({ni, nj});\n                    }\n                }\n            }\n            time++;\n        }\n        return fresh == 0 ? time : -1;\n    }\n};",
+        "java": "class Solution {\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length, fresh = 0, time = 0;\n        Queue<int[]> q = new LinkedList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) q.offer(new int[]{i,j});\n                else if (grid[i][j] == 1) fresh++;\n            }\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!q.isEmpty() && fresh > 0) {\n            int sz = q.size();\n            while (sz-- > 0) {\n                int[] cell = q.poll();\n                for (int[] d : dirs) {\n                    int ni = cell[0]+d[0], nj = cell[1]+d[1];\n                    if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]==1) {\n                        grid[ni][nj] = 2; fresh--; q.offer(new int[]{ni,nj});\n                    }\n                }\n            }\n            time++;\n        }\n        return fresh == 0 ? time : -1;\n    }\n}",
+        "js": "var orangesRotting = function(grid) {\n    const m = grid.length, n = grid[0].length, q = [];\n    let fresh = 0, time = 0;\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++) {\n            if (grid[i][j] === 2) q.push([i,j]);\n            else if (grid[i][j] === 1) fresh++;\n        }\n    while (q.length && fresh > 0) {\n        const sz = q.length;\n        for (let s = 0; s < sz; s++) {\n            const [r,c] = q.shift();\n            for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n                const ni = r+di, nj = c+dj;\n                if (ni>=0 && nj>=0 && ni<m && nj<n && grid[ni][nj]===1) {\n                    grid[ni][nj] = 2; fresh--; q.push([ni,nj]);\n                }\n            }\n        }\n        time++;\n    }\n    return fresh === 0 ? time : -1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "417",
+      "slug": "pacific-atlantic-water-flow",
+      "title": "Pacific Atlantic Water Flow",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 6,
+      "tags": [
+        "graph",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/pacific-atlantic-water-flow/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=s-VkcjHqkGI"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "DFS from ocean borders inward (reverse flow). Cell reachable from BOTH oceans is in the answer. Two visited sets, return intersection.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def pacificAtlantic(heights):\n    rows, cols = len(heights), len(heights[0])\n    pac, atl = set(), set()\n    def dfs(r, c, visit, prev_h):\n        if (r,c) in visit or r<0 or r>=rows or c<0 or c>=cols or heights[r][c]<prev_h:\n            return\n        visit.add((r,c))\n        for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            dfs(r+dr, c+dc, visit, heights[r][c])\n    for c in range(cols):\n        dfs(0, c, pac, 0); dfs(rows-1, c, atl, 0)\n    for r in range(rows):\n        dfs(r, 0, pac, 0); dfs(r, cols-1, atl, 0)\n    return list(pac & atl)",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {\n        int m = heights.size(), n = heights[0].size();\n        vector<vector<bool>> pac(m, vector<bool>(n)), atl(m, vector<bool>(n));\n        for (int i = 0; i < m; i++) { dfs(heights, pac, i, 0); dfs(heights, atl, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(heights, pac, 0, j); dfs(heights, atl, m-1, j); }\n        vector<vector<int>> result;\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (pac[i][j] && atl[i][j]) result.push_back({i, j});\n        return result;\n    }\n    void dfs(vector<vector<int>>& h, vector<vector<bool>>& v, int i, int j) {\n        if (v[i][j]) return;\n        v[i][j] = true;\n        int dirs[] = {0,1,0,-1,0};\n        for (int d = 0; d < 4; d++) {\n            int ni = i+dirs[d], nj = j+dirs[d+1];\n            if (ni >= 0 && nj >= 0 && ni < h.size() && nj < h[0].size() && h[ni][nj] >= h[i][j])\n                dfs(h, v, ni, nj);\n        }\n    }\n};",
+        "java": "class Solution {\n    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n    public List<List<Integer>> pacificAtlantic(int[][] heights) {\n        int m = heights.length, n = heights[0].length;\n        boolean[][] pac = new boolean[m][n], atl = new boolean[m][n];\n        for (int i = 0; i < m; i++) { dfs(heights, pac, i, 0); dfs(heights, atl, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(heights, pac, 0, j); dfs(heights, atl, m-1, j); }\n        List<List<Integer>> result = new ArrayList<>();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                if (pac[i][j] && atl[i][j]) result.add(Arrays.asList(i, j));\n        return result;\n    }\n    void dfs(int[][] h, boolean[][] v, int i, int j) {\n        if (v[i][j]) return;\n        v[i][j] = true;\n        for (int[] d : dirs) {\n            int ni = i+d[0], nj = j+d[1];\n            if (ni >= 0 && nj >= 0 && ni < h.length && nj < h[0].length && h[ni][nj] >= h[i][j])\n                dfs(h, v, ni, nj);\n        }\n    }\n}",
+        "js": "var pacificAtlantic = function(heights) {\n    const m = heights.length, n = heights[0].length;\n    const pac = Array.from({length:m}, () => new Array(n).fill(false));\n    const atl = Array.from({length:m}, () => new Array(n).fill(false));\n    const dfs = (vis, i, j) => {\n        if (vis[i][j]) return;\n        vis[i][j] = true;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && heights[ni][nj]>=heights[i][j]) dfs(vis,ni,nj);\n        }\n    };\n    for (let i = 0; i < m; i++) { dfs(pac,i,0); dfs(atl,i,n-1); }\n    for (let j = 0; j < n; j++) { dfs(pac,0,j); dfs(atl,m-1,j); }\n    const result = [];\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (pac[i][j] && atl[i][j]) result.push([i,j]);\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "130",
+      "slug": "surrounded-regions",
+      "title": "Surrounded Regions",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 7,
+      "tags": [
+        "graph",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/surrounded-regions/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=9z2BunfoZ5Y"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "DFS from border 'O's, mark them as safe. Then flip all remaining 'O' to 'X' (they're surrounded). Restore safe ones.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def solve(board):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c):\n        if r<0 or r>=rows or c<0 or c>=cols or board[r][c]!=\"O\": return\n        board[r][c] = \"S\"  # safe\n        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1)\n    for r in range(rows):\n        for c in range(cols):\n            if (r in [0,rows-1] or c in [0,cols-1]) and board[r][c]==\"O\":\n                dfs(r, c)\n    for r in range(rows):\n        for c in range(cols):\n            if board[r][c] == \"O\": board[r][c] = \"X\"\n            elif board[r][c] == \"S\": board[r][c] = \"O\"",
+        "cpp": "class Solution {\npublic:\n    void solve(vector<vector<char>>& board) {\n        int m = board.size(), n = board[0].size();\n        for (int i = 0; i < m; i++) { dfs(board, i, 0); dfs(board, i, n-1); }\n        for (int j = 0; j < n; j++) { dfs(board, 0, j); dfs(board, m-1, j); }\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                board[i][j] = board[i][j] == 'T' ? 'O' : 'X';\n    }\n    void dfs(vector<vector<char>>& b, int i, int j) {\n        if (i < 0 || j < 0 || i >= b.size() || j >= b[0].size() || b[i][j] != 'O') return;\n        b[i][j] = 'T';\n        dfs(b,i+1,j); dfs(b,i-1,j); dfs(b,i,j+1); dfs(b,i,j-1);\n    }\n};",
+        "java": "class Solution {\n    public void solve(char[][] board) {\n        int m = board.length, n = board[0].length;\n        for (int i = 0; i < m; i++) { dfs(board,i,0); dfs(board,i,n-1); }\n        for (int j = 0; j < n; j++) { dfs(board,0,j); dfs(board,m-1,j); }\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                board[i][j] = board[i][j] == 'T' ? 'O' : 'X';\n    }\n    void dfs(char[][] b, int i, int j) {\n        if (i < 0 || j < 0 || i >= b.length || j >= b[0].length || b[i][j] != 'O') return;\n        b[i][j] = 'T';\n        dfs(b,i+1,j); dfs(b,i-1,j); dfs(b,i,j+1); dfs(b,i,j-1);\n    }\n}",
+        "js": "var solve = function(board) {\n    const m = board.length, n = board[0].length;\n    const dfs = (i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] !== 'O') return;\n        board[i][j] = 'T';\n        dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1);\n    };\n    for (let i = 0; i < m; i++) { dfs(i,0); dfs(i,n-1); }\n    for (let j = 0; j < n; j++) { dfs(0,j); dfs(m-1,j); }\n    for (let i = 0; i < m; i++)\n        for (let j = 0; j < n; j++)\n            board[i][j] = board[i][j] === 'T' ? 'O' : 'X';\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "207",
+      "slug": "course-schedule",
+      "title": "Course Schedule",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 8,
+      "tags": [
+        "graph",
+        "topological-sort"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/course-schedule/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=EgI5nU9etnU"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Cycle detection in directed graph. If cycle exists, can't finish all courses. Use DFS with 3 states: unvisited, in-progress, completed.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def canFinish(numCourses, prerequisites):\n    adj = defaultdict(list)\n    for crs, pre in prerequisites:\n        adj[crs].append(pre)\n    # 0=unvisited, 1=in-progress, 2=done\n    state = [0] * numCourses\n    def dfs(crs):\n        if state[crs] == 1: return False  # cycle!\n        if state[crs] == 2: return True   # already verified\n        state[crs] = 1\n        for pre in adj[crs]:\n            if not dfs(pre): return False\n        state[crs] = 2\n        return True\n    return all(dfs(c) for c in range(numCourses))",
+        "cpp": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> indegree(numCourses, 0);\n        for (auto& p : prerequisites) { graph[p[1]].push_back(p[0]); indegree[p[0]]++; }\n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.push(i);\n        int count = 0;\n        while (!q.empty()) {\n            int cur = q.front(); q.pop(); count++;\n            for (int next : graph[cur]) if (--indegree[next] == 0) q.push(next);\n        }\n        return count == numCourses;\n    }\n};",
+        "java": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> graph = new ArrayList<>();\n        int[] indegree = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());\n        for (int[] p : prerequisites) { graph.get(p[1]).add(p[0]); indegree[p[0]]++; }\n        Queue<Integer> q = new LinkedList<>();\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.offer(i);\n        int count = 0;\n        while (!q.isEmpty()) {\n            int cur = q.poll(); count++;\n            for (int next : graph.get(cur)) if (--indegree[next] == 0) q.offer(next);\n        }\n        return count == numCourses;\n    }\n}",
+        "js": "var canFinish = function(numCourses, prerequisites) {\n    const graph = Array.from({length: numCourses}, () => []);\n    const indegree = new Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) { graph[b].push(a); indegree[a]++; }\n    const q = [];\n    for (let i = 0; i < numCourses; i++) if (indegree[i] === 0) q.push(i);\n    let count = 0;\n    while (q.length) {\n        const cur = q.shift(); count++;\n        for (const next of graph[cur]) if (--indegree[next] === 0) q.push(next);\n    }\n    return count === numCourses;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "210",
+      "slug": "course-schedule-ii",
+      "title": "Course Schedule II",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 9,
+      "tags": [
+        "graph",
+        "topological-sort"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/course-schedule-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Akt3glAwyfY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Same as Course Schedule but collect the order. Add to result in postorder (after all prerequisites are processed).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findOrder(numCourses, prerequisites):\n    adj = defaultdict(list)\n    for crs, pre in prerequisites:\n        adj[crs].append(pre)\n    result, state = [], [0] * numCourses\n    def dfs(crs):\n        if state[crs] == 1: return False\n        if state[crs] == 2: return True\n        state[crs] = 1\n        for pre in adj[crs]:\n            if not dfs(pre): return False\n        state[crs] = 2\n        result.append(crs)\n        return True\n    for c in range(numCourses):\n        if not dfs(c): return []\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> indegree(numCourses, 0);\n        for (auto& p : prerequisites) { graph[p[1]].push_back(p[0]); indegree[p[0]]++; }\n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.push(i);\n        vector<int> order;\n        while (!q.empty()) {\n            int cur = q.front(); q.pop();\n            order.push_back(cur);\n            for (int next : graph[cur]) if (--indegree[next] == 0) q.push(next);\n        }\n        return order.size() == numCourses ? order : vector<int>();\n    }\n};",
+        "java": "class Solution {\n    public int[] findOrder(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> graph = new ArrayList<>();\n        int[] indegree = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());\n        for (int[] p : prerequisites) { graph.get(p[1]).add(p[0]); indegree[p[0]]++; }\n        Queue<Integer> q = new LinkedList<>();\n        for (int i = 0; i < numCourses; i++) if (indegree[i] == 0) q.offer(i);\n        int[] order = new int[numCourses];\n        int idx = 0;\n        while (!q.isEmpty()) {\n            int cur = q.poll();\n            order[idx++] = cur;\n            for (int next : graph.get(cur)) if (--indegree[next] == 0) q.offer(next);\n        }\n        return idx == numCourses ? order : new int[]{};\n    }\n}",
+        "js": "var findOrder = function(numCourses, prerequisites) {\n    const graph = Array.from({length: numCourses}, () => []);\n    const indegree = new Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) { graph[b].push(a); indegree[a]++; }\n    const q = [], order = [];\n    for (let i = 0; i < numCourses; i++) if (indegree[i] === 0) q.push(i);\n    while (q.length) {\n        const cur = q.shift();\n        order.push(cur);\n        for (const next of graph[cur]) if (--indegree[next] === 0) q.push(next);\n    }\n    return order.length === numCourses ? order : [];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "261",
+      "slug": "graph-valid-tree",
+      "title": "Graph Valid Tree",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 10,
+      "tags": [
+        "graph",
+        "union-find"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/graph-valid-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=bXsUuownnoQ"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "A valid tree has exactly N-1 edges and is fully connected. Use Union-Find: if unite returns false (already connected), there's a cycle.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def validTree(n, edges):\n    if len(edges) != n - 1: return False\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb: return False\n        parent[ra] = rb\n    return True",
+        "cpp": "class Solution {\npublic:\n    bool validTree(int n, vector<vector<int>>& edges) {\n        if (edges.size() != n - 1) return false;\n        vector<int> parent(n);\n        iota(parent.begin(), parent.end(), 0);\n        function<int(int)> find = [&](int x) {\n            return parent[x] == x ? x : parent[x] = find(parent[x]);\n        };\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return false;\n            parent[a] = b;\n        }\n        return true;\n    }\n};",
+        "java": "class Solution {\n    int[] parent;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public boolean validTree(int n, int[][] edges) {\n        if (edges.length != n - 1) return false;\n        parent = new int[n];\n        for (int i = 0; i < n; i++) parent[i] = i;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return false;\n            parent[a] = b;\n        }\n        return true;\n    }\n}",
+        "js": "var validTree = function(n, edges) {\n    if (edges.length !== n - 1) return false;\n    const parent = Array.from({length: n}, (_, i) => i);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    for (const [a, b] of edges) {\n        const pa = find(a), pb = find(b);\n        if (pa === pb) return false;\n        parent[pa] = pb;\n    }\n    return true;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "323",
+      "slug": "number-of-connected-components",
+      "title": "Number of Connected Components",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 11,
+      "tags": [
+        "graph",
+        "union-find"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=8f1XPm4WOUc"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def countComponents(n, edges):\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    components = n\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra != rb:\n            parent[ra] = rb\n            components -= 1\n    return components",
+        "cpp": "class Solution {\npublic:\n    int countComponents(int n, vector<vector<int>>& edges) {\n        vector<int> parent(n);\n        iota(parent.begin(), parent.end(), 0);\n        function<int(int)> find = [&](int x) {\n            return parent[x] == x ? x : parent[x] = find(parent[x]);\n        };\n        int components = n;\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a != b) { parent[a] = b; components--; }\n        }\n        return components;\n    }\n};",
+        "java": "class Solution {\n    int[] parent;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public int countComponents(int n, int[][] edges) {\n        parent = new int[n];\n        for (int i = 0; i < n; i++) parent[i] = i;\n        int components = n;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a != b) { parent[a] = b; components--; }\n        }\n        return components;\n    }\n}",
+        "js": "var countComponents = function(n, edges) {\n    const parent = Array.from({length: n}, (_, i) => i);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    let components = n;\n    for (const [a, b] of edges) {\n        const pa = find(a), pb = find(b);\n        if (pa !== pb) { parent[pa] = pb; components--; }\n    }\n    return components;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "684",
+      "slug": "redundant-connection",
+      "title": "Redundant Connection",
+      "difficulty": "medium",
+      "category": "graphs",
+      "order": 12,
+      "tags": [
+        "graph",
+        "union-find"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/redundant-connection/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=FXWRE67PLL0"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Add edges one by one with Union-Find. The first edge that connects two already-connected nodes is the redundant one.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findRedundantConnection(edges):\n    parent = list(range(len(edges) + 1))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra == rb: return [a, b]\n        parent[ra] = rb",
+        "cpp": "class Solution {\n    vector<int> parent, rank_;\n    int find(int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); }\npublic:\n    vector<int> findRedundantConnection(vector<vector<int>>& edges) {\n        int n = edges.size();\n        parent.resize(n + 1); rank_.resize(n + 1, 0);\n        iota(parent.begin(), parent.end(), 0);\n        for (auto& e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return e;\n            if (rank_[a] < rank_[b]) swap(a, b);\n            parent[b] = a;\n            if (rank_[a] == rank_[b]) rank_[a]++;\n        }\n        return {};\n    }\n};",
+        "java": "class Solution {\n    int[] parent, rank;\n    int find(int x) { return parent[x] == x ? x : (parent[x] = find(parent[x])); }\n    public int[] findRedundantConnection(int[][] edges) {\n        int n = edges.length;\n        parent = new int[n + 1]; rank = new int[n + 1];\n        for (int i = 0; i <= n; i++) parent[i] = i;\n        for (int[] e : edges) {\n            int a = find(e[0]), b = find(e[1]);\n            if (a == b) return e;\n            if (rank[a] < rank[b]) { int t = a; a = b; b = t; }\n            parent[b] = a;\n            if (rank[a] == rank[b]) rank[a]++;\n        }\n        return new int[]{};\n    }\n}",
+        "js": "var findRedundantConnection = function(edges) {\n    const n = edges.length, parent = Array.from({length: n+1}, (_, i) => i);\n    const rank = new Array(n+1).fill(0);\n    const find = (x) => parent[x] === x ? x : (parent[x] = find(parent[x]));\n    for (const [a, b] of edges) {\n        let pa = find(a), pb = find(b);\n        if (pa === pb) return [a, b];\n        if (rank[pa] < rank[pb]) [pa, pb] = [pb, pa];\n        parent[pb] = pa;\n        if (rank[pa] === rank[pb]) rank[pa]++;\n    }\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "127",
+      "slug": "word-ladder",
+      "title": "Word Ladder",
+      "difficulty": "hard",
+      "category": "graphs",
+      "order": 13,
+      "tags": [
+        "graph",
+        "bfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/word-ladder/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=h9iTnkgv05E"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "BFS for shortest transformation. Build adjacency using wildcard patterns: \"hot\" -> \"*ot\", \"h*t\", \"ho*\". Words sharing a pattern are neighbors.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def ladderLength(beginWord, endWord, wordList):\n    wordSet = set(wordList)\n    if endWord not in wordSet: return 0\n    queue = deque([(beginWord, 1)])\n    visited = {beginWord}\n    while queue:\n        word, steps = queue.popleft()\n        for i in range(len(word)):\n            for c in \"abcdefghijklmnopqrstuvwxyz\":\n                new_word = word[:i] + c + word[i+1:]\n                if new_word == endWord: return steps + 1\n                if new_word in wordSet and new_word not in visited:\n                    visited.add(new_word)\n                    queue.append((new_word, steps + 1))\n    return 0",
+        "cpp": "class Solution {\npublic:\n    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {\n        unordered_set<string> dict(wordList.begin(), wordList.end());\n        if (!dict.count(endWord)) return 0;\n        queue<string> q;\n        q.push(beginWord);\n        int steps = 1;\n        while (!q.empty()) {\n            int sz = q.size();\n            while (sz--) {\n                string word = q.front(); q.pop();\n                for (int i = 0; i < word.size(); i++) {\n                    char orig = word[i];\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        word[i] = c;\n                        if (word == endWord) return steps + 1;\n                        if (dict.count(word)) { q.push(word); dict.erase(word); }\n                    }\n                    word[i] = orig;\n                }\n            }\n            steps++;\n        }\n        return 0;\n    }\n};",
+        "java": "class Solution {\n    public int ladderLength(String beginWord, String endWord, List<String> wordList) {\n        Set<String> dict = new HashSet<>(wordList);\n        if (!dict.contains(endWord)) return 0;\n        Queue<String> q = new LinkedList<>();\n        q.offer(beginWord);\n        int steps = 1;\n        while (!q.isEmpty()) {\n            int sz = q.size();\n            while (sz-- > 0) {\n                char[] word = q.poll().toCharArray();\n                for (int i = 0; i < word.length; i++) {\n                    char orig = word[i];\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        word[i] = c;\n                        String s = new String(word);\n                        if (s.equals(endWord)) return steps + 1;\n                        if (dict.contains(s)) { q.offer(s); dict.remove(s); }\n                    }\n                    word[i] = orig;\n                }\n            }\n            steps++;\n        }\n        return 0;\n    }\n}",
+        "js": "var ladderLength = function(beginWord, endWord, wordList) {\n    const dict = new Set(wordList);\n    if (!dict.has(endWord)) return 0;\n    const q = [beginWord];\n    let steps = 1;\n    while (q.length) {\n        const sz = q.length;\n        for (let s = 0; s < sz; s++) {\n            const word = q.shift().split('');\n            for (let i = 0; i < word.length; i++) {\n                const orig = word[i];\n                for (let c = 97; c <= 122; c++) {\n                    word[i] = String.fromCharCode(c);\n                    const str = word.join('');\n                    if (str === endWord) return steps + 1;\n                    if (dict.has(str)) { q.push(str); dict.delete(str); }\n                }\n                word[i] = orig;\n            }\n        }\n        steps++;\n    }\n    return 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

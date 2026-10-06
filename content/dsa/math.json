@@ -1,0 +1,288 @@
+{
+  "slug": "math",
+  "title": "Math & Geometry",
+  "icon": "📐",
+  "order": 17,
+  "concept": null,
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "48",
+      "slug": "rotate-image",
+      "title": "Rotate Image",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 1,
+      "tags": [
+        "matrix"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/rotate-image/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=fMSJSS7eO1w"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Rotate 90 clockwise = Transpose + Reverse each row.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def rotate(matrix):\n    n = len(matrix)\n    for i in range(n):  # transpose\n        for j in range(i+1, n):\n            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]\n    for row in matrix:  # reverse rows\n        row.reverse()",
+        "cpp": "class Solution {\npublic:\n    void rotate(vector<vector<int>>& matrix) {\n        int n = matrix.size();\n        for (int i = 0; i < n; i++)\n            for (int j = i + 1; j < n; j++) swap(matrix[i][j], matrix[j][i]);\n        for (auto& row : matrix) reverse(row.begin(), row.end());\n    }\n};",
+        "java": "class Solution {\n    public void rotate(int[][] matrix) {\n        int n = matrix.length;\n        for (int i = 0; i < n; i++)\n            for (int j = i + 1; j < n; j++) { int t = matrix[i][j]; matrix[i][j] = matrix[j][i]; matrix[j][i] = t; }\n        for (int[] row : matrix) { int l = 0, r = n-1; while (l < r) { int t = row[l]; row[l++] = row[r]; row[r--] = t; } }\n    }\n}",
+        "js": "var rotate = function(matrix) {\n    const n = matrix.length;\n    for (let i = 0; i < n; i++)\n        for (let j = i + 1; j < n; j++) [matrix[i][j], matrix[j][i]] = [matrix[j][i], matrix[i][j]];\n    for (const row of matrix) row.reverse();\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "54",
+      "slug": "spiral-matrix",
+      "title": "Spiral Matrix",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 2,
+      "tags": [
+        "matrix"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/spiral-matrix/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=BJnMZNwUk1M"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def spiralOrder(matrix):\n    result = []\n    top, bottom, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1\n    while top <= bottom and left <= right:\n        for c in range(left, right+1): result.append(matrix[top][c])\n        top += 1\n        for r in range(top, bottom+1): result.append(matrix[r][right])\n        right -= 1\n        if top <= bottom:\n            for c in range(right, left-1, -1): result.append(matrix[bottom][c])\n            bottom -= 1\n        if left <= right:\n            for r in range(bottom, top-1, -1): result.append(matrix[r][left])\n            left += 1\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> spiralOrder(vector<vector<int>>& matrix) {\n        vector<int> result;\n        int top = 0, bottom = matrix.size()-1, left = 0, right = matrix[0].size()-1;\n        while (top <= bottom && left <= right) {\n            for (int j = left; j <= right; j++) result.push_back(matrix[top][j]); top++;\n            for (int i = top; i <= bottom; i++) result.push_back(matrix[i][right]); right--;\n            if (top <= bottom) { for (int j = right; j >= left; j--) result.push_back(matrix[bottom][j]); bottom--; }\n            if (left <= right) { for (int i = bottom; i >= top; i--) result.push_back(matrix[i][left]); left++; }\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<Integer> spiralOrder(int[][] matrix) {\n        List<Integer> result = new ArrayList<>();\n        int top = 0, bottom = matrix.length-1, left = 0, right = matrix[0].length-1;\n        while (top <= bottom && left <= right) {\n            for (int j = left; j <= right; j++) result.add(matrix[top][j]); top++;\n            for (int i = top; i <= bottom; i++) result.add(matrix[i][right]); right--;\n            if (top <= bottom) { for (int j = right; j >= left; j--) result.add(matrix[bottom][j]); bottom--; }\n            if (left <= right) { for (int i = bottom; i >= top; i--) result.add(matrix[i][left]); left++; }\n        }\n        return result;\n    }\n}",
+        "js": "var spiralOrder = function(matrix) {\n    const result = [];\n    let top = 0, bottom = matrix.length-1, left = 0, right = matrix[0].length-1;\n    while (top <= bottom && left <= right) {\n        for (let j = left; j <= right; j++) result.push(matrix[top][j]); top++;\n        for (let i = top; i <= bottom; i++) result.push(matrix[i][right]); right--;\n        if (top <= bottom) { for (let j = right; j >= left; j--) result.push(matrix[bottom][j]); bottom--; }\n        if (left <= right) { for (let i = bottom; i >= top; i--) result.push(matrix[i][left]); left++; }\n    }\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "73",
+      "slug": "set-matrix-zeroes",
+      "title": "Set Matrix Zeroes",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 3,
+      "tags": [
+        "matrix"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/set-matrix-zeroes/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=T41rL0L3Pnw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Use first row and first column as markers. O(1) extra space.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def setZeroes(matrix):\n    m, n = len(matrix), len(matrix[0])\n    first_row_zero = any(matrix[0][j]==0 for j in range(n))\n    first_col_zero = any(matrix[i][0]==0 for i in range(m))\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][j] == 0:\n                matrix[i][0] = matrix[0][j] = 0\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][0]==0 or matrix[0][j]==0:\n                matrix[i][j] = 0\n    if first_row_zero:\n        for j in range(n): matrix[0][j] = 0\n    if first_col_zero:\n        for i in range(m): matrix[i][0] = 0",
+        "cpp": "class Solution {\npublic:\n    void setZeroes(vector<vector<int>>& matrix) {\n        int m = matrix.size(), n = matrix[0].size();\n        bool firstRow = false, firstCol = false;\n        for (int j = 0; j < n; j++) if (matrix[0][j] == 0) firstRow = true;\n        for (int i = 0; i < m; i++) if (matrix[i][0] == 0) firstCol = true;\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][j] == 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;\n        if (firstRow) for (int j = 0; j < n; j++) matrix[0][j] = 0;\n        if (firstCol) for (int i = 0; i < m; i++) matrix[i][0] = 0;\n    }\n};",
+        "java": "class Solution {\n    public void setZeroes(int[][] matrix) {\n        int m = matrix.length, n = matrix[0].length;\n        boolean firstRow = false, firstCol = false;\n        for (int j = 0; j < n; j++) if (matrix[0][j] == 0) firstRow = true;\n        for (int i = 0; i < m; i++) if (matrix[i][0] == 0) firstCol = true;\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][j] == 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;\n        if (firstRow) for (int j = 0; j < n; j++) matrix[0][j] = 0;\n        if (firstCol) for (int i = 0; i < m; i++) matrix[i][0] = 0;\n    }\n}",
+        "js": "var setZeroes = function(matrix) {\n    const m = matrix.length, n = matrix[0].length;\n    let firstRow = false, firstCol = false;\n    for (let j = 0; j < n; j++) if (matrix[0][j] === 0) firstRow = true;\n    for (let i = 0; i < m; i++) if (matrix[i][0] === 0) firstCol = true;\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++)\n            if (matrix[i][j] === 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++)\n            if (matrix[i][0] === 0 || matrix[0][j] === 0) matrix[i][j] = 0;\n    if (firstRow) for (let j = 0; j < n; j++) matrix[0][j] = 0;\n    if (firstCol) for (let i = 0; i < m; i++) matrix[i][0] = 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "202",
+      "slug": "happy-number",
+      "title": "Happy Number",
+      "difficulty": "easy",
+      "category": "math",
+      "order": 4,
+      "tags": [
+        "math",
+        "fast-slow"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/happy-number/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=ljz85bxOYJ0"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isHappy(n):\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sum(int(d)**2 for d in str(n))\n    return n == 1",
+        "cpp": "class Solution {\npublic:\n    bool isHappy(int n) {\n        int slow = n, fast = n;\n        do {\n            slow = next(slow);\n            fast = next(next(fast));\n        } while (slow != fast);\n        return slow == 1;\n    }\n    int next(int n) {\n        int sum = 0;\n        while (n) { sum += (n % 10) * (n % 10); n /= 10; }\n        return sum;\n    }\n};",
+        "java": "class Solution {\n    public boolean isHappy(int n) {\n        int slow = n, fast = n;\n        do { slow = next(slow); fast = next(next(fast)); } while (slow != fast);\n        return slow == 1;\n    }\n    int next(int n) { int sum = 0; while (n > 0) { sum += (n%10)*(n%10); n /= 10; } return sum; }\n}",
+        "js": "var isHappy = function(n) {\n    const next = (n) => { let sum = 0; while (n) { sum += (n%10)**2; n = Math.floor(n/10); } return sum; };\n    let slow = n, fast = n;\n    do { slow = next(slow); fast = next(next(fast)); } while (slow !== fast);\n    return slow === 1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "66",
+      "slug": "plus-one",
+      "title": "Plus One",
+      "difficulty": "easy",
+      "category": "math",
+      "order": 5,
+      "tags": [
+        "math",
+        "array"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/plus-one/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=jIaA8LBUNJE"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def plusOne(digits):\n    for i in range(len(digits) - 1, -1, -1):\n        if digits[i] < 9:\n            digits[i] += 1\n            return digits\n        digits[i] = 0\n    return [1] + digits",
+        "cpp": "class Solution {\npublic:\n    vector<int> plusOne(vector<int>& digits) {\n        for (int i = digits.size() - 1; i >= 0; i--) {\n            if (digits[i] < 9) { digits[i]++; return digits; }\n            digits[i] = 0;\n        }\n        digits.insert(digits.begin(), 1);\n        return digits;\n    }\n};",
+        "java": "class Solution {\n    public int[] plusOne(int[] digits) {\n        for (int i = digits.length - 1; i >= 0; i--) {\n            if (digits[i] < 9) { digits[i]++; return digits; }\n            digits[i] = 0;\n        }\n        int[] result = new int[digits.length + 1];\n        result[0] = 1;\n        return result;\n    }\n}",
+        "js": "var plusOne = function(digits) {\n    for (let i = digits.length - 1; i >= 0; i--) {\n        if (digits[i] < 9) { digits[i]++; return digits; }\n        digits[i] = 0;\n    }\n    return [1, ...digits];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "50",
+      "slug": "pow-x-n",
+      "title": "Pow(x, n)",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 6,
+      "tags": [
+        "math",
+        "binary-search"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/powx-n/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=g9YQyYi4IQQ"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def myPow(x, n):\n    if n < 0: x, n = 1/x, -n\n    result = 1\n    while n:\n        if n % 2: result *= x\n        x *= x\n        n //= 2\n    return result",
+        "cpp": "class Solution {\npublic:\n    double myPow(double x, int n) {\n        long p = abs((long)n);\n        double result = 1;\n        while (p) {\n            if (p & 1) result *= x;\n            x *= x;\n            p >>= 1;\n        }\n        return n < 0 ? 1.0 / result : result;\n    }\n};",
+        "java": "class Solution {\n    public double myPow(double x, int n) {\n        long p = Math.abs((long)n);\n        double result = 1;\n        while (p > 0) {\n            if ((p & 1) == 1) result *= x;\n            x *= x;\n            p >>= 1;\n        }\n        return n < 0 ? 1.0 / result : result;\n    }\n}",
+        "js": "var myPow = function(x, n) {\n    let p = Math.abs(n), result = 1;\n    while (p > 0) {\n        if (p & 1) result *= x;\n        x *= x;\n        p >>= 1;\n    }\n    return n < 0 ? 1 / result : result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "43",
+      "slug": "multiply-strings",
+      "title": "Multiply Strings",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 7,
+      "tags": [
+        "math",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/multiply-strings/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=1vJRhu4LJQY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def multiply(num1, num2):\n    if num1==\"0\" or num2==\"0\": return \"0\"\n    res = [0] * (len(num1) + len(num2))\n    for i in range(len(num1)-1,-1,-1):\n        for j in range(len(num2)-1,-1,-1):\n            mul = int(num1[i]) * int(num2[j])\n            p1, p2 = i+j, i+j+1\n            total = mul + res[p2]\n            res[p2] = total % 10\n            res[p1] += total // 10\n    result = \"\".join(str(d) for d in res)\n    return result.lstrip(\"0\")",
+        "cpp": "class Solution {\npublic:\n    string multiply(string num1, string num2) {\n        int m = num1.size(), n = num2.size();\n        vector<int> result(m + n, 0);\n        for (int i = m-1; i >= 0; i--)\n            for (int j = n-1; j >= 0; j--) {\n                int mul = (num1[i]-'0') * (num2[j]-'0');\n                int p1 = i+j, p2 = i+j+1;\n                int sum = mul + result[p2];\n                result[p2] = sum % 10;\n                result[p1] += sum / 10;\n            }\n        string s;\n        for (int d : result) if (!(s.empty() && d == 0)) s += to_string(d);\n        return s.empty() ? \"0\" : s;\n    }\n};",
+        "java": "class Solution {\n    public String multiply(String num1, String num2) {\n        int m = num1.length(), n = num2.length();\n        int[] result = new int[m + n];\n        for (int i = m-1; i >= 0; i--)\n            for (int j = n-1; j >= 0; j--) {\n                int mul = (num1.charAt(i)-'0') * (num2.charAt(j)-'0');\n                int sum = mul + result[i+j+1];\n                result[i+j+1] = sum % 10;\n                result[i+j] += sum / 10;\n            }\n        StringBuilder sb = new StringBuilder();\n        for (int d : result) if (!(sb.length() == 0 && d == 0)) sb.append(d);\n        return sb.length() == 0 ? \"0\" : sb.toString();\n    }\n}",
+        "js": "var multiply = function(num1, num2) {\n    const m = num1.length, n = num2.length;\n    const result = new Array(m + n).fill(0);\n    for (let i = m-1; i >= 0; i--)\n        for (let j = n-1; j >= 0; j--) {\n            const mul = (num1[i]-'0') * (num2[j]-'0');\n            const sum = mul + result[i+j+1];\n            result[i+j+1] = sum % 10;\n            result[i+j] += Math.floor(sum / 10);\n        }\n    const s = result.join('').replace(/^0+/, '');\n    return s || '0';\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "2013",
+      "slug": "detect-squares",
+      "title": "Detect Squares",
+      "difficulty": "medium",
+      "category": "math",
+      "order": 8,
+      "tags": [
+        "math",
+        "hash-map"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/detect-squares/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=bahebearrDc"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class DetectSquares:\n    def __init__(self):\n        self.pts = defaultdict(int)\n    def add(self, point):\n        self.pts[tuple(point)] += 1\n    def count(self, point):\n        px, py = point\n        res = 0\n        for (x, y), cnt in self.pts.items():\n            if abs(x-px) != abs(y-py) or x==px or y==py: continue\n            res += cnt * self.pts.get((x,py),0) * self.pts.get((px,y),0)\n        return res",
+        "cpp": "class DetectSquares {\n    unordered_map<long long, int> count;\n    vector<pair<int,int>> points;\npublic:\n    void add(vector<int> point) {\n        count[(long long)point[0] << 32 | point[1]]++;\n        points.push_back({point[0], point[1]});\n    }\n    int count_fn(vector<int> point) {\n        int px = point[0], py = point[1], result = 0;\n        for (auto& [x, y] : points) {\n            if (abs(px-x) != abs(py-y) || px == x || py == y) continue;\n            long long k1 = (long long)x << 32 | py;\n            long long k2 = (long long)px << 32 | y;\n            result += (count.count(k1) ? count[k1] : 0) * (count.count(k2) ? count[k2] : 0);\n        }\n        return result;\n    }\n};",
+        "java": "class DetectSquares {\n    Map<Long, Integer> count = new HashMap<>();\n    List<int[]> points = new ArrayList<>();\n    public void add(int[] point) {\n        long key = (long)point[0] << 32 | (point[1] & 0xFFFFFFFFL);\n        count.merge(key, 1, Integer::sum);\n        points.add(point);\n    }\n    public int count(int[] point) {\n        int px = point[0], py = point[1], result = 0;\n        for (int[] p : points) {\n            int x = p[0], y = p[1];\n            if (Math.abs(px-x) != Math.abs(py-y) || px == x || py == y) continue;\n            long k1 = (long)x << 32 | (py & 0xFFFFFFFFL);\n            long k2 = (long)px << 32 | (y & 0xFFFFFFFFL);\n            result += count.getOrDefault(k1, 0) * count.getOrDefault(k2, 0);\n        }\n        return result;\n    }\n}",
+        "js": "var DetectSquares = function() { this.count = new Map(); this.points = []; };\nDetectSquares.prototype.add = function(point) {\n    const key = point[0] + ',' + point[1];\n    this.count.set(key, (this.count.get(key) || 0) + 1);\n    this.points.push(point);\n};\nDetectSquares.prototype.count = function(point) {\n    const [px, py] = point;\n    let result = 0;\n    for (const [x, y] of this.points) {\n        if (Math.abs(px-x) !== Math.abs(py-y) || px === x || py === y) continue;\n        result += (this.count.get(x+','+py) || 0) * (this.count.get(px+','+y) || 0);\n    }\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

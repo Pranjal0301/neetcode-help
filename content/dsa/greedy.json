@@ -1,0 +1,288 @@
+{
+  "slug": "greedy",
+  "title": "Greedy",
+  "icon": "🎯",
+  "order": 15,
+  "concept": null,
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "53",
+      "slug": "maximum-subarray",
+      "title": "Maximum Subarray",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 1,
+      "tags": [
+        "greedy",
+        "dp",
+        "kadane"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/maximum-subarray/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=5WZl3MMT0Eg"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "**Key Insight (Kadane's):** At each position: either extend current subarray or start fresh. cur_sum = max(num, cur_sum + num).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxSubArray(nums):\n    cur_sum = max_sum = nums[0]\n    for num in nums[1:]:\n        cur_sum = max(num, cur_sum + num)\n        max_sum = max(max_sum, cur_sum)\n    return max_sum",
+        "cpp": "class Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        int cur = 0, maxSum = nums[0];\n        for (int n : nums) { cur = max(n, cur + n); maxSum = max(maxSum, cur); }\n        return maxSum;\n    }\n};",
+        "java": "class Solution {\n    public int maxSubArray(int[] nums) {\n        int cur = 0, maxSum = nums[0];\n        for (int n : nums) { cur = Math.max(n, cur + n); maxSum = Math.max(maxSum, cur); }\n        return maxSum;\n    }\n}",
+        "js": "var maxSubArray = function(nums) {\n    let cur = 0, maxSum = nums[0];\n    for (const n of nums) { cur = Math.max(n, cur + n); maxSum = Math.max(maxSum, cur); }\n    return maxSum;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "55",
+      "slug": "jump-game",
+      "title": "Jump Game",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 2,
+      "tags": [
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/jump-game/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Yan0cv2cLy8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Track the farthest index reachable. If current index > farthest, we're stuck.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def canJump(nums):\n    farthest = 0\n    for i in range(len(nums)):\n        if i > farthest: return False\n        farthest = max(farthest, i + nums[i])\n    return True",
+        "cpp": "class Solution {\npublic:\n    bool canJump(vector<int>& nums) {\n        int maxReach = 0;\n        for (int i = 0; i <= maxReach && i < nums.size(); i++)\n            maxReach = max(maxReach, i + nums[i]);\n        return maxReach >= nums.size() - 1;\n    }\n};",
+        "java": "class Solution {\n    public boolean canJump(int[] nums) {\n        int maxReach = 0;\n        for (int i = 0; i <= maxReach && i < nums.length; i++)\n            maxReach = Math.max(maxReach, i + nums[i]);\n        return maxReach >= nums.length - 1;\n    }\n}",
+        "js": "var canJump = function(nums) {\n    let maxReach = 0;\n    for (let i = 0; i <= maxReach && i < nums.length; i++)\n        maxReach = Math.max(maxReach, i + nums[i]);\n    return maxReach >= nums.length - 1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "45",
+      "slug": "jump-game-ii",
+      "title": "Jump Game II",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 3,
+      "tags": [
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/jump-game-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=dJ7sWiOoK7g"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "BFS-like. Track current jump's farthest reach. When you hit the boundary, you must jump (increment count) and extend boundary.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def jump(nums):\n    jumps = end = farthest = 0\n    for i in range(len(nums) - 1):\n        farthest = max(farthest, i + nums[i])\n        if i == end:\n            jumps += 1\n            end = farthest\n    return jumps",
+        "cpp": "class Solution {\npublic:\n    int jump(vector<int>& nums) {\n        int jumps = 0, curEnd = 0, farthest = 0;\n        for (int i = 0; i < nums.size() - 1; i++) {\n            farthest = max(farthest, i + nums[i]);\n            if (i == curEnd) { jumps++; curEnd = farthest; }\n        }\n        return jumps;\n    }\n};",
+        "java": "class Solution {\n    public int jump(int[] nums) {\n        int jumps = 0, curEnd = 0, farthest = 0;\n        for (int i = 0; i < nums.length - 1; i++) {\n            farthest = Math.max(farthest, i + nums[i]);\n            if (i == curEnd) { jumps++; curEnd = farthest; }\n        }\n        return jumps;\n    }\n}",
+        "js": "var jump = function(nums) {\n    let jumps = 0, curEnd = 0, farthest = 0;\n    for (let i = 0; i < nums.length - 1; i++) {\n        farthest = Math.max(farthest, i + nums[i]);\n        if (i === curEnd) { jumps++; curEnd = farthest; }\n    }\n    return jumps;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "134",
+      "slug": "gas-station",
+      "title": "Gas Station",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 4,
+      "tags": [
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/gas-station/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=lJwbPZGo05A"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "If total gas >= total cost, solution exists. If tank goes negative at i, start from i+1 (everything before fails).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def canCompleteCircuit(gas, cost):\n    if sum(gas) < sum(cost): return -1\n    tank = start = 0\n    for i in range(len(gas)):\n        tank += gas[i] - cost[i]\n        if tank < 0:\n            tank = 0\n            start = i + 1\n    return start",
+        "cpp": "class Solution {\npublic:\n    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {\n        int total = 0, tank = 0, start = 0;\n        for (int i = 0; i < gas.size(); i++) {\n            int diff = gas[i] - cost[i];\n            total += diff; tank += diff;\n            if (tank < 0) { start = i + 1; tank = 0; }\n        }\n        return total >= 0 ? start : -1;\n    }\n};",
+        "java": "class Solution {\n    public int canCompleteCircuit(int[] gas, int[] cost) {\n        int total = 0, tank = 0, start = 0;\n        for (int i = 0; i < gas.length; i++) {\n            int diff = gas[i] - cost[i];\n            total += diff; tank += diff;\n            if (tank < 0) { start = i + 1; tank = 0; }\n        }\n        return total >= 0 ? start : -1;\n    }\n}",
+        "js": "var canCompleteCircuit = function(gas, cost) {\n    let total = 0, tank = 0, start = 0;\n    for (let i = 0; i < gas.length; i++) {\n        const diff = gas[i] - cost[i];\n        total += diff; tank += diff;\n        if (tank < 0) { start = i + 1; tank = 0; }\n    }\n    return total >= 0 ? start : -1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "846",
+      "slug": "hand-of-straights",
+      "title": "Hand of Straights",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 5,
+      "tags": [
+        "greedy",
+        "hash-map"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/hand-of-straights/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=amnrMCVd2YI"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isNStraightHand(hand, groupSize):\n    if len(hand) % groupSize: return False\n    count = Counter(hand)\n    for card in sorted(count):\n        if count[card] > 0:\n            need = count[card]\n            for i in range(groupSize):\n                if count[card + i] < need: return False\n                count[card + i] -= need\n    return True",
+        "cpp": "class Solution {\npublic:\n    bool isNStraightHand(vector<int>& hand, int groupSize) {\n        if (hand.size() % groupSize) return false;\n        map<int, int> count;\n        for (int h : hand) count[h]++;\n        for (auto& [card, cnt] : count) {\n            if (cnt > 0)\n                for (int i = 0; i < groupSize; i++) {\n                    count[card + i] -= cnt;\n                    if (count[card + i] < 0) return false;\n                }\n        }\n        return true;\n    }\n};",
+        "java": "class Solution {\n    public boolean isNStraightHand(int[] hand, int groupSize) {\n        if (hand.length % groupSize != 0) return false;\n        TreeMap<Integer, Integer> count = new TreeMap<>();\n        for (int h : hand) count.merge(h, 1, Integer::sum);\n        while (!count.isEmpty()) {\n            int first = count.firstKey();\n            for (int i = 0; i < groupSize; i++) {\n                if (!count.containsKey(first + i)) return false;\n                count.merge(first + i, -1, Integer::sum);\n                if (count.get(first + i) == 0) count.remove(first + i);\n            }\n        }\n        return true;\n    }\n}",
+        "js": "var isNStraightHand = function(hand, groupSize) {\n    if (hand.length % groupSize) return false;\n    const count = new Map();\n    for (const h of hand) count.set(h, (count.get(h) || 0) + 1);\n    const sorted = [...count.keys()].sort((a,b) => a - b);\n    for (const card of sorted) {\n        const cnt = count.get(card);\n        if (cnt > 0)\n            for (let i = 0; i < groupSize; i++) {\n                const c = count.get(card + i) || 0;\n                if (c < cnt) return false;\n                count.set(card + i, c - cnt);\n            }\n    }\n    return true;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1899",
+      "slug": "merge-triplets-to-form-target-triplet",
+      "title": "Merge Triplets to Form Target Triplet",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 6,
+      "tags": [
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/merge-triplets-to-form-target-triplet/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=kShkQLQZ9K4"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def mergeTriplets(triplets, target):\n    good = set()\n    for t in triplets:\n        if t[0]<=target[0] and t[1]<=target[1] and t[2]<=target[2]:\n            for i in range(3):\n                if t[i] == target[i]: good.add(i)\n    return len(good) == 3",
+        "cpp": "class Solution {\npublic:\n    bool mergeTriplets(vector<vector<int>>& triplets, vector<int>& target) {\n        bool a = false, b = false, c = false;\n        for (auto& t : triplets) {\n            if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n                if (t[0] == target[0]) a = true;\n                if (t[1] == target[1]) b = true;\n                if (t[2] == target[2]) c = true;\n            }\n        }\n        return a && b && c;\n    }\n};",
+        "java": "class Solution {\n    public boolean mergeTriplets(int[][] triplets, int[] target) {\n        boolean a = false, b = false, c = false;\n        for (int[] t : triplets) {\n            if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n                if (t[0] == target[0]) a = true;\n                if (t[1] == target[1]) b = true;\n                if (t[2] == target[2]) c = true;\n            }\n        }\n        return a && b && c;\n    }\n}",
+        "js": "var mergeTriplets = function(triplets, target) {\n    let a = false, b = false, c = false;\n    for (const t of triplets) {\n        if (t[0] <= target[0] && t[1] <= target[1] && t[2] <= target[2]) {\n            if (t[0] === target[0]) a = true;\n            if (t[1] === target[1]) b = true;\n            if (t[2] === target[2]) c = true;\n        }\n    }\n    return a && b && c;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "763",
+      "slug": "partition-labels",
+      "title": "Partition Labels",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 7,
+      "tags": [
+        "greedy",
+        "two-pointers"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/partition-labels/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=B7m8UmZE-vw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "For each char, find its LAST occurrence. Extend current partition to include last occurrence of every char within it.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def partitionLabels(s):\n    last = {c: i for i, c in enumerate(s)}\n    result, start, end = [], 0, 0\n    for i, c in enumerate(s):\n        end = max(end, last[c])\n        if i == end:\n            result.append(end - start + 1)\n            start = i + 1\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> partitionLabels(string s) {\n        int last[26] = {};\n        for (int i = 0; i < s.size(); i++) last[s[i]-'a'] = i;\n        vector<int> result;\n        int start = 0, end = 0;\n        for (int i = 0; i < s.size(); i++) {\n            end = max(end, last[s[i]-'a']);\n            if (i == end) { result.push_back(end - start + 1); start = i + 1; }\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<Integer> partitionLabels(String s) {\n        int[] last = new int[26];\n        for (int i = 0; i < s.length(); i++) last[s.charAt(i)-'a'] = i;\n        List<Integer> result = new ArrayList<>();\n        int start = 0, end = 0;\n        for (int i = 0; i < s.length(); i++) {\n            end = Math.max(end, last[s.charAt(i)-'a']);\n            if (i == end) { result.add(end - start + 1); start = i + 1; }\n        }\n        return result;\n    }\n}",
+        "js": "var partitionLabels = function(s) {\n    const last = {};\n    for (let i = 0; i < s.length; i++) last[s[i]] = i;\n    const result = [];\n    let start = 0, end = 0;\n    for (let i = 0; i < s.length; i++) {\n        end = Math.max(end, last[s[i]]);\n        if (i === end) { result.push(end - start + 1); start = i + 1; }\n    }\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "678",
+      "slug": "valid-parenthesis-string",
+      "title": "Valid Parenthesis String",
+      "difficulty": "medium",
+      "category": "greedy",
+      "order": 8,
+      "tags": [
+        "greedy",
+        "stack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/valid-parenthesis-string/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=QhPdNS143Qg"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Track min and max possible open count. '*' can be '(', ')' or empty. Valid if min ever drops below 0, clamp to 0. At end, min must be 0.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def checkValidString(s):\n    lo = hi = 0  # range of possible open parens\n    for c in s:\n        if c == '(': lo += 1; hi += 1\n        elif c == ')': lo -= 1; hi -= 1\n        else: lo -= 1; hi += 1  # * can be (, ), or \"\"\n        if hi < 0: return False\n        lo = max(lo, 0)\n    return lo == 0",
+        "cpp": "class Solution {\npublic:\n    bool checkValidString(string s) {\n        int lo = 0, hi = 0;\n        for (char c : s) {\n            lo += c == '(' ? 1 : -1;\n            hi += c != ')' ? 1 : -1;\n            if (hi < 0) return false;\n            lo = max(lo, 0);\n        }\n        return lo == 0;\n    }\n};",
+        "java": "class Solution {\n    public boolean checkValidString(String s) {\n        int lo = 0, hi = 0;\n        for (char c : s.toCharArray()) {\n            lo += c == '(' ? 1 : -1;\n            hi += c != ')' ? 1 : -1;\n            if (hi < 0) return false;\n            lo = Math.max(lo, 0);\n        }\n        return lo == 0;\n    }\n}",
+        "js": "var checkValidString = function(s) {\n    let lo = 0, hi = 0;\n    for (const c of s) {\n        lo += c === '(' ? 1 : -1;\n        hi += c !== ')' ? 1 : -1;\n        if (hi < 0) return false;\n        lo = Math.max(lo, 0);\n    }\n    return lo === 0;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

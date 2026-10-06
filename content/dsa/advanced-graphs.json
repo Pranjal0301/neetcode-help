@@ -1,0 +1,237 @@
+{
+  "slug": "advanced-graphs",
+  "title": "Advanced Graphs",
+  "icon": "🌍",
+  "order": 12,
+  "concept": {
+    "heading": "Advanced Algorithms",
+    "body": "",
+    "bullets": [
+      "**Dijkstra's:** Shortest path in weighted graph (no negative edges). Min-heap.",
+      "**Prim's/Kruskal's:** Minimum Spanning Tree.",
+      "**Topological Sort on strings:** Alien Dictionary."
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "332",
+      "slug": "reconstruct-itinerary",
+      "title": "Reconstruct Itinerary",
+      "difficulty": "hard",
+      "category": "advanced-graphs",
+      "order": 1,
+      "tags": [
+        "graph",
+        "dfs",
+        "euler"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/reconstruct-itinerary/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=ZyB_gQ8vqGA"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Eulerian path - visit every edge exactly once. Use DFS with sorted adjacency lists. Add to result in postorder (Hierholzer's algorithm).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findItinerary(tickets):\n    adj = defaultdict(list)\n    for src, dst in sorted(tickets, reverse=True):\n        adj[src].append(dst)\n    route = []\n    def dfs(airport):\n        while adj[airport]:\n            dfs(adj[airport].pop())\n        route.append(airport)\n    dfs(\"JFK\")\n    return route[::-1]",
+        "cpp": "class Solution {\npublic:\n    vector<string> findItinerary(vector<vector<string>>& tickets) {\n        unordered_map<string, priority_queue<string, vector<string>, greater<string>>> graph;\n        for (auto& t : tickets) graph[t[0]].push(t[1]);\n        vector<string> result;\n        function<void(string)> dfs = [&](string airport) {\n            while (!graph[airport].empty()) {\n                string next = graph[airport].top(); graph[airport].pop();\n                dfs(next);\n            }\n            result.push_back(airport);\n        };\n        dfs(\"JFK\");\n        reverse(result.begin(), result.end());\n        return result;\n    }\n};",
+        "java": "class Solution {\n    Map<String, PriorityQueue<String>> graph = new HashMap<>();\n    List<String> result = new LinkedList<>();\n    public List<String> findItinerary(List<List<String>> tickets) {\n        for (var t : tickets) graph.computeIfAbsent(t.get(0), k -> new PriorityQueue<>()).offer(t.get(1));\n        dfs(\"JFK\");\n        return result;\n    }\n    void dfs(String airport) {\n        while (graph.containsKey(airport) && !graph.get(airport).isEmpty())\n            dfs(graph.get(airport).poll());\n        result.add(0, airport);\n    }\n}",
+        "js": "var findItinerary = function(tickets) {\n    const graph = {};\n    for (const [from, to] of tickets) {\n        if (!graph[from]) graph[from] = [];\n        graph[from].push(to);\n    }\n    for (const key in graph) graph[key].sort();\n    const result = [];\n    const dfs = (airport) => {\n        while (graph[airport] && graph[airport].length)\n            dfs(graph[airport].shift());\n        result.unshift(airport);\n    };\n    dfs('JFK');\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1584",
+      "slug": "min-cost-to-connect-all-points",
+      "title": "Min Cost to Connect All Points",
+      "difficulty": "medium",
+      "category": "advanced-graphs",
+      "order": 2,
+      "tags": [
+        "graph",
+        "mst",
+        "prim"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/min-cost-to-connect-all-points/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=f7JOBJIC-NA"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Minimum Spanning Tree. Prim's: start from any node, greedily add cheapest edge to unvisited node using min-heap.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minCostConnectPoints(points):\n    n = len(points)\n    visited = set()\n    heap = [(0, 0)]  # (cost, point_idx)\n    total = 0\n    while len(visited) < n:\n        cost, i = heapq.heappop(heap)\n        if i in visited: continue\n        visited.add(i)\n        total += cost\n        for j in range(n):\n            if j not in visited:\n                dist = abs(points[i][0]-points[j][0]) + abs(points[i][1]-points[j][1])\n                heapq.heappush(heap, (dist, j))\n    return total",
+        "cpp": "class Solution {\npublic:\n    int minCostConnectPoints(vector<vector<int>>& points) {\n        int n = points.size(), cost = 0, connected = 0;\n        vector<int> minDist(n, INT_MAX);\n        vector<bool> visited(n, false);\n        minDist[0] = 0;\n        while (connected < n) {\n            int u = -1;\n            for (int i = 0; i < n; i++)\n                if (!visited[i] && (u == -1 || minDist[i] < minDist[u])) u = i;\n            visited[u] = true;\n            cost += minDist[u]; connected++;\n            for (int v = 0; v < n; v++) {\n                int d = abs(points[u][0]-points[v][0]) + abs(points[u][1]-points[v][1]);\n                minDist[v] = min(minDist[v], d);\n            }\n        }\n        return cost;\n    }\n};",
+        "java": "class Solution {\n    public int minCostConnectPoints(int[][] points) {\n        int n = points.length, cost = 0;\n        int[] minDist = new int[n];\n        boolean[] visited = new boolean[n];\n        Arrays.fill(minDist, Integer.MAX_VALUE);\n        minDist[0] = 0;\n        for (int i = 0; i < n; i++) {\n            int u = -1;\n            for (int j = 0; j < n; j++)\n                if (!visited[j] && (u == -1 || minDist[j] < minDist[u])) u = j;\n            visited[u] = true;\n            cost += minDist[u];\n            for (int v = 0; v < n; v++)\n                minDist[v] = Math.min(minDist[v],\n                    Math.abs(points[u][0]-points[v][0]) + Math.abs(points[u][1]-points[v][1]));\n        }\n        return cost;\n    }\n}",
+        "js": "var minCostConnectPoints = function(points) {\n    const n = points.length;\n    const minDist = new Array(n).fill(Infinity);\n    const visited = new Array(n).fill(false);\n    minDist[0] = 0;\n    let cost = 0;\n    for (let i = 0; i < n; i++) {\n        let u = -1;\n        for (let j = 0; j < n; j++)\n            if (!visited[j] && (u === -1 || minDist[j] < minDist[u])) u = j;\n        visited[u] = true;\n        cost += minDist[u];\n        for (let v = 0; v < n; v++)\n            minDist[v] = Math.min(minDist[v],\n                Math.abs(points[u][0]-points[v][0]) + Math.abs(points[u][1]-points[v][1]));\n    }\n    return cost;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "743",
+      "slug": "network-delay-time",
+      "title": "Network Delay Time",
+      "difficulty": "medium",
+      "category": "advanced-graphs",
+      "order": 3,
+      "tags": [
+        "graph",
+        "dijkstra"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/network-delay-time/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=EaphyqKU4PQ"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Classic Dijkstra. Find shortest path from source to ALL nodes. Answer = max of all shortest paths (time for last node to receive signal).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def networkDelayTime(times, n, k):\n    adj = defaultdict(list)\n    for u, v, w in times:\n        adj[u].append((v, w))\n    heap = [(0, k)]\n    dist = {}\n    while heap:\n        d, node = heapq.heappop(heap)\n        if node in dist: continue\n        dist[node] = d\n        for nei, w in adj[node]:\n            if nei not in dist:\n                heapq.heappush(heap, (d + w, nei))\n    return max(dist.values()) if len(dist) == n else -1",
+        "cpp": "class Solution {\npublic:\n    int networkDelayTime(vector<vector<int>>& times, int n, int k) {\n        vector<vector<pair<int,int>>> graph(n + 1);\n        for (auto& t : times) graph[t[0]].push_back({t[1], t[2]});\n        vector<int> dist(n + 1, INT_MAX);\n        dist[k] = 0;\n        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n        pq.push({0, k});\n        while (!pq.empty()) {\n            auto [d, u] = pq.top(); pq.pop();\n            if (d > dist[u]) continue;\n            for (auto [v, w] : graph[u]) {\n                if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; pq.push({dist[v], v}); }\n            }\n        }\n        int result = *max_element(dist.begin() + 1, dist.end());\n        return result == INT_MAX ? -1 : result;\n    }\n};",
+        "java": "class Solution {\n    public int networkDelayTime(int[][] times, int n, int k) {\n        List<int[]>[] graph = new List[n + 1];\n        for (int i = 0; i <= n; i++) graph[i] = new ArrayList<>();\n        for (int[] t : times) graph[t[0]].add(new int[]{t[1], t[2]});\n        int[] dist = new int[n + 1];\n        Arrays.fill(dist, Integer.MAX_VALUE);\n        dist[k] = 0;\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0] - b[0]);\n        pq.offer(new int[]{0, k});\n        while (!pq.isEmpty()) {\n            int[] cur = pq.poll();\n            if (cur[0] > dist[cur[1]]) continue;\n            for (int[] e : graph[cur[1]])\n                if (dist[cur[1]] + e[1] < dist[e[0]]) {\n                    dist[e[0]] = dist[cur[1]] + e[1];\n                    pq.offer(new int[]{dist[e[0]], e[0]});\n                }\n        }\n        int result = 0;\n        for (int i = 1; i <= n; i++) result = Math.max(result, dist[i]);\n        return result == Integer.MAX_VALUE ? -1 : result;\n    }\n}",
+        "js": "var networkDelayTime = function(times, n, k) {\n    const graph = Array.from({length: n+1}, () => []);\n    for (const [u,v,w] of times) graph[u].push([v,w]);\n    const dist = new Array(n+1).fill(Infinity);\n    dist[k] = 0;\n    const pq = [[0, k]]; // [dist, node]\n    while (pq.length) {\n        pq.sort((a,b) => a[0]-b[0]);\n        const [d, u] = pq.shift();\n        if (d > dist[u]) continue;\n        for (const [v, w] of graph[u])\n            if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; pq.push([dist[v], v]); }\n    }\n    const result = Math.max(...dist.slice(1));\n    return result === Infinity ? -1 : result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "778",
+      "slug": "swim-in-rising-water",
+      "title": "Swim in Rising Water",
+      "difficulty": "hard",
+      "category": "advanced-graphs",
+      "order": 4,
+      "tags": [
+        "graph",
+        "binary-search",
+        "dijkstra"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/swim-in-rising-water/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=amvrKlMLuGY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Modified Dijkstra on grid. \"Distance\" = max elevation along path. Min-heap by max elevation. Find path minimizing the maximum.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def swimInWater(grid):\n    n = len(grid)\n    visited = set()\n    heap = [(grid[0][0], 0, 0)]\n    while heap:\n        t, r, c = heapq.heappop(heap)\n        if (r, c) == (n-1, n-1): return t\n        if (r, c) in visited: continue\n        visited.add((r, c))\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<n and 0<=nc<n and (nr,nc) not in visited:\n                heapq.heappush(heap, (max(t, grid[nr][nc]), nr, nc))",
+        "cpp": "class Solution {\npublic:\n    int swimInWater(vector<vector<int>>& grid) {\n        int n = grid.size();\n        priority_queue<tuple<int,int,int>, vector<tuple<int,int,int>>, greater<>> pq;\n        pq.push({grid[0][0], 0, 0});\n        vector<vector<bool>> visited(n, vector<bool>(n, false));\n        visited[0][0] = true;\n        int dirs[] = {0,1,0,-1,0};\n        while (!pq.empty()) {\n            auto [t, i, j] = pq.top(); pq.pop();\n            if (i == n-1 && j == n-1) return t;\n            for (int d = 0; d < 4; d++) {\n                int ni = i+dirs[d], nj = j+dirs[d+1];\n                if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                    visited[ni][nj] = true;\n                    pq.push({max(t, grid[ni][nj]), ni, nj});\n                }\n            }\n        }\n        return 0;\n    }\n};",
+        "java": "class Solution {\n    public int swimInWater(int[][] grid) {\n        int n = grid.length;\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0]-b[0]);\n        pq.offer(new int[]{grid[0][0], 0, 0});\n        boolean[][] visited = new boolean[n][n];\n        visited[0][0] = true;\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!pq.isEmpty()) {\n            int[] cur = pq.poll();\n            if (cur[1] == n-1 && cur[2] == n-1) return cur[0];\n            for (int[] d : dirs) {\n                int ni = cur[1]+d[0], nj = cur[2]+d[1];\n                if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                    visited[ni][nj] = true;\n                    pq.offer(new int[]{Math.max(cur[0], grid[ni][nj]), ni, nj});\n                }\n            }\n        }\n        return 0;\n    }\n}",
+        "js": "var swimInWater = function(grid) {\n    const n = grid.length;\n    const visited = Array.from({length:n}, () => new Array(n).fill(false));\n    const pq = [[grid[0][0], 0, 0]];\n    visited[0][0] = true;\n    while (pq.length) {\n        pq.sort((a,b) => a[0]-b[0]);\n        const [t, i, j] = pq.shift();\n        if (i === n-1 && j === n-1) return t;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                visited[ni][nj] = true;\n                pq.push([Math.max(t, grid[ni][nj]), ni, nj]);\n            }\n        }\n    }\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "269",
+      "slug": "alien-dictionary",
+      "title": "Alien Dictionary",
+      "difficulty": "hard",
+      "category": "advanced-graphs",
+      "order": 5,
+      "tags": [
+        "graph",
+        "topological-sort"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/alien-dictionary/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=6kTZYvNNyps"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Compare adjacent words to find ordering constraints (edges). Build graph, topological sort. If cycle exists, return \"\".",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def alienOrder(words):\n    adj = {c: set() for w in words for c in w}\n    for i in range(len(words) - 1):\n        w1, w2 = words[i], words[i+1]\n        min_len = min(len(w1), len(w2))\n        if w1[:min_len] == w2[:min_len] and len(w1) > len(w2):\n            return \"\"  # invalid\n        for j in range(min_len):\n            if w1[j] != w2[j]:\n                adj[w1[j]].add(w2[j])\n                break\n    visited = {}  # False=in-progress, True=done\n    result = []\n    def dfs(c):\n        if c in visited:\n            return visited[c]  # True=ok, False=cycle\n        visited[c] = False\n        for nei in adj[c]:\n            if not dfs(nei): return False\n        visited[c] = True\n        result.append(c)\n        return True\n    for c in adj:\n        if not dfs(c): return \"\"\n    return \"\".join(result[::-1])",
+        "cpp": "class Solution {\npublic:\n    string alienOrder(vector<string>& words) {\n        unordered_map<char, unordered_set<char>> graph;\n        unordered_map<char, int> indegree;\n        for (auto& w : words) for (char c : w) indegree[c] = 0;\n        for (int i = 0; i < words.size() - 1; i++) {\n            string &w1 = words[i], &w2 = words[i+1];\n            if (w1.size() > w2.size() && w1.substr(0, w2.size()) == w2) return \"\";\n            for (int j = 0; j < min(w1.size(), w2.size()); j++) {\n                if (w1[j] != w2[j]) {\n                    if (!graph[w1[j]].count(w2[j])) {\n                        graph[w1[j]].insert(w2[j]);\n                        indegree[w2[j]]++;\n                    }\n                    break;\n                }\n            }\n        }\n        queue<char> q;\n        for (auto& [c, d] : indegree) if (d == 0) q.push(c);\n        string result;\n        while (!q.empty()) {\n            char c = q.front(); q.pop();\n            result += c;\n            for (char next : graph[c]) if (--indegree[next] == 0) q.push(next);\n        }\n        return result.size() == indegree.size() ? result : \"\";\n    }\n};",
+        "java": "class Solution {\n    public String alienOrder(String[] words) {\n        Map<Character, Set<Character>> graph = new HashMap<>();\n        Map<Character, Integer> indegree = new HashMap<>();\n        for (String w : words) for (char c : w.toCharArray()) indegree.put(c, 0);\n        for (int i = 0; i < words.length - 1; i++) {\n            String w1 = words[i], w2 = words[i+1];\n            if (w1.length() > w2.length() && w1.startsWith(w2)) return \"\";\n            for (int j = 0; j < Math.min(w1.length(), w2.length()); j++) {\n                if (w1.charAt(j) != w2.charAt(j)) {\n                    graph.computeIfAbsent(w1.charAt(j), k -> new HashSet<>());\n                    if (graph.get(w1.charAt(j)).add(w2.charAt(j)))\n                        indegree.merge(w2.charAt(j), 1, Integer::sum);\n                    break;\n                }\n            }\n        }\n        Queue<Character> q = new LinkedList<>();\n        for (var e : indegree.entrySet()) if (e.getValue() == 0) q.offer(e.getKey());\n        StringBuilder sb = new StringBuilder();\n        while (!q.isEmpty()) {\n            char c = q.poll(); sb.append(c);\n            if (graph.containsKey(c))\n                for (char next : graph.get(c)) if (indegree.merge(next, -1, Integer::sum) == 0) q.offer(next);\n        }\n        return sb.length() == indegree.size() ? sb.toString() : \"\";\n    }\n}",
+        "js": "var alienOrder = function(words) {\n    const graph = {}, indegree = {};\n    for (const w of words) for (const c of w) indegree[c] = 0;\n    for (let i = 0; i < words.length - 1; i++) {\n        const w1 = words[i], w2 = words[i+1];\n        if (w1.length > w2.length && w1.startsWith(w2)) return '';\n        for (let j = 0; j < Math.min(w1.length, w2.length); j++) {\n            if (w1[j] !== w2[j]) {\n                if (!graph[w1[j]]) graph[w1[j]] = new Set();\n                if (!graph[w1[j]].has(w2[j])) {\n                    graph[w1[j]].add(w2[j]);\n                    indegree[w2[j]]++;\n                }\n                break;\n            }\n        }\n    }\n    const q = Object.keys(indegree).filter(c => indegree[c] === 0);\n    let result = '';\n    while (q.length) {\n        const c = q.shift(); result += c;\n        if (graph[c]) for (const next of graph[c]) if (--indegree[next] === 0) q.push(next);\n    }\n    return result.length === Object.keys(indegree).length ? result : '';\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "787",
+      "slug": "cheapest-flights-within-k-stops",
+      "title": "Cheapest Flights Within K Stops",
+      "difficulty": "medium",
+      "category": "advanced-graphs",
+      "order": 6,
+      "tags": [
+        "graph",
+        "dijkstra",
+        "bellman-ford"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/cheapest-flights-within-k-stops/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=5eIK3zUdYmE"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Bellman-Ford with K+1 iterations (K stops = K+1 edges max). Each iteration relaxes all edges once.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def findCheapestPrice(n, flights, src, dst, k):\n    prices = [float('inf')] * n\n    prices[src] = 0\n    for _ in range(k + 1):\n        tmp = prices[:]\n        for u, v, w in flights:\n            if prices[u] + w < tmp[v]:\n                tmp[v] = prices[u] + w\n        prices = tmp\n    return prices[dst] if prices[dst] != float('inf') else -1",
+        "cpp": "class Solution {\npublic:\n    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {\n        vector<int> prices(n, INT_MAX);\n        prices[src] = 0;\n        for (int i = 0; i <= k; i++) {\n            vector<int> tmp(prices);\n            for (auto& f : flights) {\n                if (prices[f[0]] == INT_MAX) continue;\n                tmp[f[1]] = min(tmp[f[1]], prices[f[0]] + f[2]);\n            }\n            prices = tmp;\n        }\n        return prices[dst] == INT_MAX ? -1 : prices[dst];\n    }\n};",
+        "java": "class Solution {\n    public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {\n        int[] prices = new int[n];\n        Arrays.fill(prices, Integer.MAX_VALUE);\n        prices[src] = 0;\n        for (int i = 0; i <= k; i++) {\n            int[] tmp = prices.clone();\n            for (int[] f : flights) {\n                if (prices[f[0]] == Integer.MAX_VALUE) continue;\n                tmp[f[1]] = Math.min(tmp[f[1]], prices[f[0]] + f[2]);\n            }\n            prices = tmp;\n        }\n        return prices[dst] == Integer.MAX_VALUE ? -1 : prices[dst];\n    }\n}",
+        "js": "var findCheapestPrice = function(n, flights, src, dst, k) {\n    let prices = new Array(n).fill(Infinity);\n    prices[src] = 0;\n    for (let i = 0; i <= k; i++) {\n        const tmp = [...prices];\n        for (const [u, v, w] of flights)\n            if (prices[u] !== Infinity) tmp[v] = Math.min(tmp[v], prices[u] + w);\n        prices = tmp;\n    }\n    return prices[dst] === Infinity ? -1 : prices[dst];\n};"
+      },
+      "complexity": {
+        "time": "O(K * E)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

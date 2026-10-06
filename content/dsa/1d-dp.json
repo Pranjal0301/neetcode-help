@@ -1,0 +1,434 @@
+{
+  "slug": "1d-dp",
+  "title": "1-D Dynamic Programming",
+  "icon": "📊",
+  "order": 13,
+  "concept": {
+    "heading": "Core Pattern",
+    "body": "**DP = optimal substructure + overlapping subproblems.** Define state, recurrence, base case. Bottom-up (tabulation) or top-down (memoization).",
+    "bullets": [
+      "**State:** What info do I need at position i?",
+      "**Transition:** How does dp[i] depend on previous states?",
+      "**Base case:** What's dp[0] or dp[1]?"
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "70",
+      "slug": "climbing-stairs",
+      "title": "Climbing Stairs",
+      "difficulty": "easy",
+      "category": "1d-dp",
+      "order": 1,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/climbing-stairs/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Y0lT9Fck7qI"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[i] = dp[i-1] + dp[i-2]. Same as Fibonacci. Can optimize to O(1) space with two variables.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def climbStairs(n):\n    a, b = 1, 1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b",
+        "cpp": "class Solution {\npublic:\n    int climbStairs(int n) {\n        int a = 1, b = 1;\n        for (int i = 2; i <= n; i++) { int c = a + b; a = b; b = c; }\n        return b;\n    }\n};",
+        "java": "class Solution {\n    public int climbStairs(int n) {\n        int a = 1, b = 1;\n        for (int i = 2; i <= n; i++) { int c = a + b; a = b; b = c; }\n        return b;\n    }\n}",
+        "js": "var climbStairs = function(n) {\n    let a = 1, b = 1;\n    for (let i = 2; i <= n; i++) { const c = a + b; a = b; b = c; }\n    return b;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "746",
+      "slug": "min-cost-climbing-stairs",
+      "title": "Min Cost Climbing Stairs",
+      "difficulty": "easy",
+      "category": "1d-dp",
+      "order": 2,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/min-cost-climbing-stairs/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=ktmzAZWkEZ0"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minCostClimbingStairs(cost):\n    for i in range(2, len(cost)):\n        cost[i] += min(cost[i-1], cost[i-2])\n    return min(cost[-1], cost[-2])",
+        "cpp": "class Solution {\npublic:\n    int minCostClimbingStairs(vector<int>& cost) {\n        int a = 0, b = 0;\n        for (int i = 2; i <= cost.size(); i++) {\n            int c = min(a + cost[i-2], b + cost[i-1]);\n            a = b; b = c;\n        }\n        return b;\n    }\n};",
+        "java": "class Solution {\n    public int minCostClimbingStairs(int[] cost) {\n        int a = 0, b = 0;\n        for (int i = 2; i <= cost.length; i++) {\n            int c = Math.min(a + cost[i-2], b + cost[i-1]);\n            a = b; b = c;\n        }\n        return b;\n    }\n}",
+        "js": "var minCostClimbingStairs = function(cost) {\n    let a = 0, b = 0;\n    for (let i = 2; i <= cost.length; i++) {\n        const c = Math.min(a + cost[i-2], b + cost[i-1]);\n        a = b; b = c;\n    }\n    return b;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "198",
+      "slug": "house-robber",
+      "title": "House Robber",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 3,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/house-robber/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=73r3KWiEvyk"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "At each house: rob it (add to i-2's max) or skip it (keep i-1's max). dp[i] = max(dp[i-1], dp[i-2] + nums[i]).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def rob(nums):\n    prev2, prev1 = 0, 0\n    for n in nums:\n        prev2, prev1 = prev1, max(prev1, prev2 + n)\n    return prev1",
+        "cpp": "class Solution {\npublic:\n    int rob(vector<int>& nums) {\n        int prev2 = 0, prev1 = 0;\n        for (int n : nums) { int cur = max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n};",
+        "java": "class Solution {\n    public int rob(int[] nums) {\n        int prev2 = 0, prev1 = 0;\n        for (int n : nums) { int cur = Math.max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n}",
+        "js": "var rob = function(nums) {\n    let prev2 = 0, prev1 = 0;\n    for (const n of nums) { const cur = Math.max(prev1, prev2 + n); prev2 = prev1; prev1 = cur; }\n    return prev1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "213",
+      "slug": "house-robber-ii",
+      "title": "House Robber II",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 4,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/house-robber-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=rWAJCfYYOvM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Circular: can't rob both first and last. Run House Robber twice: once excluding last, once excluding first. Take max.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def rob(nums):\n    if len(nums) == 1: return nums[0]\n    def rob1(arr):\n        p2, p1 = 0, 0\n        for n in arr:\n            p2, p1 = p1, max(p1, p2 + n)\n        return p1\n    return max(rob1(nums[:-1]), rob1(nums[1:]))",
+        "cpp": "class Solution {\npublic:\n    int rob(vector<int>& nums) {\n        if (nums.size() == 1) return nums[0];\n        return max(robRange(nums, 0, nums.size()-2), robRange(nums, 1, nums.size()-1));\n    }\n    int robRange(vector<int>& nums, int lo, int hi) {\n        int prev2 = 0, prev1 = 0;\n        for (int i = lo; i <= hi; i++) { int cur = max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n};",
+        "java": "class Solution {\n    public int rob(int[] nums) {\n        if (nums.length == 1) return nums[0];\n        return Math.max(robRange(nums, 0, nums.length-2), robRange(nums, 1, nums.length-1));\n    }\n    int robRange(int[] nums, int lo, int hi) {\n        int prev2 = 0, prev1 = 0;\n        for (int i = lo; i <= hi; i++) { int cur = Math.max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    }\n}",
+        "js": "var rob = function(nums) {\n    if (nums.length === 1) return nums[0];\n    const robRange = (lo, hi) => {\n        let prev2 = 0, prev1 = 0;\n        for (let i = lo; i <= hi; i++) { const cur = Math.max(prev1, prev2 + nums[i]); prev2 = prev1; prev1 = cur; }\n        return prev1;\n    };\n    return Math.max(robRange(0, nums.length-2), robRange(1, nums.length-1));\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "5",
+      "slug": "longest-palindromic-substring",
+      "title": "Longest Palindromic Substring",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 5,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-palindromic-substring/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=XYQecbcd6_c"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Expand around center. For each index, try both odd-length (single center) and even-length (double center) palindromes.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def longestPalindrome(s):\n    result = \"\"\n    def expand(l, r):\n        nonlocal result\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            if r - l + 1 > len(result):\n                result = s[l:r+1]\n            l -= 1; r += 1\n    for i in range(len(s)):\n        expand(i, i)    # odd\n        expand(i, i+1)  # even\n    return result",
+        "cpp": "class Solution {\npublic:\n    string longestPalindrome(string s) {\n        int start = 0, maxLen = 0;\n        for (int i = 0; i < s.size(); i++) {\n            for (int d : {0, 1}) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.size() && s[l] == s[r]) { l--; r++; }\n                if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n            }\n        }\n        return s.substr(start, maxLen);\n    }\n};",
+        "java": "class Solution {\n    public String longestPalindrome(String s) {\n        int start = 0, maxLen = 0;\n        for (int i = 0; i < s.length(); i++) {\n            for (int d = 0; d <= 1; d++) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) { l--; r++; }\n                if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n            }\n        }\n        return s.substring(start, start + maxLen);\n    }\n}",
+        "js": "var longestPalindrome = function(s) {\n    let start = 0, maxLen = 0;\n    for (let i = 0; i < s.length; i++) {\n        for (const d of [0, 1]) {\n            let l = i, r = i + d;\n            while (l >= 0 && r < s.length && s[l] === s[r]) { l--; r++; }\n            if (r - l - 1 > maxLen) { maxLen = r - l - 1; start = l + 1; }\n        }\n    }\n    return s.substring(start, start + maxLen);\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "647",
+      "slug": "palindromic-substrings",
+      "title": "Palindromic Substrings",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 6,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/palindromic-substrings/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=4RACzI5-du8"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def countSubstrings(s):\n    count = 0\n    def expand(l, r):\n        nonlocal count\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            count += 1; l -= 1; r += 1\n    for i in range(len(s)):\n        expand(i, i); expand(i, i+1)\n    return count",
+        "cpp": "class Solution {\npublic:\n    int countSubstrings(string s) {\n        int count = 0;\n        for (int i = 0; i < s.size(); i++)\n            for (int d : {0, 1}) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.size() && s[l] == s[r]) { count++; l--; r++; }\n            }\n        return count;\n    }\n};",
+        "java": "class Solution {\n    public int countSubstrings(String s) {\n        int count = 0;\n        for (int i = 0; i < s.length(); i++)\n            for (int d = 0; d <= 1; d++) {\n                int l = i, r = i + d;\n                while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) { count++; l--; r++; }\n            }\n        return count;\n    }\n}",
+        "js": "var countSubstrings = function(s) {\n    let count = 0;\n    for (let i = 0; i < s.length; i++)\n        for (const d of [0, 1]) {\n            let l = i, r = i + d;\n            while (l >= 0 && r < s.length && s[l] === s[r]) { count++; l--; r++; }\n        }\n    return count;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "91",
+      "slug": "decode-ways",
+      "title": "Decode Ways",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 7,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/decode-ways/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=6aEyTjOwlJU"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[i] = ways to decode s[i:]. Single digit (1-9): dp[i] += dp[i+1]. Two digits (10-26): dp[i] += dp[i+2].",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def numDecodings(s):\n    dp = {len(s): 1}\n    for i in range(len(s) - 1, -1, -1):\n        if s[i] == \"0\":\n            dp[i] = 0\n        else:\n            dp[i] = dp[i + 1]\n            if i + 1 < len(s) and int(s[i:i+2]) <= 26:\n                dp[i] += dp[i + 2]\n    return dp[0]",
+        "cpp": "class Solution {\npublic:\n    int numDecodings(string s) {\n        int n = s.size(), prev2 = 1, prev1 = s[0] != '0' ? 1 : 0;\n        for (int i = 2; i <= n; i++) {\n            int cur = 0;\n            if (s[i-1] != '0') cur += prev1;\n            int two = stoi(s.substr(i-2, 2));\n            if (two >= 10 && two <= 26) cur += prev2;\n            prev2 = prev1; prev1 = cur;\n        }\n        return prev1;\n    }\n};",
+        "java": "class Solution {\n    public int numDecodings(String s) {\n        int prev2 = 1, prev1 = s.charAt(0) != '0' ? 1 : 0;\n        for (int i = 2; i <= s.length(); i++) {\n            int cur = 0;\n            if (s.charAt(i-1) != '0') cur += prev1;\n            int two = Integer.parseInt(s.substring(i-2, i));\n            if (two >= 10 && two <= 26) cur += prev2;\n            prev2 = prev1; prev1 = cur;\n        }\n        return prev1;\n    }\n}",
+        "js": "var numDecodings = function(s) {\n    let prev2 = 1, prev1 = s[0] !== '0' ? 1 : 0;\n    for (let i = 2; i <= s.length; i++) {\n        let cur = 0;\n        if (s[i-1] !== '0') cur += prev1;\n        const two = Number(s.substring(i-2, i));\n        if (two >= 10 && two <= 26) cur += prev2;\n        prev2 = prev1; prev1 = cur;\n    }\n    return prev1;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "322",
+      "slug": "coin-change",
+      "title": "Coin Change",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 8,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/coin-change/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=H9bfqozjoqs"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[amount] = min coins to make that amount. For each coin, dp[a] = min(dp[a], 1 + dp[a - coin]).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def coinChange(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for a in range(1, amount + 1):\n        for c in coins:\n            if a - c >= 0:\n                dp[a] = min(dp[a], 1 + dp[a - c])\n    return dp[amount] if dp[amount] != float('inf') else -1",
+        "cpp": "class Solution {\npublic:\n    int coinChange(vector<int>& coins, int amount) {\n        vector<int> dp(amount + 1, amount + 1);\n        dp[0] = 0;\n        for (int i = 1; i <= amount; i++)\n            for (int c : coins)\n                if (c <= i) dp[i] = min(dp[i], dp[i - c] + 1);\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n};",
+        "java": "class Solution {\n    public int coinChange(int[] coins, int amount) {\n        int[] dp = new int[amount + 1];\n        Arrays.fill(dp, amount + 1);\n        dp[0] = 0;\n        for (int i = 1; i <= amount; i++)\n            for (int c : coins)\n                if (c <= i) dp[i] = Math.min(dp[i], dp[i - c] + 1);\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n}",
+        "js": "var coinChange = function(coins, amount) {\n    const dp = new Array(amount + 1).fill(amount + 1);\n    dp[0] = 0;\n    for (let i = 1; i <= amount; i++)\n        for (const c of coins)\n            if (c <= i) dp[i] = Math.min(dp[i], dp[i - c] + 1);\n    return dp[amount] > amount ? -1 : dp[amount];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "152",
+      "slug": "maximum-product-subarray",
+      "title": "Maximum Product Subarray",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 9,
+      "tags": [
+        "dp"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/maximum-product-subarray/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=lXVy6YWFcRM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Track both max AND min product ending here (negative * negative = positive). At each step, consider: num alone, num*prevMax, num*prevMin.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxProduct(nums):\n    result = max(nums)\n    cur_max = cur_min = 1\n    for n in nums:\n        vals = (n, n * cur_max, n * cur_min)\n        cur_max, cur_min = max(vals), min(vals)\n        result = max(result, cur_max)\n    return result",
+        "cpp": "class Solution {\npublic:\n    int maxProduct(vector<int>& nums) {\n        int result = nums[0], curMax = 1, curMin = 1;\n        for (int n : nums) {\n            int a = curMax * n, b = curMin * n;\n            curMax = max({n, a, b});\n            curMin = min({n, a, b});\n            result = max(result, curMax);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int maxProduct(int[] nums) {\n        int result = nums[0], curMax = 1, curMin = 1;\n        for (int n : nums) {\n            int a = curMax * n, b = curMin * n;\n            curMax = Math.max(n, Math.max(a, b));\n            curMin = Math.min(n, Math.min(a, b));\n            result = Math.max(result, curMax);\n        }\n        return result;\n    }\n}",
+        "js": "var maxProduct = function(nums) {\n    let result = nums[0], curMax = 1, curMin = 1;\n    for (const n of nums) {\n        const a = curMax * n, b = curMin * n;\n        curMax = Math.max(n, a, b);\n        curMin = Math.min(n, a, b);\n        result = Math.max(result, curMax);\n    }\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "139",
+      "slug": "word-break",
+      "title": "Word Break",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 10,
+      "tags": [
+        "dp",
+        "string"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/word-break/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Sx9NNgInc3A"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[i] = can we segment s[0:i]? For each position, check if any word in dict ends here AND dp[i - len(word)] is True.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def wordBreak(s, wordDict):\n    dp = [False] * (len(s) + 1)\n    dp[0] = True\n    for i in range(1, len(s) + 1):\n        for w in wordDict:\n            if i >= len(w) and dp[i - len(w)] and s[i-len(w):i] == w:\n                dp[i] = True\n                break\n    return dp[-1]",
+        "cpp": "class Solution {\npublic:\n    bool wordBreak(string s, vector<string>& wordDict) {\n        unordered_set<string> dict(wordDict.begin(), wordDict.end());\n        int n = s.size();\n        vector<bool> dp(n + 1, false);\n        dp[0] = true;\n        for (int i = 1; i <= n; i++)\n            for (int j = 0; j < i; j++)\n                if (dp[j] && dict.count(s.substr(j, i - j))) { dp[i] = true; break; }\n        return dp[n];\n    }\n};",
+        "java": "class Solution {\n    public boolean wordBreak(String s, List<String> wordDict) {\n        Set<String> dict = new HashSet<>(wordDict);\n        boolean[] dp = new boolean[s.length() + 1];\n        dp[0] = true;\n        for (int i = 1; i <= s.length(); i++)\n            for (int j = 0; j < i; j++)\n                if (dp[j] && dict.contains(s.substring(j, i))) { dp[i] = true; break; }\n        return dp[s.length()];\n    }\n}",
+        "js": "var wordBreak = function(s, wordDict) {\n    const dict = new Set(wordDict);\n    const dp = new Array(s.length + 1).fill(false);\n    dp[0] = true;\n    for (let i = 1; i <= s.length; i++)\n        for (let j = 0; j < i; j++)\n            if (dp[j] && dict.has(s.substring(j, i))) { dp[i] = true; break; }\n    return dp[s.length];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "300",
+      "slug": "longest-increasing-subsequence",
+      "title": "Longest Increasing Subsequence",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 11,
+      "tags": [
+        "dp",
+        "binary-search"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/longest-increasing-subsequence/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=cjWnW0hdVeM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "dp[i] = length of LIS ending at i. For O(N log N): maintain a \"tails\" array, binary search for insertion point.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "# O(N^2) DP\ndef lengthOfLIS(nums):\n    dp = [1] * len(nums)\n    for i in range(1, len(nums)):\n        for j in range(i):\n            if nums[j] < nums[i]:\n                dp[i] = max(dp[i], dp[j] + 1)\n    return max(dp)\n\n# O(N log N) Binary Search\nimport bisect\ndef lengthOfLIS(nums):\n    tails = []\n    for num in nums:\n        pos = bisect.bisect_left(tails, num)\n        if pos == len(tails):\n            tails.append(num)\n        else:\n            tails[pos] = num\n    return len(tails)",
+        "cpp": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> tails;\n        for (int n : nums) {\n            auto it = lower_bound(tails.begin(), tails.end(), n);\n            if (it == tails.end()) tails.push_back(n);\n            else *it = n;\n        }\n        return tails.size();\n    }\n};",
+        "java": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        List<Integer> tails = new ArrayList<>();\n        for (int n : nums) {\n            int pos = Collections.binarySearch(tails, n);\n            if (pos < 0) pos = -(pos + 1);\n            if (pos == tails.size()) tails.add(n);\n            else tails.set(pos, n);\n        }\n        return tails.size();\n    }\n}",
+        "js": "var lengthOfLIS = function(nums) {\n    const tails = [];\n    for (const n of nums) {\n        let l = 0, r = tails.length;\n        while (l < r) { const m = (l+r)>>1; tails[m] < n ? l = m+1 : r = m; }\n        tails[l] = n;\n    }\n    return tails.length;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "416",
+      "slug": "partition-equal-subset-sum",
+      "title": "Partition Equal Subset Sum",
+      "difficulty": "medium",
+      "category": "1d-dp",
+      "order": 12,
+      "tags": [
+        "dp",
+        "knapsack"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/partition-equal-subset-sum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=IsvocB5BJhw"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Partition into two equal halves = find subset with sum = total/2. This is 0/1 Knapsack. Use boolean DP: can we make sum j?",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def canPartition(nums):\n    total = sum(nums)\n    if total % 2: return False\n    target = total // 2\n    dp = set([0])\n    for num in nums:\n        dp = dp | {s + num for s in dp}\n        if target in dp: return True\n    return False",
+        "cpp": "class Solution {\npublic:\n    bool canPartition(vector<int>& nums) {\n        int sum = accumulate(nums.begin(), nums.end(), 0);\n        if (sum % 2) return false;\n        int target = sum / 2;\n        vector<bool> dp(target + 1, false);\n        dp[0] = true;\n        for (int n : nums)\n            for (int j = target; j >= n; j--)\n                dp[j] = dp[j] || dp[j - n];\n        return dp[target];\n    }\n};",
+        "java": "class Solution {\n    public boolean canPartition(int[] nums) {\n        int sum = Arrays.stream(nums).sum();\n        if (sum % 2 != 0) return false;\n        int target = sum / 2;\n        boolean[] dp = new boolean[target + 1];\n        dp[0] = true;\n        for (int n : nums)\n            for (int j = target; j >= n; j--)\n                dp[j] = dp[j] || dp[j - n];\n        return dp[target];\n    }\n}",
+        "js": "var canPartition = function(nums) {\n    const sum = nums.reduce((a, b) => a + b, 0);\n    if (sum % 2) return false;\n    const target = sum / 2;\n    const dp = new Array(target + 1).fill(false);\n    dp[0] = true;\n    for (const n of nums)\n        for (let j = target; j >= n; j--)\n            dp[j] = dp[j] || dp[j - n];\n    return dp[target];\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

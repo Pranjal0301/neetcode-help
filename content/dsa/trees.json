@@ -1,0 +1,594 @@
+{
+  "slug": "trees",
+  "title": "Trees",
+  "icon": "🌳",
+  "order": 7,
+  "concept": {
+    "heading": "Core Patterns",
+    "body": "",
+    "bullets": [
+      "**DFS (recursive):** Most tree problems. Return values up, pass info down.",
+      "**BFS (queue):** Level-order traversal, right side view.",
+      "**BST property:** left < root < right. Inorder = sorted."
+    ],
+    "legacySvg": "<svg width=\"400\" height=\"130\" viewBox=\"0 0 400 130\">\n                    <style>text{font-family:'Inter',sans-serif;fill:#e2e8f0}circle{fill:#1e293b;stroke:#6366f1;stroke-width:2}</style>\n                    <circle cx=\"100\" cy=\"30\" r=\"18\"/><text x=\"100\" y=\"35\" text-anchor=\"middle\" font-size=\"12\">4</text>\n                    <line x1=\"86\" y1=\"44\" x2=\"60\" y2=\"66\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <line x1=\"114\" y1=\"44\" x2=\"140\" y2=\"66\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <circle cx=\"60\" cy=\"80\" r=\"18\"/><text x=\"60\" y=\"85\" text-anchor=\"middle\" font-size=\"12\">2</text>\n                    <circle cx=\"140\" cy=\"80\" r=\"18\"/><text x=\"140\" y=\"85\" text-anchor=\"middle\" font-size=\"12\">7</text>\n                    <line x1=\"47\" y1=\"94\" x2=\"30\" y2=\"110\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <line x1=\"73\" y1=\"94\" x2=\"90\" y2=\"110\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <circle cx=\"30\" cy=\"120\" r=\"14\" stroke-width=\"1.5\"/><text x=\"30\" y=\"125\" text-anchor=\"middle\" font-size=\"10\">1</text>\n                    <circle cx=\"90\" cy=\"120\" r=\"14\" stroke-width=\"1.5\"/><text x=\"90\" y=\"125\" text-anchor=\"middle\" font-size=\"10\">3</text>\n                    <!-- Legend -->\n                    <text x=\"220\" y=\"30\" font-size=\"11\" fill=\"#22c55e\" font-weight=\"600\">DFS Traversals:</text>\n                    <text x=\"220\" y=\"50\" font-size=\"11\" fill=\"#a5b4fc\">Inorder  (L,Root,R): 1,2,3,4,7</text>\n                    <text x=\"220\" y=\"66\" font-size=\"11\" fill=\"#c084fc\">Preorder (Root,L,R): 4,2,1,3,7</text>\n                    <text x=\"220\" y=\"82\" font-size=\"11\" fill=\"#fca5a5\">Postorder(L,R,Root): 1,3,2,7,4</text>\n                    <text x=\"220\" y=\"106\" font-size=\"11\" fill=\"#eab308\" font-weight=\"600\">BFS (Level Order):</text>\n                    <text x=\"220\" y=\"122\" font-size=\"11\" fill=\"#fde68a\">[4], [2,7], [1,3]</text>\n                </svg>"
+  },
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "226",
+      "slug": "invert-binary-tree",
+      "title": "Invert Binary Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 1,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/invert-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=OnSn2XEQ4MY"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "Swap left and right children at every node, recursively.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def invertTree(root):\n    if not root:\n        return None\n    root.left, root.right = root.right, root.left\n    invertTree(root.left)\n    invertTree(root.right)\n    return root",
+        "cpp": "class Solution {\npublic:\n    TreeNode* invertTree(TreeNode* root) {\n        if (!root) return nullptr;\n        swap(root->left, root->right);\n        invertTree(root->left);\n        invertTree(root->right);\n        return root;\n    }\n};",
+        "java": "class Solution {\n    public TreeNode invertTree(TreeNode root) {\n        if (root == null) return null;\n        TreeNode tmp = root.left;\n        root.left = invertTree(root.right);\n        root.right = invertTree(tmp);\n        return root;\n    }\n}",
+        "js": "var invertTree = function(root) {\n    if (!root) return null;\n    [root.left, root.right] = [invertTree(root.right), invertTree(root.left)];\n    return root;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H) recursion stack"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "104",
+      "slug": "maximum-depth-of-binary-tree",
+      "title": "Maximum Depth of Binary Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 2,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/maximum-depth-of-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=hTM3phVI6YQ"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxDepth(root):\n    if not root:\n        return 0\n    return 1 + max(maxDepth(root.left), maxDepth(root.right))",
+        "cpp": "class Solution {\npublic:\n    int maxDepth(TreeNode* root) {\n        if (!root) return 0;\n        return 1 + max(maxDepth(root->left), maxDepth(root->right));\n    }\n};",
+        "java": "class Solution {\n    public int maxDepth(TreeNode root) {\n        if (root == null) return 0;\n        return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));\n    }\n}",
+        "js": "var maxDepth = function(root) {\n    if (!root) return 0;\n    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "543",
+      "slug": "diameter-of-binary-tree",
+      "title": "Diameter of Binary Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 3,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/diameter-of-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=bkxqA8Rfv04"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "Diameter through a node = left_height + right_height. Track global max while computing heights.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def diameterOfBinaryTree(root):\n    result = [0]\n    def dfs(node):\n        if not node:\n            return 0\n        left = dfs(node.left)\n        right = dfs(node.right)\n        result[0] = max(result[0], left + right)\n        return 1 + max(left, right)\n    dfs(root)\n    return result[0]",
+        "cpp": "class Solution {\n    int result = 0;\n    int dfs(TreeNode* node) {\n        if (!node) return 0;\n        int l = dfs(node->left), r = dfs(node->right);\n        result = max(result, l + r);\n        return 1 + max(l, r);\n    }\npublic:\n    int diameterOfBinaryTree(TreeNode* root) { dfs(root); return result; }\n};",
+        "java": "class Solution {\n    int result = 0;\n    public int diameterOfBinaryTree(TreeNode root) { dfs(root); return result; }\n    int dfs(TreeNode node) {\n        if (node == null) return 0;\n        int l = dfs(node.left), r = dfs(node.right);\n        result = Math.max(result, l + r);\n        return 1 + Math.max(l, r);\n    }\n}",
+        "js": "var diameterOfBinaryTree = function(root) {\n    let result = 0;\n    const dfs = (node) => {\n        if (!node) return 0;\n        const l = dfs(node.left), r = dfs(node.right);\n        result = Math.max(result, l + r);\n        return 1 + Math.max(l, r);\n    };\n    dfs(root);\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "110",
+      "slug": "balanced-binary-tree",
+      "title": "Balanced Binary Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 4,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/balanced-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=QfJsau0ItOY"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "Return -1 if subtree is unbalanced. Otherwise return height. Unbalanced = height difference > 1.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isBalanced(root):\n    def dfs(node):\n        if not node:\n            return 0\n        left, right = dfs(node.left), dfs(node.right)\n        if left == -1 or right == -1 or abs(left - right) > 1:\n            return -1\n        return 1 + max(left, right)\n    return dfs(root) != -1",
+        "cpp": "class Solution {\npublic:\n    bool isBalanced(TreeNode* root) {\n        return height(root) != -1;\n    }\n    int height(TreeNode* node) {\n        if (!node) return 0;\n        int l = height(node->left), r = height(node->right);\n        if (l == -1 || r == -1 || abs(l - r) > 1) return -1;\n        return 1 + max(l, r);\n    }\n};",
+        "java": "class Solution {\n    public boolean isBalanced(TreeNode root) { return height(root) != -1; }\n    int height(TreeNode node) {\n        if (node == null) return 0;\n        int l = height(node.left), r = height(node.right);\n        if (l == -1 || r == -1 || Math.abs(l - r) > 1) return -1;\n        return 1 + Math.max(l, r);\n    }\n}",
+        "js": "var isBalanced = function(root) {\n    const height = (node) => {\n        if (!node) return 0;\n        const l = height(node.left), r = height(node.right);\n        if (l === -1 || r === -1 || Math.abs(l - r) > 1) return -1;\n        return 1 + Math.max(l, r);\n    };\n    return height(root) !== -1;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "100",
+      "slug": "same-tree",
+      "title": "Same Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 5,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/same-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=vRbbcPXRSqY"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isSameTree(p, q):\n    if not p and not q: return True\n    if not p or not q or p.val != q.val: return False\n    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)",
+        "cpp": "class Solution {\npublic:\n    bool isSameTree(TreeNode* p, TreeNode* q) {\n        if (!p && !q) return true;\n        if (!p || !q || p->val != q->val) return false;\n        return isSameTree(p->left, q->left) && isSameTree(p->right, q->right);\n    }\n};",
+        "java": "class Solution {\n    public boolean isSameTree(TreeNode p, TreeNode q) {\n        if (p == null && q == null) return true;\n        if (p == null || q == null || p.val != q.val) return false;\n        return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);\n    }\n}",
+        "js": "var isSameTree = function(p, q) {\n    if (!p && !q) return true;\n    if (!p || !q || p.val !== q.val) return false;\n    return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "572",
+      "slug": "subtree-of-another-tree",
+      "title": "Subtree of Another Tree",
+      "difficulty": "easy",
+      "category": "trees",
+      "order": 6,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/subtree-of-another-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=E36O5SWp-LE"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isSubtree(root, subRoot):\n    if not root: return False\n    if isSameTree(root, subRoot): return True\n    return isSubtree(root.left, subRoot) or isSubtree(root.right, subRoot)",
+        "cpp": "class Solution {\npublic:\n    bool isSubtree(TreeNode* root, TreeNode* subRoot) {\n        if (!root) return false;\n        if (isSame(root, subRoot)) return true;\n        return isSubtree(root->left, subRoot) || isSubtree(root->right, subRoot);\n    }\n    bool isSame(TreeNode* a, TreeNode* b) {\n        if (!a && !b) return true;\n        if (!a || !b || a->val != b->val) return false;\n        return isSame(a->left, b->left) && isSame(a->right, b->right);\n    }\n};",
+        "java": "class Solution {\n    public boolean isSubtree(TreeNode root, TreeNode subRoot) {\n        if (root == null) return false;\n        if (isSame(root, subRoot)) return true;\n        return isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot);\n    }\n    boolean isSame(TreeNode a, TreeNode b) {\n        if (a == null && b == null) return true;\n        if (a == null || b == null || a.val != b.val) return false;\n        return isSame(a.left, b.left) && isSame(a.right, b.right);\n    }\n}",
+        "js": "var isSubtree = function(root, subRoot) {\n    if (!root) return false;\n    const isSame = (a, b) => {\n        if (!a && !b) return true;\n        if (!a || !b || a.val !== b.val) return false;\n        return isSame(a.left, b.left) && isSame(a.right, b.right);\n    };\n    if (isSame(root, subRoot)) return true;\n    return isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot);\n};"
+      },
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M + N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "235",
+      "slug": "lowest-common-ancestor-of-bst",
+      "title": "Lowest Common Ancestor of BST",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 7,
+      "tags": [
+        "tree",
+        "bst"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=gs2LMfuOR9k"
+      },
+      "pattern": "BST Property",
+      "patternTriggers": [],
+      "keyInsight": "In BST, if both p and q are smaller, go left. Both bigger, go right. Otherwise, current node IS the LCA (split point).",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def lowestCommonAncestor(root, p, q):\n    while root:\n        if p.val < root.val and q.val < root.val:\n            root = root.left\n        elif p.val > root.val and q.val > root.val:\n            root = root.right\n        else:\n            return root",
+        "cpp": "class Solution {\npublic:\n    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {\n        while (root) {\n            if (p->val < root->val && q->val < root->val) root = root->left;\n            else if (p->val > root->val && q->val > root->val) root = root->right;\n            else return root;\n        }\n        return nullptr;\n    }\n};",
+        "java": "class Solution {\n    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {\n        while (root != null) {\n            if (p.val < root.val && q.val < root.val) root = root.left;\n            else if (p.val > root.val && q.val > root.val) root = root.right;\n            else return root;\n        }\n        return null;\n    }\n}",
+        "js": "var lowestCommonAncestor = function(root, p, q) {\n    while (root) {\n        if (p.val < root.val && q.val < root.val) root = root.left;\n        else if (p.val > root.val && q.val > root.val) root = root.right;\n        else return root;\n    }\n};"
+      },
+      "complexity": {
+        "time": "O(H)",
+        "space": "O(1)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "102",
+      "slug": "binary-tree-level-order-traversal",
+      "title": "Binary Tree Level Order Traversal",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 8,
+      "tags": [
+        "tree",
+        "bfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=6ZnyEApgFYg"
+      },
+      "pattern": "BFS",
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "from collections import deque\n\ndef levelOrder(root):\n    if not root: return []\n    result, queue = [], deque([root])\n    while queue:\n        level = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.val)\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        result.append(level)\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root) {\n        vector<vector<int>> result;\n        if (!root) return result;\n        queue<TreeNode*> q;\n        q.push(root);\n        while (!q.empty()) {\n            int sz = q.size();\n            vector<int> level;\n            while (sz--) {\n                auto* node = q.front(); q.pop();\n                level.push_back(node->val);\n                if (node->left) q.push(node->left);\n                if (node->right) q.push(node->right);\n            }\n            result.push_back(level);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<List<Integer>> levelOrder(TreeNode root) {\n        List<List<Integer>> result = new ArrayList<>();\n        if (root == null) return result;\n        Queue<TreeNode> q = new LinkedList<>();\n        q.offer(root);\n        while (!q.isEmpty()) {\n            int sz = q.size();\n            List<Integer> level = new ArrayList<>();\n            while (sz-- > 0) {\n                TreeNode node = q.poll();\n                level.add(node.val);\n                if (node.left != null) q.offer(node.left);\n                if (node.right != null) q.offer(node.right);\n            }\n            result.add(level);\n        }\n        return result;\n    }\n}",
+        "js": "var levelOrder = function(root) {\n    if (!root) return [];\n    const result = [], queue = [root];\n    while (queue.length) {\n        const level = [], sz = queue.length;\n        for (let i = 0; i < sz; i++) {\n            const node = queue.shift();\n            level.push(node.val);\n            if (node.left) queue.push(node.left);\n            if (node.right) queue.push(node.right);\n        }\n        result.push(level);\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "199",
+      "slug": "binary-tree-right-side-view",
+      "title": "Binary Tree Right Side View",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 9,
+      "tags": [
+        "tree",
+        "bfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/binary-tree-right-side-view/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=d4zLyf32e3I"
+      },
+      "pattern": "BFS",
+      "patternTriggers": [],
+      "keyInsight": "BFS level by level. The last node in each level is visible from the right.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def rightSideView(root):\n    if not root: return []\n    result, queue = [], deque([root])\n    while queue:\n        for i in range(len(queue)):\n            node = queue.popleft()\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        result.append(node.val)  # last node of level\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<int> rightSideView(TreeNode* root) {\n        vector<int> result;\n        if (!root) return result;\n        queue<TreeNode*> q;\n        q.push(root);\n        while (!q.empty()) {\n            int sz = q.size();\n            for (int i = 0; i < sz; i++) {\n                auto* node = q.front(); q.pop();\n                if (i == sz - 1) result.push_back(node->val);\n                if (node->left) q.push(node->left);\n                if (node->right) q.push(node->right);\n            }\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public List<Integer> rightSideView(TreeNode root) {\n        List<Integer> result = new ArrayList<>();\n        if (root == null) return result;\n        Queue<TreeNode> q = new LinkedList<>();\n        q.offer(root);\n        while (!q.isEmpty()) {\n            int sz = q.size();\n            for (int i = 0; i < sz; i++) {\n                TreeNode node = q.poll();\n                if (i == sz - 1) result.add(node.val);\n                if (node.left != null) q.offer(node.left);\n                if (node.right != null) q.offer(node.right);\n            }\n        }\n        return result;\n    }\n}",
+        "js": "var rightSideView = function(root) {\n    if (!root) return [];\n    const result = [], queue = [root];\n    while (queue.length) {\n        const sz = queue.length;\n        for (let i = 0; i < sz; i++) {\n            const node = queue.shift();\n            if (i === sz - 1) result.push(node.val);\n            if (node.left) queue.push(node.left);\n            if (node.right) queue.push(node.right);\n        }\n    }\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1448",
+      "slug": "count-good-nodes-in-binary-tree",
+      "title": "Count Good Nodes in Binary Tree",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 10,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/count-good-nodes-in-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=7cp5imvDzl4"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "A node is \"good\" if no node on the path from root has a greater value. Pass the max value seen so far down the recursion.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def goodNodes(root):\n    def dfs(node, max_val):\n        if not node: return 0\n        good = 1 if node.val >= max_val else 0\n        max_val = max(max_val, node.val)\n        return good + dfs(node.left, max_val) + dfs(node.right, max_val)\n    return dfs(root, root.val)",
+        "cpp": "class Solution {\npublic:\n    int goodNodes(TreeNode* root) {\n        return dfs(root, root->val);\n    }\n    int dfs(TreeNode* node, int maxVal) {\n        if (!node) return 0;\n        int good = node->val >= maxVal ? 1 : 0;\n        maxVal = max(maxVal, node->val);\n        return good + dfs(node->left, maxVal) + dfs(node->right, maxVal);\n    }\n};",
+        "java": "class Solution {\n    public int goodNodes(TreeNode root) { return dfs(root, root.val); }\n    int dfs(TreeNode node, int maxVal) {\n        if (node == null) return 0;\n        int good = node.val >= maxVal ? 1 : 0;\n        maxVal = Math.max(maxVal, node.val);\n        return good + dfs(node.left, maxVal) + dfs(node.right, maxVal);\n    }\n}",
+        "js": "var goodNodes = function(root) {\n    const dfs = (node, maxVal) => {\n        if (!node) return 0;\n        const good = node.val >= maxVal ? 1 : 0;\n        const newMax = Math.max(maxVal, node.val);\n        return good + dfs(node.left, newMax) + dfs(node.right, newMax);\n    };\n    return dfs(root, root.val);\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "98",
+      "slug": "validate-binary-search-tree",
+      "title": "Validate Binary Search Tree",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 11,
+      "tags": [
+        "tree",
+        "bst",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/validate-binary-search-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=s6ATEkipzow"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "Each node must be within a valid range (low, high). Going left, update high. Going right, update low.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def isValidBST(root):\n    def dfs(node, low, high):\n        if not node: return True\n        if not (low < node.val < high): return False\n        return dfs(node.left, low, node.val) and dfs(node.right, node.val, high)\n    return dfs(root, float('-inf'), float('inf'))",
+        "cpp": "class Solution {\npublic:\n    bool isValidBST(TreeNode* root) {\n        return validate(root, LONG_MIN, LONG_MAX);\n    }\n    bool validate(TreeNode* node, long lo, long hi) {\n        if (!node) return true;\n        if (node->val <= lo || node->val >= hi) return false;\n        return validate(node->left, lo, node->val) && validate(node->right, node->val, hi);\n    }\n};",
+        "java": "class Solution {\n    public boolean isValidBST(TreeNode root) {\n        return validate(root, Long.MIN_VALUE, Long.MAX_VALUE);\n    }\n    boolean validate(TreeNode node, long lo, long hi) {\n        if (node == null) return true;\n        if (node.val <= lo || node.val >= hi) return false;\n        return validate(node.left, lo, node.val) && validate(node.right, node.val, hi);\n    }\n}",
+        "js": "var isValidBST = function(root) {\n    const validate = (node, lo, hi) => {\n        if (!node) return true;\n        if (node.val <= lo || node.val >= hi) return false;\n        return validate(node.left, lo, node.val) && validate(node.right, node.val, hi);\n    };\n    return validate(root, -Infinity, Infinity);\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "230",
+      "slug": "kth-smallest-element-in-a-bst",
+      "title": "Kth Smallest Element in a BST",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 12,
+      "tags": [
+        "tree",
+        "bst",
+        "inorder"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=5LUXSvjmGCw"
+      },
+      "pattern": "Inorder Traversal",
+      "patternTriggers": [],
+      "keyInsight": "Inorder traversal of BST gives sorted order. The kth element in inorder is the answer.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def kthSmallest(root, k):\n    stack = []\n    curr = root\n    while stack or curr:\n        while curr:\n            stack.append(curr)\n            curr = curr.left\n        curr = stack.pop()\n        k -= 1\n        if k == 0:\n            return curr.val\n        curr = curr.right",
+        "cpp": "class Solution {\npublic:\n    int kthSmallest(TreeNode* root, int k) {\n        stack<TreeNode*> st;\n        while (root || !st.empty()) {\n            while (root) { st.push(root); root = root->left; }\n            root = st.top(); st.pop();\n            if (--k == 0) return root->val;\n            root = root->right;\n        }\n        return -1;\n    }\n};",
+        "java": "class Solution {\n    public int kthSmallest(TreeNode root, int k) {\n        Stack<TreeNode> stack = new Stack<>();\n        while (root != null || !stack.isEmpty()) {\n            while (root != null) { stack.push(root); root = root.left; }\n            root = stack.pop();\n            if (--k == 0) return root.val;\n            root = root.right;\n        }\n        return -1;\n    }\n}",
+        "js": "var kthSmallest = function(root, k) {\n    const stack = [];\n    while (root || stack.length) {\n        while (root) { stack.push(root); root = root.left; }\n        root = stack.pop();\n        if (--k === 0) return root.val;\n        root = root.right;\n    }\n};"
+      },
+      "complexity": {
+        "time": "O(H + K)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "105",
+      "slug": "construct-binary-tree-from-preorder-and-inorder",
+      "title": "Construct Binary Tree from Preorder and Inorder",
+      "difficulty": "medium",
+      "category": "trees",
+      "order": 13,
+      "tags": [
+        "tree",
+        "dfs",
+        "construction"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=ihj4IQGZ2zc"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "Preorder[0] = root. Find root in inorder to split left/right subtrees. Use hashmap for O(1) index lookup in inorder.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def buildTree(preorder, inorder):\n    inorder_idx = {v: i for i, v in enumerate(inorder)}\n    self_idx = [0]  # preorder index\n\n    def build(lo, hi):\n        if lo > hi: return None\n        root_val = preorder[self_idx[0]]\n        self_idx[0] += 1\n        root = TreeNode(root_val)\n        mid = inorder_idx[root_val]\n        root.left = build(lo, mid - 1)\n        root.right = build(mid + 1, hi)\n        return root\n\n    return build(0, len(inorder) - 1)",
+        "cpp": "class Solution {\npublic:\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        unordered_map<int,int> map;\n        for (int i = 0; i < inorder.size(); i++) map[inorder[i]] = i;\n        int idx = 0;\n        return build(preorder, map, idx, 0, inorder.size() - 1);\n    }\n    TreeNode* build(vector<int>& pre, unordered_map<int,int>& map, int& idx, int l, int r) {\n        if (l > r) return nullptr;\n        TreeNode* root = new TreeNode(pre[idx++]);\n        int mid = map[root->val];\n        root->left = build(pre, map, idx, l, mid - 1);\n        root->right = build(pre, map, idx, mid + 1, r);\n        return root;\n    }\n};",
+        "java": "class Solution {\n    int idx = 0;\n    Map<Integer, Integer> map = new HashMap<>();\n    public TreeNode buildTree(int[] preorder, int[] inorder) {\n        for (int i = 0; i < inorder.length; i++) map.put(inorder[i], i);\n        return build(preorder, 0, inorder.length - 1);\n    }\n    TreeNode build(int[] pre, int l, int r) {\n        if (l > r) return null;\n        TreeNode root = new TreeNode(pre[idx++]);\n        int mid = map.get(root.val);\n        root.left = build(pre, l, mid - 1);\n        root.right = build(pre, mid + 1, r);\n        return root;\n    }\n}",
+        "js": "var buildTree = function(preorder, inorder) {\n    const map = new Map();\n    inorder.forEach((v, i) => map.set(v, i));\n    let idx = 0;\n    const build = (l, r) => {\n        if (l > r) return null;\n        const root = new TreeNode(preorder[idx++]);\n        const mid = map.get(root.val);\n        root.left = build(l, mid - 1);\n        root.right = build(mid + 1, r);\n        return root;\n    };\n    return build(0, inorder.length - 1);\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "124",
+      "slug": "binary-tree-maximum-path-sum",
+      "title": "Binary Tree Maximum Path Sum",
+      "difficulty": "hard",
+      "category": "trees",
+      "order": 14,
+      "tags": [
+        "tree",
+        "dfs"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/binary-tree-maximum-path-sum/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=Hr5cWUld4vU"
+      },
+      "pattern": "DFS",
+      "patternTriggers": [],
+      "keyInsight": "At each node, the max path THROUGH it = node.val + max(left, 0) + max(right, 0). Return the max single-branch path upward. Track global max.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def maxPathSum(root):\n    result = [root.val]\n    def dfs(node):\n        if not node: return 0\n        left = max(dfs(node.left), 0)   # ignore negative paths\n        right = max(dfs(node.right), 0)\n        result[0] = max(result[0], node.val + left + right)\n        return node.val + max(left, right)\n    dfs(root)\n    return result[0]",
+        "cpp": "class Solution {\n    int result = INT_MIN;\npublic:\n    int maxPathSum(TreeNode* root) { dfs(root); return result; }\n    int dfs(TreeNode* node) {\n        if (!node) return 0;\n        int l = max(0, dfs(node->left));\n        int r = max(0, dfs(node->right));\n        result = max(result, l + r + node->val);\n        return max(l, r) + node->val;\n    }\n};",
+        "java": "class Solution {\n    int result = Integer.MIN_VALUE;\n    public int maxPathSum(TreeNode root) { dfs(root); return result; }\n    int dfs(TreeNode node) {\n        if (node == null) return 0;\n        int l = Math.max(0, dfs(node.left));\n        int r = Math.max(0, dfs(node.right));\n        result = Math.max(result, l + r + node.val);\n        return Math.max(l, r) + node.val;\n    }\n}",
+        "js": "var maxPathSum = function(root) {\n    let result = -Infinity;\n    const dfs = (node) => {\n        if (!node) return 0;\n        const l = Math.max(0, dfs(node.left));\n        const r = Math.max(0, dfs(node.right));\n        result = Math.max(result, l + r + node.val);\n        return Math.max(l, r) + node.val;\n    };\n    dfs(root);\n    return result;\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(H)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "297",
+      "slug": "serialize-and-deserialize-binary-tree",
+      "title": "Serialize and Deserialize Binary Tree",
+      "difficulty": "hard",
+      "category": "trees",
+      "order": 15,
+      "tags": [
+        "tree",
+        "bfs",
+        "design"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=u4JAi2JJhI8"
+      },
+      "pattern": "DFS Preorder",
+      "patternTriggers": [],
+      "keyInsight": "Preorder DFS with null markers. Serialize: \"1,2,N,N,3,4,N,N,5,N,N\". Deserialize: consume tokens one by one in same preorder fashion.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "class Codec:\n    def serialize(self, root):\n        vals = []\n        def dfs(node):\n            if not node:\n                vals.append(\"N\")\n                return\n            vals.append(str(node.val))\n            dfs(node.left)\n            dfs(node.right)\n        dfs(root)\n        return \",\".join(vals)\n\n    def deserialize(self, data):\n        vals = iter(data.split(\",\"))\n        def dfs():\n            val = next(vals)\n            if val == \"N\": return None\n            node = TreeNode(int(val))\n            node.left = dfs()\n            node.right = dfs()\n            return node\n        return dfs()",
+        "cpp": "class Codec {\npublic:\n    string serialize(TreeNode* root) {\n        if (!root) return \"N\";\n        return to_string(root->val) + \",\" + serialize(root->left) + \",\" + serialize(root->right);\n    }\n    TreeNode* deserialize(string data) {\n        queue<string> q;\n        string token;\n        istringstream ss(data);\n        while (getline(ss, token, ',')) q.push(token);\n        return build(q);\n    }\n    TreeNode* build(queue<string>& q) {\n        string val = q.front(); q.pop();\n        if (val == \"N\") return nullptr;\n        TreeNode* node = new TreeNode(stoi(val));\n        node->left = build(q);\n        node->right = build(q);\n        return node;\n    }\n};",
+        "java": "public class Codec {\n    public String serialize(TreeNode root) {\n        if (root == null) return \"N\";\n        return root.val + \",\" + serialize(root.left) + \",\" + serialize(root.right);\n    }\n    int idx = 0;\n    public TreeNode deserialize(String data) {\n        String[] tokens = data.split(\",\");\n        idx = 0;\n        return build(tokens);\n    }\n    TreeNode build(String[] tokens) {\n        if (tokens[idx].equals(\"N\")) { idx++; return null; }\n        TreeNode node = new TreeNode(Integer.parseInt(tokens[idx++]));\n        node.left = build(tokens);\n        node.right = build(tokens);\n        return node;\n    }\n}",
+        "js": "var serialize = function(root) {\n    if (!root) return 'N';\n    return root.val + ',' + serialize(root.left) + ',' + serialize(root.right);\n};\nvar deserialize = function(data) {\n    const tokens = data.split(',');\n    let idx = 0;\n    const build = () => {\n        if (tokens[idx] === 'N') { idx++; return null; }\n        const node = new TreeNode(Number(tokens[idx++]));\n        node.left = build();\n        node.right = build();\n        return node;\n    };\n    return build();\n};"
+      },
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)"
+      },
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}

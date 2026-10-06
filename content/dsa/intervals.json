@@ -1,0 +1,221 @@
+{
+  "slug": "intervals",
+  "title": "Intervals",
+  "icon": "⏱",
+  "order": 16,
+  "concept": null,
+  "patternTemplate": null,
+  "recognitionTriggers": [],
+  "problems": [
+    {
+      "id": "57",
+      "slug": "insert-interval",
+      "title": "Insert Interval",
+      "difficulty": "medium",
+      "category": "intervals",
+      "order": 1,
+      "tags": [
+        "intervals"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/insert-interval/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=A8NUOmlJCJc"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def insert(intervals, newInterval):\n    result = []\n    for i, (s, e) in enumerate(intervals):\n        if newInterval[1] < s:\n            result.append(newInterval)\n            return result + intervals[i:]\n        elif newInterval[0] > e:\n            result.append([s, e])\n        else:\n            newInterval = [min(s, newInterval[0]), max(e, newInterval[1])]\n    result.append(newInterval)\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {\n        vector<vector<int>> result;\n        for (auto& i : intervals) {\n            if (i[1] < newInterval[0]) result.push_back(i);\n            else if (i[0] > newInterval[1]) { result.push_back(newInterval); newInterval = {INT_MAX, INT_MAX}; result.push_back(i); }\n            else { newInterval[0] = min(newInterval[0], i[0]); newInterval[1] = max(newInterval[1], i[1]); }\n        }\n        if (newInterval[0] != INT_MAX) result.push_back(newInterval);\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[][] insert(int[][] intervals, int[] newInterval) {\n        List<int[]> result = new ArrayList<>();\n        for (int[] i : intervals) {\n            if (i[1] < newInterval[0]) result.add(i);\n            else if (i[0] > newInterval[1]) { result.add(newInterval); newInterval = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE}; result.add(i); }\n            else { newInterval[0] = Math.min(newInterval[0], i[0]); newInterval[1] = Math.max(newInterval[1], i[1]); }\n        }\n        if (newInterval[0] != Integer.MAX_VALUE) result.add(newInterval);\n        return result.toArray(new int[0][]);\n    }\n}",
+        "js": "var insert = function(intervals, newInterval) {\n    const result = [];\n    for (const i of intervals) {\n        if (i[1] < newInterval[0]) result.push(i);\n        else if (i[0] > newInterval[1]) { result.push(newInterval); newInterval = [Infinity, Infinity]; result.push(i); }\n        else { newInterval[0] = Math.min(newInterval[0], i[0]); newInterval[1] = Math.max(newInterval[1], i[1]); }\n    }\n    if (newInterval[0] !== Infinity) result.push(newInterval);\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "56",
+      "slug": "merge-intervals",
+      "title": "Merge Intervals",
+      "difficulty": "medium",
+      "category": "intervals",
+      "order": 2,
+      "tags": [
+        "intervals",
+        "sorting"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/merge-intervals/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=44H3cEC2fFM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def merge(intervals):\n    intervals.sort()\n    result = [intervals[0]]\n    for s, e in intervals[1:]:\n        if s <= result[-1][1]:\n            result[-1][1] = max(result[-1][1], e)\n        else:\n            result.append([s, e])\n    return result",
+        "cpp": "class Solution {\npublic:\n    vector<vector<int>> merge(vector<vector<int>>& intervals) {\n        sort(intervals.begin(), intervals.end());\n        vector<vector<int>> result = {intervals[0]};\n        for (int i = 1; i < intervals.size(); i++) {\n            if (intervals[i][0] <= result.back()[1])\n                result.back()[1] = max(result.back()[1], intervals[i][1]);\n            else result.push_back(intervals[i]);\n        }\n        return result;\n    }\n};",
+        "java": "class Solution {\n    public int[][] merge(int[][] intervals) {\n        Arrays.sort(intervals, (a,b) -> a[0] - b[0]);\n        List<int[]> result = new ArrayList<>();\n        result.add(intervals[0]);\n        for (int i = 1; i < intervals.length; i++) {\n            int[] last = result.get(result.size()-1);\n            if (intervals[i][0] <= last[1]) last[1] = Math.max(last[1], intervals[i][1]);\n            else result.add(intervals[i]);\n        }\n        return result.toArray(new int[0][]);\n    }\n}",
+        "js": "var merge = function(intervals) {\n    intervals.sort((a,b) => a[0] - b[0]);\n    const result = [intervals[0]];\n    for (let i = 1; i < intervals.length; i++) {\n        const last = result[result.length - 1];\n        if (intervals[i][0] <= last[1]) last[1] = Math.max(last[1], intervals[i][1]);\n        else result.push(intervals[i]);\n    }\n    return result;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "435",
+      "slug": "non-overlapping-intervals",
+      "title": "Non-overlapping Intervals",
+      "difficulty": "medium",
+      "category": "intervals",
+      "order": 3,
+      "tags": [
+        "intervals",
+        "greedy"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/non-overlapping-intervals/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=nONCGxWoUfM"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Sort by end time. Greedily keep intervals that end earliest. Count removals.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def eraseOverlapIntervals(intervals):\n    intervals.sort(key=lambda x: x[1])\n    count, prev_end = 0, float('-inf')\n    for s, e in intervals:\n        if s >= prev_end:\n            prev_end = e\n        else:\n            count += 1\n    return count",
+        "cpp": "class Solution {\npublic:\n    int eraseOverlapIntervals(vector<vector<int>>& intervals) {\n        sort(intervals.begin(), intervals.end(), [](auto& a, auto& b) { return a[1] < b[1]; });\n        int count = 0, prevEnd = INT_MIN;\n        for (auto& i : intervals) {\n            if (i[0] >= prevEnd) prevEnd = i[1];\n            else count++;\n        }\n        return count;\n    }\n};",
+        "java": "class Solution {\n    public int eraseOverlapIntervals(int[][] intervals) {\n        Arrays.sort(intervals, (a,b) -> a[1] - b[1]);\n        int count = 0, prevEnd = Integer.MIN_VALUE;\n        for (int[] i : intervals) {\n            if (i[0] >= prevEnd) prevEnd = i[1];\n            else count++;\n        }\n        return count;\n    }\n}",
+        "js": "var eraseOverlapIntervals = function(intervals) {\n    intervals.sort((a,b) => a[1] - b[1]);\n    let count = 0, prevEnd = -Infinity;\n    for (const i of intervals) {\n        if (i[0] >= prevEnd) prevEnd = i[1];\n        else count++;\n    }\n    return count;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "252",
+      "slug": "meeting-rooms",
+      "title": "Meeting Rooms",
+      "difficulty": "easy",
+      "category": "intervals",
+      "order": 4,
+      "tags": [
+        "intervals",
+        "sorting"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/meeting-rooms/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=PaJCKC7TbCk"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def canAttendMeetings(intervals):\n    intervals.sort()\n    return all(intervals[i][0] >= intervals[i-1][1] for i in range(1, len(intervals)))",
+        "cpp": "class Solution {\npublic:\n    bool canAttendMeetings(vector<vector<int>>& intervals) {\n        sort(intervals.begin(), intervals.end());\n        for (int i = 1; i < intervals.size(); i++)\n            if (intervals[i][0] < intervals[i-1][1]) return false;\n        return true;\n    }\n};",
+        "java": "class Solution {\n    public boolean canAttendMeetings(int[][] intervals) {\n        Arrays.sort(intervals, (a,b) -> a[0] - b[0]);\n        for (int i = 1; i < intervals.length; i++)\n            if (intervals[i][0] < intervals[i-1][1]) return false;\n        return true;\n    }\n}",
+        "js": "var canAttendMeetings = function(intervals) {\n    intervals.sort((a,b) => a[0] - b[0]);\n    for (let i = 1; i < intervals.length; i++)\n        if (intervals[i][0] < intervals[i-1][1]) return false;\n    return true;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "253",
+      "slug": "meeting-rooms-ii",
+      "title": "Meeting Rooms II",
+      "difficulty": "medium",
+      "category": "intervals",
+      "order": 5,
+      "tags": [
+        "intervals",
+        "heap"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/meeting-rooms-ii/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=FdzJmTCVyJU"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": "Sort by start. Min-heap of end times = active rooms. If earliest ending room ends before current meeting starts, reuse it (pop). Push current end.",
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minMeetingRooms(intervals):\n    intervals.sort()\n    heap = []  # end times\n    for s, e in intervals:\n        if heap and heap[0] <= s:\n            heapq.heappop(heap)\n        heapq.heappush(heap, e)\n    return len(heap)",
+        "cpp": "class Solution {\npublic:\n    int minMeetingRooms(vector<vector<int>>& intervals) {\n        vector<int> starts, ends;\n        for (auto& i : intervals) { starts.push_back(i[0]); ends.push_back(i[1]); }\n        sort(starts.begin(), starts.end());\n        sort(ends.begin(), ends.end());\n        int rooms = 0, endPtr = 0;\n        for (int i = 0; i < starts.size(); i++) {\n            if (starts[i] < ends[endPtr]) rooms++;\n            else endPtr++;\n        }\n        return rooms;\n    }\n};",
+        "java": "class Solution {\n    public int minMeetingRooms(int[][] intervals) {\n        int[] starts = new int[intervals.length], ends = new int[intervals.length];\n        for (int i = 0; i < intervals.length; i++) { starts[i] = intervals[i][0]; ends[i] = intervals[i][1]; }\n        Arrays.sort(starts); Arrays.sort(ends);\n        int rooms = 0, endPtr = 0;\n        for (int i = 0; i < starts.length; i++) {\n            if (starts[i] < ends[endPtr]) rooms++;\n            else endPtr++;\n        }\n        return rooms;\n    }\n}",
+        "js": "var minMeetingRooms = function(intervals) {\n    const starts = intervals.map(i => i[0]).sort((a,b) => a-b);\n    const ends = intervals.map(i => i[1]).sort((a,b) => a-b);\n    let rooms = 0, endPtr = 0;\n    for (let i = 0; i < starts.length; i++) {\n        if (starts[i] < ends[endPtr]) rooms++;\n        else endPtr++;\n    }\n    return rooms;\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    },
+    {
+      "id": "1851",
+      "slug": "minimum-interval-to-include-each-query",
+      "title": "Minimum Interval to Include Each Query",
+      "difficulty": "hard",
+      "category": "intervals",
+      "order": 6,
+      "tags": [
+        "intervals",
+        "heap",
+        "sorting"
+      ],
+      "links": {
+        "leetcode": "https://leetcode.com/problems/minimum-interval-to-include-each-query/",
+        "neetcodeVideo": "https://www.youtube.com/watch?v=5hQ5WWW5awQ"
+      },
+      "pattern": null,
+      "patternTriggers": [],
+      "keyInsight": null,
+      "bruteForce": null,
+      "approach": [],
+      "code": {
+        "python": "def minInterval(intervals, queries):\n    intervals.sort()\n    heap = []\n    res = {}\n    i = 0\n    for q in sorted(queries):\n        while i < len(intervals) and intervals[i][0] <= q:\n            l, r = intervals[i]\n            heapq.heappush(heap, (r - l + 1, r))\n            i += 1\n        while heap and heap[0][1] < q:\n            heapq.heappop(heap)\n        res[q] = heap[0][0] if heap else -1\n    return [res[q] for q in queries]",
+        "cpp": "class Solution {\npublic:\n    vector<int> minInterval(vector<vector<int>>& intervals, vector<int>& queries) {\n        sort(intervals.begin(), intervals.end());\n        vector<int> sortedQ = queries;\n        sort(sortedQ.begin(), sortedQ.end());\n        unordered_map<int, int> result;\n        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n        int i = 0;\n        for (int q : sortedQ) {\n            while (i < intervals.size() && intervals[i][0] <= q)\n                pq.push({intervals[i][1] - intervals[i][0] + 1, intervals[i][1]}), i++;\n            while (!pq.empty() && pq.top().second < q) pq.pop();\n            result[q] = pq.empty() ? -1 : pq.top().first;\n        }\n        vector<int> ans;\n        for (int q : queries) ans.push_back(result[q]);\n        return ans;\n    }\n};",
+        "java": "class Solution {\n    public int[] minInterval(int[][] intervals, int[] queries) {\n        Arrays.sort(intervals, (a,b) -> a[0] - b[0]);\n        int[] sortedQ = queries.clone();\n        Arrays.sort(sortedQ);\n        Map<Integer, Integer> result = new HashMap<>();\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0] - b[0]);\n        int i = 0;\n        for (int q : sortedQ) {\n            while (i < intervals.length && intervals[i][0] <= q)\n                pq.offer(new int[]{intervals[i][1] - intervals[i][0] + 1, intervals[i++][1]});\n            while (!pq.isEmpty() && pq.peek()[1] < q) pq.poll();\n            result.put(q, pq.isEmpty() ? -1 : pq.peek()[0]);\n        }\n        int[] ans = new int[queries.length];\n        for (int j = 0; j < queries.length; j++) ans[j] = result.get(queries[j]);\n        return ans;\n    }\n}",
+        "js": "var minInterval = function(intervals, queries) {\n    intervals.sort((a,b) => a[0] - b[0]);\n    const sortedQ = [...queries].sort((a,b) => a - b);\n    const result = new Map();\n    const pq = []; // [{size, end}]\n    let i = 0;\n    for (const q of sortedQ) {\n        while (i < intervals.length && intervals[i][0] <= q) {\n            pq.push([intervals[i][1] - intervals[i][0] + 1, intervals[i][1]]); i++;\n        }\n        pq.sort((a,b) => a[0] - b[0]);\n        while (pq.length && pq[0][1] < q) pq.shift();\n        result.set(q, pq.length ? pq[0][0] : -1);\n    }\n    return queries.map(q => result.get(q));\n};"
+      },
+      "complexity": null,
+      "dryRun": null,
+      "diagram": null,
+      "pitfalls": [],
+      "edgeCases": [],
+      "followUps": [],
+      "related": [],
+      "core": false
+    }
+  ]
+}
