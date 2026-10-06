@@ -7,6 +7,14 @@ languages, complexity, a worked trace, the mistakes people actually make, and th
 follow-ups an interviewer asks. On top of the content sit four study tools:
 spaced repetition, pattern-recognition drills, timed mocks, and dated study plans.
 
+**All 150 problems are written in full** — pattern, triggers, key insight, brute
+force, approach, complexity, dry run, pitfalls, edge cases, follow-ups and related
+problems. Every dry-run trace was produced by running the algorithm rather than
+written by hand, which is how three real content errors were caught.
+
+Still open: the diagram pass (38 of ~120 done), an AI/ML track, and deployment.
+See [docs/ROADMAP.md](docs/ROADMAP.md).
+
 ## Run it
 
 ```bash

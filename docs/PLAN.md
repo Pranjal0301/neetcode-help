@@ -3,6 +3,10 @@
 Goal: a study platform that gets Pranjal interview-ready for 15–20 LPA SDE roles,
 following the NeetCode 150, with rich explanations, real diagrams, and active-recall tooling.
 
+> This file records the original stack decisions and the phase outline.
+> For current status and the detailed breakdown of remaining work, see
+> [ROADMAP.md](ROADMAP.md). Phases 0, 1, 2 and 4 are complete; 3, 5 and 6 are not.
+
 ## Stack decision
 
 | Concern | Choice | Why |
