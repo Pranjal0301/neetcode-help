@@ -13,8 +13,18 @@
     ],
     "legacySvg": "<svg width=\"500\" height=\"120\" viewBox=\"0 0 500 120\">\n                    <style>text{font-family:'Inter',sans-serif;font-size:12px;fill:#e2e8f0}rect{rx:6}</style>\n                    <!-- Array -->\n                    <text x=\"10\" y=\"20\" fill=\"#94a3b8\" font-weight=\"600\">Array (O(N) search)</text>\n                    <rect x=\"10\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"28\" y=\"52\" text-anchor=\"middle\">2</text>\n                    <rect x=\"62\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"80\" y=\"52\" text-anchor=\"middle\">7</text>\n                    <rect x=\"114\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"132\" y=\"52\" text-anchor=\"middle\">11</text>\n                    <rect x=\"166\" y=\"30\" width=\"50\" height=\"35\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"184\" y=\"52\" text-anchor=\"middle\">15</text>\n                    <!-- Arrow -->\n                    <text x=\"240\" y=\"52\" fill=\"#6366f1\" font-size=\"20\">&#x2192;</text>\n                    <!-- HashMap -->\n                    <text x=\"280\" y=\"20\" fill=\"#94a3b8\" font-weight=\"600\">HashMap (O(1) lookup)</text>\n                    <rect x=\"280\" y=\"30\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"325\" y=\"48\" text-anchor=\"middle\" fill=\"#a5b4fc\">2 &#x2192; 0</text>\n                    <rect x=\"280\" y=\"60\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"325\" y=\"78\" text-anchor=\"middle\" fill=\"#a5b4fc\">7 &#x2192; 1</text>\n                    <rect x=\"380\" y=\"30\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"425\" y=\"48\" text-anchor=\"middle\" fill=\"#a5b4fc\">11 &#x2192; 2</text>\n                    <rect x=\"380\" y=\"60\" width=\"90\" height=\"28\" fill=\"#312e81\" stroke=\"#6366f1\"/>\n                    <text x=\"425\" y=\"78\" text-anchor=\"middle\" fill=\"#a5b4fc\">15 &#x2192; 3</text>\n                    <text x=\"280\" y=\"110\" fill=\"#22c55e\" font-size=\"11\">val &#x2192; index mapping</text>\n                </svg>"
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# Three shapes cover almost everything in this category.\nfrom collections import Counter, defaultdict\n\n# 1. Count: value -> how many times it appears\ncounts = Counter(items)\n\n# 2. Group: derived key -> everything sharing that key\ngroups = defaultdict(list)\nfor item in items:\n    groups[key_of(item)].append(item)\n\n# 3. Membership: \"have I seen this?\" in O(1)\nseen = set()\nfor item in items:\n    if item in seen:\n        ...          # act on the repeat\n    seen.add(item)   # note: check BEFORE you insert",
+    "cpp": "// Three shapes cover almost everything in this category.\n\n// 1. Count: value -> how many times it appears\nunordered_map<int, int> counts;\nfor (int x : nums) counts[x]++;\n\n// 2. Group: derived key -> everything sharing that key\nunordered_map<string, vector<string>> groups;\nfor (auto& s : strs) groups[keyOf(s)].push_back(s);\n\n// 3. Membership: \"have I seen this?\" in O(1)\nunordered_set<int> seen;\nfor (int x : nums) {\n    if (seen.count(x)) { /* act on the repeat */ }\n    seen.insert(x);   // note: check BEFORE you insert\n}",
+    "java": "// Three shapes cover almost everything in this category.\n\n// 1. Count: value -> how many times it appears\nMap<Integer, Integer> counts = new HashMap<>();\nfor (int x : nums) counts.merge(x, 1, Integer::sum);\n\n// 2. Group: derived key -> everything sharing that key\nMap<String, List<String>> groups = new HashMap<>();\nfor (String s : strs)\n    groups.computeIfAbsent(keyOf(s), k -> new ArrayList<>()).add(s);\n\n// 3. Membership: \"have I seen this?\" in O(1)\nSet<Integer> seen = new HashSet<>();\nfor (int x : nums) {\n    // add() returns false when the value was already present —\n    // one call does both the check and the insert\n    if (!seen.add(x)) { /* act on the repeat */ }\n}",
+    "js": "// Three shapes cover almost everything in this category.\n\n// 1. Count: value -> how many times it appears\nconst counts = new Map();\nfor (const x of nums) counts.set(x, (counts.get(x) ?? 0) + 1);\n\n// 2. Group: derived key -> everything sharing that key\nconst groups = new Map();\nfor (const s of strs) {\n  const k = keyOf(s);\n  if (!groups.has(k)) groups.set(k, []);\n  groups.get(k).push(s);\n}\n\n// 3. Membership: \"have I seen this?\" in O(1)\nconst seen = new Set();\nfor (const x of nums) {\n  if (seen.has(x)) { /* act on the repeat */ }\n  seen.add(x);   // note: check BEFORE you insert\n}"
+  },
+  "recognitionTriggers": [
+    "You need to answer **have I seen this before?** or **how many times?** — O(1) with a hash structure, O(N) with a rescan.",
+    "A nested loop is re-deriving something it already computed once. Hashing is how you *remember* instead of recompute.",
+    "Order in the input carries no information, or you are free to destroy it.",
+    "A **key** can be built from each element — a sorted string, a character count, a `(row, col, box)` triple — and equal keys mean 'belongs together'."
+  ],
   "problems": [
     {
       "id": "217",
@@ -32,9 +42,18 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=3OamzN0UjO8"
       },
       "pattern": "Hash Set",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "The question is only **whether** something repeats — not where, and not how often.",
+        "You need membership tests and never care about order.",
+        "The words *distinct*, *unique* or *duplicate* appear in the statement."
+      ],
       "keyInsight": "A set automatically handles uniqueness. If we can't insert (already exists), we found a duplicate.",
-      "bruteForce": null,
+      "bruteForce": {
+        "idea": "Two nested loops: compare every element against every element after it, returning true on the first match.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "At N = 100,000 that is about 5 billion comparisons — minutes, against a one-second limit. The waste is structural: each pass re-examines values it has already seen, when all it needed was to *remember* them."
+      },
       "approach": [
         "Create an empty hash set",
         "For each number, check if it's already in the set",
@@ -49,15 +68,68 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "One pass, with each set insert and lookup O(1) on average. The set can hold up to N keys — that space is exactly what buys the factor of N off the running time."
       },
       "dryRun": "Input: [1, 2, 3, 1]\n\nStep 1: num=1, seen={},     1 not in seen → add → seen={1}\nStep 2: num=2, seen={1},    2 not in seen → add → seen={1,2}\nStep 3: num=3, seen={1,2},  3 not in seen → add → seen={1,2,3}\nStep 4: num=1, seen={1,2,3}, 1 IN seen → return True ✓",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            1,
+            2,
+            3,
+            1
+          ],
+          "highlight": [
+            0,
+            3
+          ],
+          "pointers": [
+            {
+              "at": 3,
+              "label": "num",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "By the time the scan reaches index 3, seen = {1, 2, 3}. The value 1 is already a member, so the answer is true — without ever comparing pairs."
+      },
+      "pitfalls": [
+        "Using a list or array for `seen` instead of a set. `in` on a list is O(N), which quietly restores the O(N^2) you were trying to escape.",
+        "Inserting before checking. Add `num` first and it looks like a duplicate of itself, so every input returns true.",
+        "Reaching for sorting by reflex. It works and uses O(1) extra space, but it costs O(N log N) and mutates the caller's array — offer it as a trade, not a default."
+      ],
+      "edgeCases": [
+        "empty array -> false",
+        "single element -> false",
+        "every element identical, e.g. [7, 7, 7]",
+        "negative values, and values outside 32-bit range"
+      ],
+      "followUps": [
+        {
+          "q": "What if you are not allowed any extra space?",
+          "a": "Sort in place, then compare neighbours — once sorted, duplicates must be adjacent. O(N log N) time, O(1) extra: a deliberate trade of time for space. Say out loud that it destroys the input order, because sometimes the caller cannot accept that."
+        },
+        {
+          "q": "What if the input is already sorted?",
+          "a": "Drop the set entirely and compare each element with the next. O(N) time and O(1) space, which beats the hash solution on both axes. Recognising that sortedness removes the need to remember anything is the real answer here."
+        },
+        {
+          "q": "What if the data is a stream far larger than memory?",
+          "a": "An exact answer needs space proportional to the number of distinct values, so either spill to disk (external sort, then scan neighbours) or accept approximation. A Bloom filter has no false negatives, so 'no duplicate' is trustworthy while 'duplicate' needs confirming — which is often the right trade for deduplication at scale."
+        },
+        {
+          "q": "Return the duplicated values rather than a boolean?",
+          "a": "Same single scan, but instead of returning early, collect `num` whenever the insert fails. Use a set for the output, otherwise a value appearing three times gets reported twice."
+        }
+      ],
+      "related": [
+        "valid-anagram",
+        "two-sum",
+        "longest-consecutive-sequence"
+      ],
+      "core": true
     },
     {
       "id": "242",
@@ -76,9 +148,18 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=9UtInBqnCgA"
       },
       "pattern": "Frequency Count",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Two inputs must contain the same characters with the same multiplicities.",
+        "The words *anagram*, *permutation* or *rearrangement* appear.",
+        "Order does not matter, but counts do — that gap is exactly what a frequency table fills."
+      ],
       "keyInsight": "Two strings are anagrams if and only if their character frequency counts are identical.",
-      "bruteForce": null,
+      "bruteForce": {
+        "idea": "Sort both strings and compare them character by character.",
+        "time": "O(N log N)",
+        "space": "O(N)",
+        "whyItFails": "It is not wrong, and for short strings it is perfectly acceptable. But it pays a log N factor for information you never use: you need the characters *counted*, not *ordered*. Sorting is the strictly stronger — and therefore more expensive — operation."
+      },
       "approach": [
         "If lengths differ, return false immediately",
         "Count frequency of each char in both strings",
@@ -93,15 +174,108 @@
       "complexity": {
         "time": "O(N)",
         "space": "O(1)",
-        "note": "at most 26 chars"
+        "note": "The count table is 26 fixed slots for lowercase ASCII, so it does not grow with N — that is what makes the space O(1) rather than O(N). For Unicode input it becomes O(K) in the number of distinct code points."
       },
       "dryRun": "s = \"anagram\", t = \"nagaram\"\n\nAfter counting: {'a':0, 'n':0, 'g':0, 'r':0, 'm':0}\nAll zeros → True ✓\n\ns = \"rat\", t = \"car\"\nAfter counting: {'r':0, 'a':0, 't':1, 'c':-1}\nNot all zeros → False ✓",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "s",
+            "t",
+            "diff"
+          ],
+          "colLabels": [
+            "a",
+            "g",
+            "m",
+            "n",
+            "r"
+          ],
+          "cells": [
+            [
+              3,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              3,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "highlight": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        },
+        "caption": "s = \"anagram\", t = \"nagaram\". Count up for s and down for t in one pass; the anagram condition is exactly 'every cell of the difference row is zero'."
+      },
+      "pitfalls": [
+        "Skipping the length check. Without it, a loop that walks only the shorter string reports \"ab\" and \"abb\" as anagrams.",
+        "Collapsing the table into a single number. Character *sums* match for \"ad\" and \"bc\"; you need per-character counts, not an aggregate.",
+        "Assuming lowercase ASCII when the statement does not promise it — `count[c - 'a']` indexes out of bounds on the first capital or accented letter.",
+        "In the one-table version, forgetting to verify every slot is zero and checking only the ones you touched."
+      ],
+      "edgeCases": [
+        "both strings empty -> true",
+        "different lengths -> false immediately",
+        "same letters, different counts: \"aab\" vs \"abb\"",
+        "single-character strings"
+      ],
+      "followUps": [
+        {
+          "q": "What if the inputs are Unicode?",
+          "a": "Replace the 26-slot array with a hash map keyed by code point — or by grapheme cluster if combining characters matter, since \"é\" can be one code point or two. Time stays O(N); space becomes O(K) in distinct characters."
+        },
+        {
+          "q": "Group many strings into anagram classes?",
+          "a": "That is Group Anagrams: the count table (or the sorted string) becomes a dictionary key, so each string is classified in one pass. Comparing every pair instead would be O(N^2) anagram checks."
+        },
+        {
+          "q": "Can you do it in a single pass with one table?",
+          "a": "Yes — increment for s and decrement for t in the same loop, then confirm every entry is zero. Same complexity, but it reads more cleanly and is the version worth writing in an interview."
+        },
+        {
+          "q": "What if no extra space is allowed at all?",
+          "a": "Sort both in place and compare: O(N log N) time, O(1) beyond the sort. For a fixed small alphabet the count table is already O(1) space, so this is usually the worse trade — which is the point worth making."
+        }
+      ],
+      "related": [
+        "group-anagrams",
+        "contains-duplicate",
+        "valid-palindrome"
+      ],
+      "core": true
     },
     {
       "id": "1",
@@ -119,9 +293,18 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=KLlXCFG5TnA"
       },
       "pattern": "Hash Map",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Find **two** elements that combine to a target value.",
+        "The array is unsorted and you are asked for *indices*, not values — so you cannot sort without extra bookkeeping.",
+        "For each element there is exactly one value that would complete it. Whenever the thing you are looking for is computable, you can look it up instead of searching for it."
+      ],
       "keyInsight": "For each number x, we need (target - x). Store seen numbers in a hash map so we can check for complements in O(1).",
-      "bruteForce": null,
+      "bruteForce": {
+        "idea": "For every index i, scan every later index j and test whether nums[i] + nums[j] == target.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "It rescans the whole suffix for every element, which at N = 10,000 is about 50 million pairs. It also ignores the strongest fact available: you are not looking for *some* number, you are looking for exactly `target - nums[i]`."
+      },
       "approach": [
         "Create hash map {value: index}",
         "For each num, compute complement = target - num",
@@ -136,15 +319,74 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "A single pass; each element is looked up once and inserted once, both O(1) on average. Hashing degrades to O(N) per operation under adversarial keys, so the true worst case is O(N^2) — worth saying if asked about guarantees rather than averages."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [2, 7, 11, 15], target = 9\n\ni=0  num=2   need 9-2 = 7   map {}         7 not seen -> store -> map {2: 0}\ni=1  num=7   need 9-7 = 2   map {2: 0}     2 IS seen at index 0 -> return [0, 1]\n\nThe scan never reaches 11 or 15.\n\nNote the order inside the loop: look up the complement BEFORE\ninserting. Insert first and nums = [3], target = 6 would match\n3 against itself and return [0, 0].",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            2,
+            7,
+            11,
+            15
+          ],
+          "highlight": [
+            0,
+            1
+          ],
+          "pointers": [
+            {
+              "at": 1,
+              "label": "i",
+              "tone": "accent"
+            },
+            {
+              "at": 0,
+              "label": "in map",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "target = 9. At i = 1 the complement 9 - 7 = 2 is already in the map at index 0, so the answer is [0, 1] — found before the scan reaches index 2."
+      },
+      "pitfalls": [
+        "Inserting `nums[i]` into the map before checking for its complement. With target 6 and a single 3, that returns [0, 0] — a pair made of one element.",
+        "Sorting and using two pointers. That is Two Sum II; sorting here throws away the indices you were asked to return.",
+        "Assuming the values are distinct. [3, 3] with target 6 is valid input, and a value-keyed map must not overwrite the first 3 before the lookup happens.",
+        "Returning values instead of indices — an easy slip under pressure, and the reason to re-read the return type before coding."
+      ],
+      "edgeCases": [
+        "exactly two elements, which must be the answer",
+        "duplicate values forming the pair: [3, 3], target 6",
+        "negative numbers, and a negative target",
+        "no valid pair at all, if the problem does not guarantee one"
+      ],
+      "followUps": [
+        {
+          "q": "What if the array were sorted?",
+          "a": "Two pointers from both ends: advance the left pointer when the sum is too small, pull the right pointer in when it is too large. O(N) time and O(1) space — strictly better than the hash map, because sortedness replaces the memory the map was providing."
+        },
+        {
+          "q": "Return all pairs rather than one?",
+          "a": "Keep scanning instead of returning early, and decide what 'all' means: all index pairs, or all distinct value pairs. For distinct values, sort first and skip equal neighbours, otherwise [3, 3, 3] reports the same pair repeatedly."
+        },
+        {
+          "q": "Three numbers summing to a target?",
+          "a": "Sort, fix the first number, then two-pointer the rest: O(N^2) time, O(1) extra. That is 3Sum, and the idea generalises — kSum costs O(N^(k-1)) by fixing k-2 values and two-pointering the remainder."
+        },
+        {
+          "q": "Many queries against the same array?",
+          "a": "Build the value -> index map once in O(N) and reuse it, so each query is O(N) at worst but shares the setup. If the array is static and queries are numerous, sorting once and binary searching per query is the other reasonable shape."
+        }
+      ],
+      "related": [
+        "two-sum-ii-input-array-is-sorted",
+        "3sum",
+        "contains-duplicate"
+      ],
+      "core": true
     },
     {
       "id": "49",
@@ -163,13 +405,23 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=vzdNOK2oB2E"
       },
       "pattern": "Hash Map",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Items must be partitioned into classes, and membership of a class is decidable from the item alone.",
+        "The words *group*, *bucket* or *classify* appear.",
+        "You can compute a **canonical form** — a value that is identical for everything in the same class. Then grouping is one pass, not a comparison of every pair."
+      ],
       "keyInsight": "Anagrams produce the same string when sorted. Use sorted string as hash map key to group them.",
-      "bruteForce": null,
+      "bruteForce": {
+        "idea": "For each string, walk the groups built so far and test it against one member of each using an anagram check; start a new group if none matches.",
+        "time": "O(N^2 * K)",
+        "space": "O(N * K)",
+        "whyItFails": "Every string is compared against every existing group. The fix is to stop *comparing* and start *computing*: a canonical key turns an O(N) search into an O(1) dictionary lookup."
+      },
       "approach": [
-        "For each word, sort its characters to create a canonical key",
-        "Use this key in a hash map, value is list of original words",
-        "Return all values from the hash map"
+        "Pick a canonical key that is equal for anagrams and different otherwise. Sorting the characters gives `\"eat\" -> \"aet\"`; a 26-length character count works too.",
+        "Create a map from key to list of strings.",
+        "For each string, compute its key and append the string to that key's list.",
+        "Return the map's values — each list is one anagram group."
       ],
       "code": {
         "python": "def groupAnagrams(strs):\n    groups = {}  # sorted_str -> [original strings]\n    for s in strs:\n        key = tuple(sorted(s))  # or ''.join(sorted(s))\n        groups.setdefault(key, []).append(s)\n    return list(groups.values())\n\n# Alt: O(N*K) using char count as key (K=max word length)\ndef groupAnagrams(strs):\n    groups = {}\n    for s in strs:\n        count = [0] * 26\n        for c in s:\n            count[ord(c) - ord('a')] += 1\n        groups.setdefault(tuple(count), []).append(s)\n    return list(groups.values())",
@@ -178,16 +430,49 @@
         "js": "var groupAnagrams = function(strs) {\n    const map = new Map();\n    for (const s of strs) {\n        const key = s.split('').sort().join('');\n        if (!map.has(key)) map.set(key, []);\n        map.get(key).push(s);\n    }\n    return Array.from(map.values());\n};"
       },
       "complexity": {
-        "time": "O(N * K log K) or O(N * K)",
-        "space": "O(N * K)"
+        "time": "O(N * K log K)",
+        "space": "O(N * K)",
+        "note": "N strings of length up to K; the log K comes from sorting each string to build its key. Using a 26-slot count tuple as the key instead removes the sort and gives O(N * K), which is the better answer when K is large."
       },
       "dryRun": "Input: [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]\n\n\"eat\" → sorted \"aet\" → groups{\"aet\": [\"eat\"]}\n\"tea\" → sorted \"aet\" → groups{\"aet\": [\"eat\",\"tea\"]}\n\"tan\" → sorted \"ant\" → groups{\"aet\": [\"eat\",\"tea\"], \"ant\": [\"tan\"]}\n\"ate\" → sorted \"aet\" → groups{\"aet\": [\"eat\",\"tea\",\"ate\"], \"ant\": [\"tan\"]}\n\"nat\" → sorted \"ant\" → groups{\"aet\": [...], \"ant\": [\"tan\",\"nat\"]}\n\"bat\" → sorted \"abt\" → groups{..., \"abt\": [\"bat\"]}\n\nOutput: [[\"eat\",\"tea\",\"ate\"], [\"tan\",\"nat\"], [\"bat\"]]",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using a mutable list as a dictionary key — Python needs `tuple(counts)`, and JavaScript needs `counts.join(',')`, since a raw array hashes by identity rather than contents.",
+        "Building the count key without a separator in JavaScript: `[1,11]` and `[11,1]` both join to \"1,11\" only if you are careful, and `[1,1,1]` vs `[11,1]` collide outright if you concatenate digits with no delimiter.",
+        "Returning the map itself rather than its values.",
+        "Assuming lowercase-only input when building a 26-slot key."
+      ],
+      "edgeCases": [
+        "empty input list -> empty output",
+        "single string -> one group of one",
+        "the empty string, which is its own group",
+        "no anagrams at all — N groups of one each",
+        "all strings identical — one group of N"
+      ],
+      "followUps": [
+        {
+          "q": "Can you avoid the log K factor?",
+          "a": "Yes. Use the 26-character count itself as the key rather than the sorted string: build it in O(K) and hash the tuple. Total O(N * K), which matters when strings are long."
+        },
+        {
+          "q": "What if the alphabet is huge, or Unicode?",
+          "a": "A fixed-width count array stops being viable. Either sort the string (back to O(K log K) but no alphabet assumption) or use a sorted list of (char, count) pairs as the key."
+        },
+        {
+          "q": "What if the strings arrive as a stream and groups must be queryable live?",
+          "a": "The same map works incrementally — compute the key on arrival and append. Nothing about the approach needs the full input up front, which is worth saying because it is not true of the sorting-based group-by."
+        },
+        {
+          "q": "How would you shard this across machines?",
+          "a": "Hash the canonical key and route by hash, so every member of a group lands on the same worker. This is exactly the map-reduce shuffle, and the canonical key is the map output key."
+        }
+      ],
+      "related": [
+        "valid-anagram",
+        "top-k-frequent-elements",
+        "encode-and-decode-strings"
+      ],
+      "core": true
     },
     {
       "id": "347",
@@ -206,10 +491,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=YPTqKIgVk-k"
       },
       "pattern": "Bucket Sort",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You need the top or bottom **k** by some measurable quantity.",
+        "The quantity has a known bounded range — here a frequency can only be between 1 and N, which is what makes a sort unnecessary.",
+        "The output order among equals does not matter."
+      ],
       "keyInsight": "Bucket sort by frequency! Index = frequency, value = list of nums with that frequency. Max frequency = N, so O(N) time.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Count frequencies, then sort the distinct values by count descending and take the first k.",
+        "time": "O(N log N)",
+        "space": "O(N)",
+        "whyItFails": "Perfectly acceptable, and often the right answer in production. But it sorts *all* distinct values to report k of them, and it pays a comparison sort's log factor on data whose keys are small bounded integers — both are avoidable."
+      },
+      "approach": [
+        "Count how many times each value appears, with a hash map.",
+        "Create buckets indexed by frequency: `buckets[f]` is the list of values appearing exactly f times. No frequency can exceed N, so N + 1 buckets always suffice.",
+        "Place each value into the bucket for its count.",
+        "Walk the buckets from the highest frequency downwards, collecting values until you have k.",
+        "Return the collected values."
+      ],
       "code": {
         "python": "def topKFrequent(nums, k):\n    count = {}\n    for n in nums:\n        count[n] = count.get(n, 0) + 1\n\n    # Bucket sort: index = frequency, value = list of nums\n    buckets = [[] for _ in range(len(nums) + 1)]\n    for num, freq in count.items():\n        buckets[freq].append(num)\n\n    # Collect from highest frequency bucket\n    result = []\n    for i in range(len(buckets) - 1, -1, -1):\n        for num in buckets[i]:\n            result.append(num)\n            if len(result) == k:\n                return result",
         "cpp": "class Solution {\npublic:\n    vector<int> topKFrequent(vector<int>& nums, int k) {\n        unordered_map<int, int> freq;\n        for (int n : nums) freq[n]++;\n        vector<vector<int>> bucket(nums.size() + 1);\n        for (auto& [num, cnt] : freq) bucket[cnt].push_back(num);\n        vector<int> result;\n        for (int i = bucket.size() - 1; i >= 0 && result.size() < k; i--)\n            for (int n : bucket[i]) {\n                result.push_back(n);\n                if (result.size() == k) break;\n            }\n        return result;\n    }\n};",
@@ -218,15 +518,66 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "Counting is O(N), filling buckets is O(distinct) which is at most N, and the final walk touches each bucket index once — N + 1 of them — plus each value once. No step sorts, so there is no log factor. The heap alternative is O(N log k), which is better only when k is tiny and you want to stream."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [1, 1, 1, 2, 2, 3], k = 2\n\nStep 1 - count each value\n  counts = {1: 3, 2: 2, 3: 1}\n\nStep 2 - bucket by frequency. N = 6, so indices 0..6 (7 slots)\n\n  frequency:   0     1     2     3     4     5     6\n  buckets:    [ ]   [3]   [2]   [1]   [ ]   [ ]   [ ]\n                     ^     ^     ^\n                     |     |     +--- 1 appears 3 times\n                     |     +--------- 2 appears 2 times\n                     +--------------- 3 appears 1 time\n\nStep 3 - walk DOWN from the highest frequency\n  f=6  empty\n  f=5  empty\n  f=4  empty\n  f=3  take 1    -> result [1]\n  f=2  take 2    -> result [1, 2]   k reached, stop\n\nreturn [1, 2]\n\nNothing was sorted, and index 6 had to exist in case one value\nfilled the whole array.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            "—",
+            "3",
+            "2",
+            "1",
+            "—",
+            "—",
+            "—"
+          ],
+          "highlight": [
+            2,
+            3
+          ],
+          "showIndices": true
+        },
+        "caption": "nums = [1,1,1,2,2,3]. The index is the frequency and the cell holds the values with that frequency: 3 appears once, 2 appears twice, 1 appears three times. Walking right to left yields [1, 2] for k = 2."
+      },
+      "pitfalls": [
+        "Sizing the bucket array at N instead of N + 1. A value appearing all N times needs index N, so the array must have N + 1 slots.",
+        "Walking the buckets upwards and then reversing, which is easy to get subtly wrong — iterate downwards from the end instead.",
+        "Forgetting that one bucket can hold several values, and breaking out of only the inner loop when k is reached.",
+        "Choosing a max-heap over all distinct values, which is O(N log N) and gains nothing over sorting. The heap is only a win as a *min*-heap of size k."
+      ],
+      "edgeCases": [
+        "k equals the number of distinct values -> return all of them",
+        "every value appears exactly once, so any k of them is valid",
+        "a single value repeated N times",
+        "ties at the k-th position, where the problem usually allows any valid choice"
+      ],
+      "followUps": [
+        {
+          "q": "What if the array does not fit in memory?",
+          "a": "Bucketing needs the counts first, so stream a count-min sketch for approximate frequencies and keep an exact min-heap of the top k candidates. You trade exactness for bounded memory, which is the standard shape of 'heavy hitters' at scale."
+        },
+        {
+          "q": "What if k is very small and N very large?",
+          "a": "A min-heap of size k is attractive: O(N log k) time but only O(k) space beyond the counts, and it works incrementally. Bucket sort still wins on time, so pick based on whether space or speed is the constraint."
+        },
+        {
+          "q": "What if elements arrive continuously and the top k must stay current?",
+          "a": "Buckets no longer work, because frequencies change after placement. Maintain counts plus a bucket-of-counts structure with pointers between adjacent frequencies — the same idea that makes an LFU cache O(1)."
+        },
+        {
+          "q": "Exact k-th most frequent, not the top k?",
+          "a": "Quickselect on the (value, count) pairs by count gives O(distinct) expected time without fully sorting — the same partition-based selection used for Kth Largest Element."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-an-array",
+        "group-anagrams",
+        "task-scheduler"
+      ],
+      "core": true
     },
     {
       "id": "271",
@@ -244,10 +595,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=B1k_sxOSgv8"
       },
       "pattern": "Length Prefix",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You must serialise a collection into one flat form and recover it exactly.",
+        "Any separator you pick could legitimately appear inside the data — so no separator alone can work.",
+        "The words *encode*, *serialise*, *design* or *round-trip* appear."
+      ],
       "keyInsight": "Prefix each string with its length + delimiter. E.g., \"hello\" becomes \"5#hello\". This way any character (including delimiter) inside the string is safe.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Join the strings with a separator such as a comma or `#`, then split on it to decode.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It is not slow, it is *incorrect*: the moment an input string contains the separator, decoding splits in the wrong place. `[\"a,b\"]` and `[\"a\", \"b\"]` encode identically, so the round-trip is ambiguous — and no choice of separator character escapes this, since the input alphabet is unrestricted."
+      },
+      "approach": [
+        "To encode, prefix each string with its own length and a delimiter: `\"hello\"` becomes `\"5#hello\"`.",
+        "Concatenate all of those blocks into a single string.",
+        "To decode, read digits until you hit the `#` — that number is the length of the next string.",
+        "Take exactly that many characters as the string, regardless of what they contain.",
+        "Continue from the character after it until the whole encoding is consumed."
+      ],
       "code": {
         "python": "def encode(strs):\n    return \"\".join(str(len(s)) + \"#\" + s for s in strs)\n\ndef decode(s):\n    result, i = [], 0\n    while i < len(s):\n        j = s.index(\"#\", i)  # find delimiter\n        length = int(s[i:j])\n        result.append(s[j + 1 : j + 1 + length])\n        i = j + 1 + length\n    return result",
         "cpp": "class Codec {\npublic:\n    string encode(vector<string>& strs) {\n        string result;\n        for (const string& s : strs)\n            result += to_string(s.size()) + \"#\" + s;\n        return result;\n    }\n    vector<string> decode(string s) {\n        vector<string> result;\n        int i = 0;\n        while (i < s.size()) {\n            int j = s.find('#', i);\n            int len = stoi(s.substr(i, j - i));\n            result.push_back(s.substr(j + 1, len));\n            i = j + 1 + len;\n        }\n        return result;\n    }\n};",
@@ -255,15 +621,48 @@
         "js": "var encode = function(strs) {\n    return strs.map(s => s.length + '#' + s).join('');\n};\nvar decode = function(s) {\n    const result = [];\n    let i = 0;\n    while (i < s.length) {\n        let j = s.indexOf('#', i);\n        const len = parseInt(s.substring(i, j));\n        result.push(s.substring(j + 1, j + 1 + len));\n        i = j + 1 + len;\n    }\n    return result;\n};"
       },
       "complexity": {
-        "time": "O(N) total chars",
-        "space": "O(1) extra"
+        "time": "O(M)",
+        "space": "O(M)",
+        "note": "M is the total number of characters across all strings. Both encode and decode touch each character a constant number of times. Decoding never scans for content, only for the short length prefix, which is why the data can contain anything at all."
       },
       "dryRun": "encode([\"hello\",\"world\"]) → \"5#hello5#world\"\n\ndecode(\"5#hello5#world\"):\n  i=0: j=1 (pos of #), length=5, extract s[2:7]=\"hello\", i=7\n  i=7: j=8 (pos of #), length=5, extract s[9:14]=\"world\", i=14\n  Result: [\"hello\", \"world\"] ✓",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Scanning for the *last* `#` rather than the first one after the length. A string containing `#` will break any search that is not anchored to the length prefix.",
+        "Reading the length one character at a time and assuming it is a single digit — lengths reach into the hundreds or thousands.",
+        "Building the encoded string with repeated `+=` in a loop, which is O(M^2) in languages with immutable strings. Use a list and join, or a StringBuilder.",
+        "Losing the distinction between an empty list and a list holding one empty string. `\"0#\"` is a list of one empty string; `\"\"` is an empty list."
+      ],
+      "edgeCases": [
+        "empty list -> empty encoding",
+        "list containing the empty string -> \"0#\"",
+        "strings containing `#` and digits, e.g. \"3#abc\"",
+        "a very long string, so the length prefix is multi-digit",
+        "strings containing newlines or non-ASCII characters"
+      ],
+      "followUps": [
+        {
+          "q": "Why not escape the delimiter instead?",
+          "a": "You can — double every `#` in the payload and use a single `#` as the separator. It works, but decoding must then scan and un-escape the whole payload, whereas a length prefix lets you jump straight over it. Length-prefixing is why real formats do it this way."
+        },
+        {
+          "q": "How do network protocols solve this?",
+          "a": "The same way. HTTP sends `Content-Length`, protobuf and most binary formats use length-delimited fields, and gRPC frames messages with an explicit byte count. The general name is type-length-value."
+        },
+        {
+          "q": "What if the strings are bytes rather than text?",
+          "a": "Nothing changes conceptually, but the length must be in *bytes*, not characters. Mixing the two is a real bug source with UTF-8, where one character can be four bytes."
+        },
+        {
+          "q": "Can you make the encoding streamable?",
+          "a": "Yes, and that is the main virtue of this format: a decoder can emit each string as soon as it has read its length and that many characters, with no need to see the end of the input."
+        }
+      ],
+      "related": [
+        "group-anagrams",
+        "serialize-and-deserialize-binary-tree",
+        "implement-trie-prefix-tree"
+      ],
       "core": false
     },
     {
@@ -282,10 +681,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=bNvIQI2wAjk"
       },
       "pattern": "Prefix & Suffix Products",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Each output position depends on *everything except* that position.",
+        "A nested loop is recomputing overlapping ranges — the sign that cumulative values should be precomputed.",
+        "The words *prefix*, *suffix*, *running total* or *except self* appear, or division is explicitly banned."
+      ],
       "keyInsight": "Product except self = (product of everything to the LEFT) * (product of everything to the RIGHT). Build both in O(N) without division.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each index, loop over the whole array multiplying every other element.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "Index 0 computes the product of elements 1..N-1, index 1 recomputes almost the same product, and so on. Each answer shares nearly all of its work with its neighbour, and prefix/suffix accumulation is how you stop paying for it twice."
+      },
+      "approach": [
+        "Observe that the answer at i is (product of everything left of i) * (product of everything right of i).",
+        "Sweep left to right, writing into the output the running product of everything strictly before each index.",
+        "Sweep right to left with a single running variable holding the product of everything strictly after each index.",
+        "Multiply the two together as you go in the second sweep, so no second array is needed.",
+        "Return the output array."
+      ],
       "code": {
         "python": "def productExceptSelf(nums):\n    n = len(nums)\n    result = [1] * n\n\n    # Left pass: result[i] = product of all elements to the left\n    prefix = 1\n    for i in range(n):\n        result[i] = prefix\n        prefix *= nums[i]\n\n    # Right pass: multiply by product of all elements to the right\n    suffix = 1\n    for i in range(n - 1, -1, -1):\n        result[i] *= suffix\n        suffix *= nums[i]\n\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> result(n, 1);\n        int prefix = 1;\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix *= nums[i];\n        }\n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] *= postfix;\n            postfix *= nums[i];\n        }\n        return result;\n    }\n};",
@@ -294,15 +708,109 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1) extra (output doesn't count)"
+        "space": "O(1)",
+        "note": "Two passes, each O(N). The output array does not count as extra space by the problem's own convention; beyond it only one running-product variable is needed, which is what makes the second sweep O(1) rather than O(N)."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [1, 2, 3, 4]\n\nPass 1 - left to right. out[i] = product of everything BEFORE i\n  running = 1\n  i=0   out[0] = 1          running = 1 * 1 = 1\n  i=1   out[1] = 1          running = 1 * 2 = 2\n  i=2   out[2] = 2          running = 2 * 3 = 6\n  i=3   out[3] = 6          running = 6 * 4 = 24\n\n  out = [1, 1, 2, 6]\n\nPass 2 - right to left. Multiply in everything AFTER i\n  running = 1\n  i=3   out[3] = 6 * 1  = 6      running = 1 * 4  = 4\n  i=2   out[2] = 2 * 4  = 8      running = 4 * 3  = 12\n  i=1   out[1] = 1 * 12 = 12     running = 12 * 2 = 24\n  i=0   out[0] = 1 * 24 = 24     running = 24 * 1 = 24\n\nreturn [24, 12, 8, 6]\n\nCheck by hand:  2*3*4 = 24   1*3*4 = 12   1*2*4 = 8   1*2*3 = 6\n\nThe suffix products were never stored — `running` carried them.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "nums",
+            "prefix",
+            "suffix",
+            "answer"
+          ],
+          "colLabels": [
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "cells": [
+            [
+              1,
+              2,
+              3,
+              4
+            ],
+            [
+              1,
+              1,
+              2,
+              6
+            ],
+            [
+              24,
+              12,
+              4,
+              1
+            ],
+            [
+              24,
+              12,
+              8,
+              6
+            ]
+          ],
+          "highlight": [
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ]
+        },
+        "caption": "prefix[i] is the product strictly left of i, suffix[i] strictly right. Their product is the answer, and the suffix row never needs storing — one variable carries it during the backward sweep."
+      },
+      "pitfalls": [
+        "Dividing the total product by each element. It is the obvious idea, it is usually banned outright, and it breaks on a single zero and is undefined for two.",
+        "Initialising the running product to 0 instead of 1 — everything then collapses to zero.",
+        "Off-by-one on 'strictly' before or after: prefix[0] must be 1, not nums[0].",
+        "Allocating separate prefix and suffix arrays and calling it O(1) space. It is correct but O(N); fold the suffix into a single variable to earn the claim."
+      ],
+      "edgeCases": [
+        "one zero in the array — every position except that one becomes 0",
+        "two or more zeros — the whole output is 0",
+        "negative numbers, where the sign of the result matters",
+        "two elements, the smallest meaningful input",
+        "products that overflow 32-bit arithmetic"
+      ],
+      "followUps": [
+        {
+          "q": "What if division were allowed?",
+          "a": "Take the product of everything and divide by each element — O(N) and genuinely simpler. You must special-case zeros: with one zero, only its own position is non-zero; with two or more, the whole answer is zero. The zero handling is the reason the problem bans division."
+        },
+        {
+          "q": "What if the array is updated between queries?",
+          "a": "Recomputing is O(N) per update. For many interleaved updates and queries, a segment tree or Fenwick tree over products gives O(log N) each — but watch zeros, since products are not invertible through them."
+        },
+        {
+          "q": "Can you do this for sums instead of products?",
+          "a": "Yes, and it is easier: total sum minus the element, O(N) with no special cases, because subtraction is always well defined. The prefix/suffix structure is the general technique; products just lack a safe inverse."
+        },
+        {
+          "q": "How do you handle overflow?",
+          "a": "Use a 64-bit type, or compute modulo a prime if the problem asks for it. If exact large values are needed, a big-integer type is the honest answer — and worth flagging rather than silently overflowing."
+        }
+      ],
+      "related": [
+        "maximum-product-subarray",
+        "maximum-subarray",
+        "longest-consecutive-sequence"
+      ],
+      "core": true
     },
     {
       "id": "36",
@@ -320,10 +828,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=TjFXEUCMqI8"
       },
       "pattern": "Hash Set",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Several independent constraints must hold simultaneously over the same data.",
+        "Each constraint is a *uniqueness* condition, which is a set membership test.",
+        "A cell's membership in a group is computable from its coordinates — no search needed to know which group it is in."
+      ],
       "keyInsight": "Track seen numbers per row, per column, and per 3x3 box. Box index = (row // 3, col // 3).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each of the 9 rows, 9 columns and 9 boxes, gather its cells and check for repeats separately — 27 independent passes.",
+        "time": "O(1)",
+        "space": "O(1)",
+        "whyItFails": "On a fixed 9x9 board nothing here is actually slow, so this is not a complexity failure — it is a clarity one. Three separate traversals with different indexing arithmetic is where bugs live; a single pass that updates all three constraint sets at once is shorter and easier to get right."
+      },
+      "approach": [
+        "Keep three collections of sets: one set per row, one per column, one per 3x3 box.",
+        "Map a cell to its box with `box = (row / 3) * 3 + (col / 3)`, using integer division.",
+        "Walk every cell once, skipping empty cells.",
+        "For each digit, check all three relevant sets; if it is already in any of them, the board is invalid.",
+        "Otherwise insert it into all three and continue. Surviving the whole board means it is valid."
+      ],
       "code": {
         "python": "def isValidSudoku(board):\n    rows = [set() for _ in range(9)]\n    cols = [set() for _ in range(9)]\n    boxes = [set() for _ in range(9)]\n\n    for r in range(9):\n        for c in range(9):\n            if board[r][c] == \".\":\n                continue\n            val = board[r][c]\n            box_idx = (r // 3) * 3 + (c // 3)\n            if val in rows[r] or val in cols[c] or val in boxes[box_idx]:\n                return False\n            rows[r].add(val)\n            cols[c].add(val)\n            boxes[box_idx].add(val)\n    return True",
         "cpp": "class Solution {\npublic:\n    bool isValidSudoku(vector<vector<char>>& board) {\n        unordered_set<string> seen;\n        for (int i = 0; i < 9; i++)\n            for (int j = 0; j < 9; j++) {\n                if (board[i][j] == '.') continue;\n                string d(1, board[i][j]);\n                if (!seen.insert(d + \"r\" + to_string(i)).second ||\n                    !seen.insert(d + \"c\" + to_string(j)).second ||\n                    !seen.insert(d + \"b\" + to_string(i/3) + to_string(j/3)).second)\n                    return false;\n            }\n        return true;\n    }\n};",
@@ -331,15 +854,48 @@
         "js": "var isValidSudoku = function(board) {\n    const seen = new Set();\n    for (let i = 0; i < 9; i++)\n        for (let j = 0; j < 9; j++) {\n            if (board[i][j] === '.') continue;\n            const d = board[i][j];\n            const row = d + 'r' + i, col = d + 'c' + j;\n            const box = d + 'b' + Math.floor(i/3) + Math.floor(j/3);\n            if (seen.has(row) || seen.has(col) || seen.has(box)) return false;\n            seen.add(row); seen.add(col); seen.add(box);\n        }\n    return true;\n};"
       },
       "complexity": {
-        "time": "O(81) = O(1)",
-        "space": "O(81) = O(1)"
+        "time": "O(1)",
+        "space": "O(1)",
+        "note": "The board is always 9x9, so this is 81 cells and 27 sets of at most 9 entries — constant by definition. Stated generally for an n^2 x n^2 board it is O(n^4) time and space, which is linear in the size of the input."
       },
-      "dryRun": null,
+      "dryRun": "Box index = (row / 3) * 3 + (col / 3), using integer division\n\n         col 0 1 2 | 3 4 5 | 6 7 8\n   row 0       0   |   1   |   2\n   row 1       0   |   1   |   2\n   row 2       0   |   1   |   2\n         ----------+-------+------\n   row 3       3   |   4   |   5\n   row 4       3   |   4   |   5\n   row 5       3   |   4   |   5\n         ----------+-------+------\n   row 6       6   |   7   |   8\n   row 7       6   |   7   |   8\n   row 8       6   |   7   |   8\n\nTrace on a board whose first column contains 8 twice:\n\n  (0,0)='8'  box 0   rows[0]={8}    cols[0]={8}     boxes[0]={8}      ok\n  (1,0)='.'          skipped - empty cells are not values\n  (2,0)='3'  box 0   rows[2]={3}    cols[0]={8,3}   boxes[0]={8,3}    ok\n  (3,0)='8'  box 3   rows[3]={}     cols[0]={8,3}   boxes[3]={}\n                     8 IS already in cols[0]  ->  return false\n\nOnly the column conflicted — its row and its box were both clean.\nThat is why all three sets must be consulted on every cell.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Getting the box index wrong. `(row / 3) * 3 + (col / 3)` is the formula; `row / 3 + col / 3` collides different boxes onto the same index.",
+        "Using float division in languages that do not floor automatically — Python needs `//`, JavaScript needs `Math.floor`.",
+        "Treating empty cells ('.') as values and reporting a duplicate the second time one appears.",
+        "Validating that the board is *solvable* rather than merely currently valid. The question only asks whether the filled cells conflict."
+      ],
+      "edgeCases": [
+        "a completely empty board -> valid",
+        "a single duplicate in a box but not in any row or column",
+        "a duplicate in a row only",
+        "a full, correctly solved board",
+        "a board that is valid but has no solution — still valid by this definition"
+      ],
+      "followUps": [
+        {
+          "q": "Now actually solve the Sudoku.",
+          "a": "Backtracking: find an empty cell, try each digit that the three constraint sets permit, recurse, and undo on failure. The validity check you just wrote becomes the pruning step, which is why this problem is usually asked first."
+        },
+        {
+          "q": "Can you do it with no extra space?",
+          "a": "On a 9x9 board the state is already constant, but you can encode each set as a 9-bit mask in a single integer — three arrays of nine ints. Faster and smaller in practice, and the duplicate test becomes one bitwise AND."
+        },
+        {
+          "q": "Generalise to an n^2 x n^2 board.",
+          "a": "Everything carries over with 3 replaced by n: the box index is `(row / n) * n + (col / n)`. Complexity becomes O(n^4), linear in the number of cells."
+        },
+        {
+          "q": "How would you validate a partially filled board being edited live?",
+          "a": "Keep the three sets as persistent state and update them on each edit, which makes a single cell change O(1) instead of rescanning. The removal path needs care — a digit leaves a set only when no other cell in that group still holds it."
+        }
+      ],
+      "related": [
+        "contains-duplicate",
+        "word-search",
+        "rotate-image"
+      ],
       "core": false
     },
     {
@@ -357,10 +913,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=P6RZZMu_maU"
       },
       "pattern": "Hash Set",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You need runs or sequences, but the input order is irrelevant — only which values exist.",
+        "Sorting would solve it, but the target complexity is O(N), which rules sorting out.",
+        "You can identify a canonical *starting point* for each run, so no run is ever counted twice."
+      ],
       "keyInsight": "A number is the START of a sequence only if (num - 1) is NOT in the set. Only start counting from sequence beginnings to avoid redundant work.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Sort the array, then scan once counting the length of each run of consecutive values, skipping duplicates.",
+        "time": "O(N log N)",
+        "space": "O(1)",
+        "whyItFails": "This is a genuinely good solution and worth offering first. It only 'fails' against an explicit O(N) requirement — and the reason it can be beaten is that you never needed the values *ordered*, just the ability to ask 'does num - 1 exist?'."
+      },
+      "approach": [
+        "Put every value into a hash set, which also removes duplicates.",
+        "For each value in the set, ask whether `num - 1` is also present.",
+        "If it is, this value sits in the middle of a run — skip it, because the run will be counted from its true start.",
+        "If it is not, this value starts a run: walk `num + 1`, `num + 2`, ... while each is in the set, counting the length.",
+        "Track the maximum length seen and return it."
+      ],
       "code": {
         "python": "def longestConsecutive(nums):\n    num_set = set(nums)\n    longest = 0\n\n    for num in num_set:\n        # Only start counting from sequence beginning\n        if num - 1 not in num_set:\n            length = 1\n            while num + length in num_set:\n                length += 1\n            longest = max(longest, length)\n\n    return longest",
         "cpp": "class Solution {\npublic:\n    int longestConsecutive(vector<int>& nums) {\n        unordered_set<int> s(nums.begin(), nums.end());\n        int longest = 0;\n        for (int n : s) {\n            if (!s.count(n - 1)) {\n                int len = 1;\n                while (s.count(n + len)) len++;\n                longest = max(longest, len);\n            }\n        }\n        return longest;\n    }\n};",
@@ -369,16 +940,75 @@
       },
       "complexity": {
         "time": "O(N)",
-        "note": "each num visited at most twice",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "The nested walk looks quadratic but is not: the inner loop only ever runs from a value that starts a run, so every value is visited at most twice overall — once by the outer loop and once by the single inner walk that contains it. The start check is exactly what guarantees this."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [100, 4, 200, 1, 3, 2]\nset  = {1, 2, 3, 4, 100, 200}\n\nFor each value ask: is (num - 1) in the set?\nIf yes, something else starts this run — skip.\n\n  num=100    99 absent   -> START   walk 101? no              length 1\n  num=4       3 present  -> skip (4 sits mid-run)\n  num=200   199 absent   -> START   walk 201? no              length 1\n  num=1       0 absent   -> START   walk 2, 3, 4, then 5? no  length 4   <- best\n  num=3       2 present  -> skip\n  num=2       1 present  -> skip\n\nreturn 4\n\nThe skips are the whole trick. The run 1->4 is walked exactly once,\nfrom its start, instead of once per member — which is what keeps\nthis O(N) rather than O(N^2).",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            100,
+            4,
+            200,
+            1,
+            3,
+            2
+          ],
+          "highlight": [
+            3,
+            5,
+            4,
+            1
+          ],
+          "pointers": [
+            {
+              "at": 3,
+              "label": "start",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Only 1 and 100 and 200 start runs, because 0, 99 and 199 are absent. Walking up from 1 finds 2, 3, 4 and stops — length 4, the answer. The run is counted once, from its start."
+      },
+      "pitfalls": [
+        "Omitting the `num - 1` check and walking up from every value. That really is O(N^2) on input like [1, 2, 3, ..., N], and it is the single mistake that defines this problem.",
+        "Iterating the original array rather than the set, so duplicates restart the same walk repeatedly.",
+        "Walking downwards as well as upwards, which double-counts and is unnecessary once you only start at true beginnings.",
+        "Returning 0 for a non-empty array because the maximum was initialised to 0 and never updated — a single element is a run of length 1."
+      ],
+      "edgeCases": [
+        "empty array -> 0",
+        "single element -> 1",
+        "all duplicates, e.g. [5, 5, 5] -> 1",
+        "no consecutive values at all -> 1",
+        "negative numbers spanning zero, e.g. [-1, 0, 1]",
+        "values at the extremes of the integer range, where num + 1 could overflow"
+      ],
+      "followUps": [
+        {
+          "q": "Prove the time really is O(N).",
+          "a": "The inner walk only starts at values with no predecessor in the set, so each run is walked exactly once in total. Across all runs the inner loops visit each value once, and the outer loop visits each once — 2N operations, so O(N). This is the question that is actually being asked."
+        },
+        {
+          "q": "Return the sequence itself, not just its length.",
+          "a": "Track the starting value alongside the best length, then reconstruct `start, start+1, ..., start+len-1` at the end. No extra complexity, and no need to store candidate runs as you go."
+        },
+        {
+          "q": "What if values arrive as a stream and the answer must stay current?",
+          "a": "Use union-find, or a map from value to the length of the run it belongs to. On inserting x, merge with the runs ending at x-1 and starting at x+1 and update the boundary entries — near O(1) amortised per insert."
+        },
+        {
+          "q": "What if the range of values is small and dense?",
+          "a": "A boolean array or bitset indexed by value beats hashing on constant factors, and a single linear scan over it finds the longest run of set bits — still O(range) rather than O(N), so it depends which is smaller."
+        }
+      ],
+      "related": [
+        "contains-duplicate",
+        "longest-increasing-subsequence",
+        "missing-number"
+      ],
+      "core": true
     }
   ]
 }
