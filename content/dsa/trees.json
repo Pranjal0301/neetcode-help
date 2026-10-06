@@ -126,7 +126,7 @@
         "same-tree",
         "binary-tree-level-order-traversal"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "104",
@@ -211,7 +211,7 @@
         "diameter-of-binary-tree",
         "invert-binary-tree"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "543",
@@ -316,7 +316,7 @@
         "maximum-depth-of-binary-tree",
         "balanced-binary-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "110",
@@ -404,7 +404,7 @@
         "diameter-of-binary-tree",
         "validate-binary-search-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "100",
@@ -490,7 +490,7 @@
         "invert-binary-tree",
         "serialize-and-deserialize-binary-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "572",
@@ -579,7 +579,7 @@
         "serialize-and-deserialize-binary-tree",
         "implement-trie-prefix-tree"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "235",
@@ -682,7 +682,7 @@
         "kth-smallest-element-in-a-bst",
         "same-tree"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "102",
@@ -769,7 +769,7 @@
         "maximum-depth-of-binary-tree",
         "rotting-oranges"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "199",
@@ -855,7 +855,7 @@
         "count-good-nodes-in-binary-tree",
         "maximum-depth-of-binary-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "1448",
@@ -942,7 +942,7 @@
         "binary-tree-maximum-path-sum",
         "maximum-depth-of-binary-tree"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "98",
@@ -1048,7 +1048,7 @@
         "lowest-common-ancestor-of-bst",
         "count-good-nodes-in-binary-tree"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "230",
@@ -1136,7 +1136,7 @@
         "lowest-common-ancestor-of-bst",
         "find-median-from-data-stream"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "105",
@@ -1224,7 +1224,7 @@
         "validate-binary-search-tree",
         "same-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "124",
@@ -1312,7 +1312,7 @@
         "maximum-subarray",
         "count-good-nodes-in-binary-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "297",
@@ -1402,7 +1402,7 @@
         "subtree-of-another-tree",
         "encode-and-decode-strings"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

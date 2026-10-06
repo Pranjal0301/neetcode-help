@@ -112,7 +112,7 @@
         "word-search-ii",
         "encode-and-decode-strings"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "211",
@@ -200,7 +200,7 @@
         "word-search-ii",
         "regular-expression-matching"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "212",
@@ -290,7 +290,7 @@
         "design-add-and-search-words-data-structure",
         "word-search"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

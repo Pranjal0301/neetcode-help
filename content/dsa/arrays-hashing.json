@@ -129,7 +129,7 @@
         "two-sum",
         "longest-consecutive-sequence"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "242",
@@ -275,7 +275,7 @@
         "contains-duplicate",
         "valid-palindrome"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "1",
@@ -386,7 +386,7 @@
         "3sum",
         "contains-duplicate"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "49",
@@ -472,7 +472,7 @@
         "top-k-frequent-elements",
         "encode-and-decode-strings"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "347",
@@ -577,7 +577,7 @@
         "group-anagrams",
         "task-scheduler"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "271",
@@ -663,7 +663,7 @@
         "serialize-and-deserialize-binary-tree",
         "implement-trie-prefix-tree"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "238",
@@ -810,7 +810,7 @@
         "maximum-subarray",
         "longest-consecutive-sequence"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "36",
@@ -896,7 +896,7 @@
         "word-search",
         "rotate-image"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "128",
@@ -1008,7 +1008,7 @@
         "longest-increasing-subsequence",
         "missing-number"
       ],
-      "core": true
+      "tier": 2
     }
   ]
 }

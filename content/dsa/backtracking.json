@@ -113,7 +113,7 @@
         "combination-sum",
         "permutations"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "39",
@@ -201,7 +201,7 @@
         "subsets",
         "coin-change-ii"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "46",
@@ -287,7 +287,7 @@
         "letter-combinations-of-a-phone-number",
         "n-queens"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "90",
@@ -374,7 +374,7 @@
         "combination-sum-ii",
         "permutations"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "40",
@@ -463,7 +463,7 @@
         "subsets-ii",
         "partition-equal-subset-sum"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "79",
@@ -553,7 +553,7 @@
         "number-of-islands",
         "n-queens"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "131",
@@ -641,7 +641,7 @@
         "longest-palindromic-substring",
         "palindromic-substrings"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "17",
@@ -728,7 +728,7 @@
         "permutations",
         "generate-parentheses"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "51",
@@ -877,7 +877,7 @@
         "word-search",
         "permutations"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

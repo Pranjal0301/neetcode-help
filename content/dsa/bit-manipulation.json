@@ -116,7 +116,7 @@
         "counting-bits",
         "sum-of-two-integers"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "191",
@@ -204,7 +204,7 @@
         "reverse-bits",
         "single-number"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "338",
@@ -293,7 +293,7 @@
         "single-number",
         "climbing-stairs"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "190",
@@ -382,7 +382,7 @@
         "counting-bits",
         "single-number"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "268",
@@ -473,7 +473,7 @@
         "find-the-duplicate-number",
         "contains-duplicate"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "371",
@@ -562,7 +562,7 @@
         "number-of-1-bits",
         "reverse-integer"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "7",
@@ -653,7 +653,7 @@
         "pow-x-n",
         "sum-of-two-integers"
       ],
-      "core": false
+      "tier": 3
     }
   ]
 }

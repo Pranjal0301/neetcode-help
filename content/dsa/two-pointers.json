@@ -140,7 +140,7 @@
         "valid-anagram",
         "palindromic-substrings"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "167",
@@ -253,7 +253,7 @@
         "3sum",
         "container-with-most-water"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "15",
@@ -376,7 +376,7 @@
         "two-sum",
         "container-with-most-water"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "11",
@@ -494,7 +494,7 @@
         "largest-rectangle-in-histogram",
         "two-sum-ii-input-array-is-sorted"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "42",
@@ -619,7 +619,7 @@
         "largest-rectangle-in-histogram",
         "sliding-window-maximum"
       ],
-      "core": true
+      "tier": 2
     }
   ]
 }

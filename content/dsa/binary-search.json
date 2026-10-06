@@ -143,7 +143,7 @@
         "find-minimum-in-rotated-sorted-array",
         "koko-eating-bananas"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "74",
@@ -271,7 +271,7 @@
         "search-in-rotated-sorted-array",
         "spiral-matrix"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "875",
@@ -358,7 +358,7 @@
         "swim-in-rising-water",
         "search-in-rotated-sorted-array"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "153",
@@ -444,7 +444,7 @@
         "binary-search",
         "search-a-2d-matrix"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "33",
@@ -531,7 +531,7 @@
         "binary-search",
         "search-a-2d-matrix"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "981",
@@ -617,7 +617,7 @@
         "lru-cache",
         "design-twitter"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "4",
@@ -706,7 +706,7 @@
         "find-median-from-data-stream",
         "merge-k-sorted-lists"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

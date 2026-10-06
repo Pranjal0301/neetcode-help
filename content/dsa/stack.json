@@ -133,7 +133,7 @@
         "min-stack",
         "valid-parenthesis-string"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "155",
@@ -219,7 +219,7 @@
         "find-median-from-data-stream",
         "evaluate-reverse-polish-notation"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "150",
@@ -306,7 +306,7 @@
         "valid-parentheses",
         "generate-parentheses"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "22",
@@ -392,7 +392,7 @@
         "subsets",
         "permutations"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "739",
@@ -506,7 +506,7 @@
         "sliding-window-maximum",
         "car-fleet"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "853",
@@ -593,7 +593,7 @@
         "merge-intervals",
         "non-overlapping-intervals"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "84",
@@ -707,7 +707,7 @@
         "trapping-rain-water",
         "container-with-most-water"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

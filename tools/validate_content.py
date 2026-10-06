@@ -78,6 +78,15 @@ def main():
     else:
         warnings.append("could not read the diagram registry; skipped kind checks")
 
+    # --- every problem needs a study tier ---
+    for p in problems:
+        if p.get("tier") not in (1, 2, 3):
+            errors.append(
+                f"#{p['id']} {p['title']}: tier is {p.get('tier')!r}, expected 1, 2 or 3"
+            )
+        if "core" in p:
+            errors.append(f"#{p['id']} {p['title']}: retired `core` field still present")
+
     # --- complexity should give both bounds ---
     for p in problems:
         cx = p.get("complexity") or {}

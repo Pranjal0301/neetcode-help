@@ -276,22 +276,22 @@ that renders the content to one self-contained file.
 
 ## Known gaps
 
-### 1. The `core` flag is too permissive — Sprint track is ineffective
+### 1. ~~The `core` flag is too permissive~~ — **resolved**
 
-**128 of 150 problems are flagged `core`**, so the Sprint track filters out
-only 22 problems. That is not a sprint.
+The boolean was replaced with a priority **tier** (1 essential / 2 important /
+3 depth), curated across all 150 problems by `tools/assign_tiers.py`, which
+also records the inclusion rule. Distribution is 54 / 57 / 39.
 
-A four-to-six week track should cover **60–75 problems**: roughly the 2–4
-highest-yield problems per category, weighted toward the patterns that recur
-most (arrays/hashing, two pointers, sliding window, trees, graphs, 1-D DP) and
-trimmed hard in the categories that are mostly one idea (tries, math, bit
-manipulation). The re-curation also needs a stated rule so it is defensible
-rather than arbitrary — something like: include a problem only if it either
-teaches a pattern no other problem in the list teaches, or is asked often
-enough that skipping it is a real risk.
+Study plans are now driven by **length**: 7, 10, 15, 20, 30, 45, 60 and 90
+days, plus unpaced. Each has a problem budget filled tier-by-tier, round-robin
+across categories, so every length covers all 18 patterns — a 7-day plan takes
+54 problems spanning every category rather than 54 tree problems.
 
-Until that is done, `lib/plan.ts` falls back to "all easy and medium" and the
-UI says so, so nothing is silently wrong — but the track is not yet useful.
+Verified invariants (`.tmp/check-plans.ts`, worth promoting to a real test):
+all 18 patterns covered at every length; tiers filled strictly in order;
+budgets exact; every selected problem scheduled exactly once; selection is
+monotone, so a longer plan is a superset of a shorter one; and each plan spans
+exactly its stated number of days with daily loads differing by at most one.
 
 ### 2. No tests
 
@@ -325,8 +325,7 @@ provenance. Worth deleting once nobody wants the history.
 
 ## Suggested order
 
-1. **Re-curate the `core` flag** — small, and it makes an already-built
-   feature work.
+1. ~~Re-curate the `core` flag~~ — done; see gap 1.
 2. **Phase 3 diagrams**, in the build order above. Highest learning value per
    hour of the remaining work.
 3. **Phase 6 ship** — deploy and PWA. Small, and it changes how the thing gets

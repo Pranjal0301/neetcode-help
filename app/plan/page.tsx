@@ -18,7 +18,7 @@ export default function PlanPage() {
       categoryTitle: c.title,
       slug: p.slug,
       difficulty: p.difficulty,
-      core: p.core,
+      tier: p.tier,
     })),
   );
 
@@ -29,9 +29,9 @@ export default function PlanPage() {
           Study plan
         </h1>
         <p className="mt-2 max-w-xl text-[14.5px] text-ink-dim">
-          Four paces, same guide order. Pick the one that matches when you
-          actually interview — then the only question each morning is “what is
-          today’s list?”.
+          Tell it how many days you have. It picks how many problems fit and
+          which ones matter most, keeping every pattern covered — so the only
+          question each morning is “what is today’s list?”.
         </p>
       </header>
 

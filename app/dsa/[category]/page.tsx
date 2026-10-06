@@ -148,7 +148,7 @@ export default async function CategoryPage({
               difficulty: p.difficulty,
               category: category.slug,
               pattern: p.pattern,
-              core: p.core,
+              tier: p.tier,
             }))}
           />
         </section>

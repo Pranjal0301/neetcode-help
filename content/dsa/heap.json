@@ -113,7 +113,7 @@
         "find-median-from-data-stream",
         "k-closest-points-to-origin"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "1046",
@@ -199,7 +199,7 @@
         "task-scheduler",
         "partition-equal-subset-sum"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "973",
@@ -286,7 +286,7 @@
         "kth-largest-element-in-a-stream",
         "last-stone-weight"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "215",
@@ -374,7 +374,7 @@
         "k-closest-points-to-origin",
         "top-k-frequent-elements"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "621",
@@ -462,7 +462,7 @@
         "last-stone-weight",
         "partition-labels"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "355",
@@ -551,7 +551,7 @@
         "lru-cache",
         "find-median-from-data-stream"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "295",
@@ -640,7 +640,7 @@
         "merge-k-sorted-lists",
         "median-of-two-sorted-arrays"
       ],
-      "core": true
+      "tier": 1
     }
   ]
 }

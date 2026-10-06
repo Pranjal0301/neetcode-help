@@ -11,13 +11,14 @@
 
 import { useSyncExternalStore } from "react";
 import type { Language } from "./types";
+import type { TrackId } from "./plan";
 import { initialSrs, isDue, review, type Rating, type SrsState } from "./srs";
+
+export type { TrackId };
 
 export const STORAGE_KEY = "dsa-mastery:v1";
 const LEGACY_CHECKED_KEY = "neetcode_checked";
 const LEGACY_LANG_KEY = "neetcode_lang";
-
-export type TrackId = "sprint" | "standard" | "thorough" | "unpaced";
 
 export type MockResult = {
   at: number;

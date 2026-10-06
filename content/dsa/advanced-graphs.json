@@ -117,7 +117,7 @@
         "alien-dictionary",
         "word-ladder"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "1584",
@@ -206,7 +206,7 @@
         "network-delay-time",
         "number-of-connected-components"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "743",
@@ -296,7 +296,7 @@
         "swim-in-rising-water",
         "rotting-oranges"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "778",
@@ -385,7 +385,7 @@
         "min-cost-to-connect-all-points",
         "koko-eating-bananas"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "269",
@@ -475,7 +475,7 @@
         "course-schedule",
         "reconstruct-itinerary"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "787",
@@ -566,7 +566,7 @@
         "swim-in-rising-water",
         "course-schedule-ii"
       ],
-      "core": true
+      "tier": 2
     }
   ]
 }

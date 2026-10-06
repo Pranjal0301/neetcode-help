@@ -170,7 +170,7 @@
         "climbing-stairs",
         "longest-increasing-path-in-a-matrix"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "1143",
@@ -331,7 +331,7 @@
         "distinct-subsequences",
         "longest-increasing-subsequence"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "309",
@@ -421,7 +421,7 @@
         "house-robber",
         "maximum-subarray"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "518",
@@ -511,7 +511,7 @@
         "partition-equal-subset-sum",
         "target-sum"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "494",
@@ -602,7 +602,7 @@
         "coin-change-ii",
         "coin-change"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "97",
@@ -692,7 +692,7 @@
         "edit-distance",
         "distinct-subsequences"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "329",
@@ -783,7 +783,7 @@
         "unique-paths",
         "course-schedule-ii"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "115",
@@ -874,7 +874,7 @@
         "interleaving-string",
         "edit-distance"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "72",
@@ -1029,7 +1029,7 @@
         "distinct-subsequences",
         "interleaving-string"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "312",
@@ -1119,7 +1119,7 @@
         "longest-palindromic-substring",
         "edit-distance"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "10",
@@ -1213,7 +1213,7 @@
         "longest-common-subsequence",
         "design-add-and-search-words-data-structure"
       ],
-      "core": false
+      "tier": 3
     }
   ]
 }

@@ -134,7 +134,7 @@
         "reverse-nodes-in-k-group",
         "merge-two-sorted-lists"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "21",
@@ -220,7 +220,7 @@
         "reverse-linked-list",
         "add-two-numbers"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "143",
@@ -305,7 +305,7 @@
         "remove-nth-node-from-end-of-list",
         "linked-list-cycle"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "19",
@@ -415,7 +415,7 @@
         "reorder-list",
         "reverse-linked-list"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "138",
@@ -503,7 +503,7 @@
         "lru-cache",
         "merge-two-sorted-lists"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "2",
@@ -590,7 +590,7 @@
         "multiply-strings",
         "plus-one"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "141",
@@ -696,7 +696,7 @@
         "remove-nth-node-from-end-of-list",
         "happy-number"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "287",
@@ -806,7 +806,7 @@
         "missing-number",
         "binary-search"
       ],
-      "core": true
+      "tier": 3
     },
     {
       "id": "146",
@@ -897,7 +897,7 @@
         "min-stack",
         "design-twitter"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "23",
@@ -986,7 +986,7 @@
         "find-median-from-data-stream",
         "kth-largest-element-in-an-array"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "25",
@@ -1075,7 +1075,7 @@
         "reorder-list",
         "merge-two-sorted-lists"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

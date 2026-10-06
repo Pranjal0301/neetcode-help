@@ -117,7 +117,7 @@
         "house-robber",
         "best-time-to-buy-and-sell-stock"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "55",
@@ -206,7 +206,7 @@
         "climbing-stairs",
         "gas-station"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "45",
@@ -295,7 +295,7 @@
         "climbing-stairs",
         "min-cost-climbing-stairs"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "134",
@@ -384,7 +384,7 @@
         "jump-game",
         "merge-triplets-to-form-target-triplet"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "846",
@@ -474,7 +474,7 @@
         "top-k-frequent-elements",
         "partition-labels"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "1899",
@@ -563,7 +563,7 @@
         "jump-game",
         "maximum-subarray"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "763",
@@ -652,7 +652,7 @@
         "non-overlapping-intervals",
         "hand-of-straights"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "678",
@@ -745,7 +745,7 @@
         "generate-parentheses",
         "longest-palindromic-substring"
       ],
-      "core": true
+      "tier": 3
     }
   ]
 }

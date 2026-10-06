@@ -69,8 +69,12 @@ export type Problem = {
   followUps: FollowUp[];
   /** Slugs of sibling problems worth solving next. */
   related: string[];
-  /** Part of the must-do subset for a time-boxed sprint. */
-  core: boolean;
+  /**
+   * Study priority, which is what the length-based plans select on.
+   * 1 = essential (teaches a pattern nothing else does, or is the most-asked
+   * instance of a common one), 2 = important reinforcement, 3 = depth.
+   */
+  tier: 1 | 2 | 3;
 };
 
 export type CategoryConcept = {

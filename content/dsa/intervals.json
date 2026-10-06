@@ -118,7 +118,7 @@
         "non-overlapping-intervals",
         "meeting-rooms"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "56",
@@ -210,7 +210,7 @@
         "non-overlapping-intervals",
         "meeting-rooms-ii"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "435",
@@ -301,7 +301,7 @@
         "meeting-rooms",
         "partition-labels"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "252",
@@ -391,7 +391,7 @@
         "merge-intervals",
         "non-overlapping-intervals"
       ],
-      "core": false
+      "tier": 2
     },
     {
       "id": "253",
@@ -482,7 +482,7 @@
         "merge-intervals",
         "task-scheduler"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "1851",
@@ -575,7 +575,7 @@
         "merge-intervals",
         "kth-largest-element-in-a-stream"
       ],
-      "core": false
+      "tier": 3
     }
   ]
 }

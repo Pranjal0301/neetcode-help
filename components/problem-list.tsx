@@ -6,6 +6,13 @@ import { isDue } from "@/lib/srs";
 import { useNow } from "@/lib/use-now";
 import { DifficultyBadge } from "./ui";
 import type { Difficulty } from "@/lib/types";
+import { TIER_LABELS } from "@/lib/plan";
+
+const TIER_TONES: Record<number, string> = {
+  1: "text-hard",
+  2: "text-medium",
+  3: "text-ink-dim",
+};
 
 export type ProblemListItem = {
   id: string;
@@ -14,7 +21,7 @@ export type ProblemListItem = {
   difficulty: Difficulty;
   category: string;
   pattern: string | null;
-  core: boolean;
+  tier: number;
 };
 
 /** Problem rows with live solved / starred / due state from localStorage. */
@@ -46,6 +53,12 @@ export function ProblemList({ items }: { items: ProblemListItem[] }) {
               href={`/dsa/${p.category}/${p.slug}`}
               className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-white/[0.03]"
             >
+              <span
+                className={`w-3 shrink-0 font-mono text-[11px] ${TIER_TONES[p.tier]}`}
+                title={`${TIER_LABELS[p.tier]} (tier ${p.tier})`}
+              >
+                {p.tier}
+              </span>
               <span className="w-9 shrink-0 font-mono text-[11px] text-ink-dim">
                 #{p.id}
               </span>

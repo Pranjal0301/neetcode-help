@@ -179,7 +179,7 @@
         "surrounded-regions",
         "number-of-connected-components"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "695",
@@ -268,7 +268,7 @@
         "pacific-atlantic-water-flow",
         "surrounded-regions"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "133",
@@ -358,7 +358,7 @@
         "number-of-connected-components",
         "course-schedule"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "286",
@@ -448,7 +448,7 @@
         "number-of-islands",
         "network-delay-time"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "994",
@@ -577,7 +577,7 @@
         "number-of-islands",
         "word-ladder"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "417",
@@ -665,7 +665,7 @@
         "number-of-islands",
         "walls-and-gates"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "130",
@@ -754,7 +754,7 @@
         "number-of-islands",
         "max-area-of-island"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "207",
@@ -844,7 +844,7 @@
         "graph-valid-tree",
         "alien-dictionary"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "210",
@@ -934,7 +934,7 @@
         "alien-dictionary",
         "graph-valid-tree"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "261",
@@ -1023,7 +1023,7 @@
         "redundant-connection",
         "course-schedule"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "323",
@@ -1111,7 +1111,7 @@
         "redundant-connection",
         "number-of-islands"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "684",
@@ -1199,7 +1199,7 @@
         "number-of-connected-components",
         "min-cost-to-connect-all-points"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "127",
@@ -1289,7 +1289,7 @@
         "clone-graph",
         "course-schedule"
       ],
-      "core": true
+      "tier": 2
     }
   ]
 }

@@ -115,7 +115,7 @@
         "house-robber",
         "coin-change"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "746",
@@ -202,7 +202,7 @@
         "house-robber",
         "jump-game-ii"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "198",
@@ -290,7 +290,7 @@
         "min-cost-climbing-stairs",
         "maximum-subarray"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "213",
@@ -379,7 +379,7 @@
         "maximum-subarray",
         "min-cost-climbing-stairs"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "5",
@@ -469,7 +469,7 @@
         "longest-common-subsequence",
         "valid-palindrome"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "647",
@@ -558,7 +558,7 @@
         "palindrome-partitioning",
         "valid-palindrome"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "91",
@@ -649,7 +649,7 @@
         "word-break",
         "coin-change"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "322",
@@ -772,7 +772,7 @@
         "partition-equal-subset-sum",
         "climbing-stairs"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "152",
@@ -861,7 +861,7 @@
         "product-of-array-except-self",
         "house-robber"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "139",
@@ -951,7 +951,7 @@
         "coin-change",
         "implement-trie-prefix-tree"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "300",
@@ -1041,7 +1041,7 @@
         "maximum-subarray",
         "binary-search"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "416",
@@ -1237,7 +1237,7 @@
         "target-sum",
         "coin-change-ii"
       ],
-      "core": true
+      "tier": 2
     }
   ]
 }

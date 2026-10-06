@@ -161,7 +161,7 @@
         "set-matrix-zeroes",
         "search-a-2d-matrix"
       ],
-      "core": true
+      "tier": 1
     },
     {
       "id": "54",
@@ -251,7 +251,7 @@
         "set-matrix-zeroes",
         "number-of-islands"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "73",
@@ -341,7 +341,7 @@
         "spiral-matrix",
         "product-of-array-except-self"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "202",
@@ -431,7 +431,7 @@
         "find-the-duplicate-number",
         "plus-one"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "66",
@@ -522,7 +522,7 @@
         "multiply-strings",
         "happy-number"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "50",
@@ -613,7 +613,7 @@
         "counting-bits",
         "multiply-strings"
       ],
-      "core": true
+      "tier": 2
     },
     {
       "id": "43",
@@ -704,7 +704,7 @@
         "add-two-numbers",
         "pow-x-n"
       ],
-      "core": false
+      "tier": 3
     },
     {
       "id": "2013",
@@ -795,7 +795,7 @@
         "group-anagrams",
         "lru-cache"
       ],
-      "core": false
+      "tier": 3
     }
   ]
 }
