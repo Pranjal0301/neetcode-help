@@ -12,8 +12,18 @@
     ],
     "legacySvg": "<svg width=\"480\" height=\"80\" viewBox=\"0 0 480 80\">\n                    <style>text{font-family:'Inter',sans-serif;fill:#e2e8f0}</style>\n                    <!-- Array -->\n                    <rect x=\"40\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"60\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">a</text>\n                    <rect x=\"85\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"105\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">b</text>\n                    <rect x=\"130\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"150\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">c</text>\n                    <rect x=\"175\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"rgba(99,102,241,0.2)\" stroke=\"#6366f1\"/>\n                    <text x=\"195\" y=\"40\" text-anchor=\"middle\" font-size=\"12\" fill=\"#a5b4fc\">d</text>\n                    <rect x=\"220\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"240\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">e</text>\n                    <rect x=\"265\" y=\"20\" width=\"40\" height=\"30\" rx=\"4\" fill=\"#1e293b\" stroke=\"#334155\"/>\n                    <text x=\"285\" y=\"40\" text-anchor=\"middle\" font-size=\"12\">f</text>\n                    <!-- Window bracket -->\n                    <text x=\"105\" y=\"70\" text-anchor=\"middle\" font-size=\"11\" fill=\"#6366f1\" font-weight=\"700\">L</text>\n                    <text x=\"195\" y=\"70\" text-anchor=\"middle\" font-size=\"11\" fill=\"#ef4444\" font-weight=\"700\">R</text>\n                    <line x1=\"85\" y1=\"55\" x2=\"215\" y2=\"55\" stroke=\"#6366f1\" stroke-width=\"2\"/>\n                    <text x=\"340\" y=\"35\" font-size=\"11\" fill=\"#94a3b8\">expand R &#x2192;</text>\n                    <text x=\"340\" y=\"52\" font-size=\"11\" fill=\"#94a3b8\">shrink L &#x2192; (when invalid)</text>\n                    <text x=\"340\" y=\"69\" font-size=\"11\" fill=\"#22c55e\">update answer each step</text>\n                </svg>"
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# Variable window: grow right always, shrink left only while invalid.\nfrom collections import defaultdict\n\nwindow = defaultdict(int)\nleft = 0\nbest = 0\nfor right, ch in enumerate(s):\n    window[ch] += 1                 # extend\n    while not is_valid(window):     # WHILE, not if — one step may not be enough\n        window[s[left]] -= 1\n        if window[s[left]] == 0:\n            del window[s[left]]\n        left += 1\n    best = max(best, right - left + 1)\n\n# Fixed window of size k: add one, drop one, no inner loop.\nfor right in range(len(s)):\n    add(s[right])\n    if right >= k:\n        remove(s[right - k])       # the element falling out of the back\n    if right >= k - 1:\n        check()                    # the window is exactly k wide here",
+    "cpp": "// Variable window: grow right always, shrink left only while invalid.\nunordered_map<char, int> window;\nint left = 0, best = 0;\nfor (int right = 0; right < s.size(); right++) {\n    window[s[right]]++;                 // extend\n    while (!isValid(window)) {          // WHILE, not if\n        if (--window[s[left]] == 0) window.erase(s[left]);\n        left++;\n    }\n    best = max(best, right - left + 1);\n}\n\n// Fixed window of size k: add one, drop one, no inner loop.\nfor (int right = 0; right < s.size(); right++) {\n    add(s[right]);\n    if (right >= k) remove(s[right - k]);   // element falling out of the back\n    if (right >= k - 1) check();            // window is exactly k wide here\n}",
+    "java": "// Variable window: grow right always, shrink left only while invalid.\nMap<Character, Integer> window = new HashMap<>();\nint left = 0, best = 0;\nfor (int right = 0; right < s.length(); right++) {\n    window.merge(s.charAt(right), 1, Integer::sum);     // extend\n    while (!isValid(window)) {                          // WHILE, not if\n        char out = s.charAt(left);\n        if (window.merge(out, -1, Integer::sum) == 0) window.remove(out);\n        left++;\n    }\n    best = Math.max(best, right - left + 1);\n}\n\n// Fixed window of size k: add one, drop one, no inner loop.\nfor (int right = 0; right < s.length(); right++) {\n    add(s.charAt(right));\n    if (right >= k) remove(s.charAt(right - k));   // falling out of the back\n    if (right >= k - 1) check();                   // exactly k wide here\n}",
+    "js": "// Variable window: grow right always, shrink left only while invalid.\nconst window = new Map();\nlet left = 0, best = 0;\nfor (let right = 0; right < s.length; right++) {\n  const ch = s[right];\n  window.set(ch, (window.get(ch) ?? 0) + 1);     // extend\n  while (!isValid(window)) {                     // WHILE, not if\n    const out = s[left];\n    window.set(out, window.get(out) - 1);\n    if (window.get(out) === 0) window.delete(out);\n    left++;\n  }\n  best = Math.max(best, right - left + 1);\n}\n\n// Fixed window of size k: add one, drop one, no inner loop.\nfor (let right = 0; right < s.length; right++) {\n  add(s[right]);\n  if (right >= k) remove(s[right - k]);   // falling out of the back\n  if (right >= k - 1) check();            // exactly k wide here\n}"
+  },
+  "recognitionTriggers": [
+    "The answer is a **contiguous** subarray or substring — the moment it may skip elements, this is dynamic programming instead.",
+    "The words *longest*, *shortest*, *at most k*, *exactly k*, or a fixed window size.",
+    "A nested loop is re-scanning ranges that overlap almost entirely. A window reuses that work by adjusting at the edges.",
+    "The validity condition is **monotone**: if a window is invalid, growing it cannot fix it, and shrinking it eventually will. That property is what makes two pointers sufficient."
+  ],
   "problems": [
     {
       "id": "121",
@@ -31,10 +41,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=1pkOgXD63yU"
       },
       "pattern": "Sliding Window",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You must pick two positions where **order matters** — buy strictly before sell.",
+        "Each candidate's value depends only on the best option seen *so far*, so one pass with one remembered value suffices.",
+        "Phrased as a window, the left edge is the cheapest day found and the right edge is today."
+      ],
       "keyInsight": "Track the minimum price seen so far. At each day, profit = current price - min so far. Keep max profit.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every pair of days with the buy day before the sell day, keeping the largest difference.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "At N = 10^5 that is 5 billion pairs. It also recomputes something trivial: for a fixed sell day, the only buy day worth considering is the cheapest one before it — and that can be carried forward in a single variable."
+      },
+      "approach": [
+        "Track the minimum price seen so far, starting with the first day's price.",
+        "Walk the prices from left to right.",
+        "At each day, the best profit that sells today is `price - minSoFar`.",
+        "Keep the maximum of those profits.",
+        "Update `minSoFar` with today's price, then continue. Return the maximum, which stays 0 if no profit is possible."
+      ],
       "code": {
         "python": "def maxProfit(prices):\n    min_price = float('inf')\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit",
         "cpp": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        int minPrice = INT_MAX, maxProfit = 0;\n        for (int price : prices) {\n            minPrice = min(minPrice, price);\n            maxProfit = max(maxProfit, price - minPrice);\n        }\n        return maxProfit;\n    }\n};",
@@ -43,15 +68,77 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "One pass, two scalars. The key observation is that the buy day never needs reconsidering — a cheaper day seen later only helps *future* sell days, and today's best buy is already recorded."
       },
       "dryRun": "prices = [7, 1, 5, 3, 6, 4]\n\nprice=7: min=7, profit=0\nprice=1: min=1, profit=0\nprice=5: min=1, profit=4  ← buy at 1, sell at 5\nprice=3: min=1, profit=4\nprice=6: min=1, profit=5  ← buy at 1, sell at 6 ✓\nprice=4: min=1, profit=5\nAnswer: 5",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            7,
+            1,
+            5,
+            3,
+            6,
+            4
+          ],
+          "highlight": [
+            1,
+            4
+          ],
+          "pointers": [
+            {
+              "at": 1,
+              "label": "buy",
+              "tone": "accent"
+            },
+            {
+              "at": 4,
+              "label": "sell",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "Buy at 1 (index 1), sell at 6 (index 4), profit 5. Day 0's price of 7 is discarded the moment the cheaper day 1 appears, and never reconsidered."
+      },
+      "pitfalls": [
+        "Returning a negative profit. If prices only fall, no transaction is made and the answer is 0 — initialise the best profit to 0, not to a difference.",
+        "Initialising `minSoFar` to 0 rather than the first price, which makes every price look like pure profit.",
+        "Updating `minSoFar` before computing today's profit, which allows buying and selling on the same day.",
+        "Tracking the global maximum price and subtracting the global minimum. That ignores the ordering constraint and reports profit for selling before buying."
+      ],
+      "edgeCases": [
+        "a single day -> 0, no transaction possible",
+        "strictly decreasing prices -> 0",
+        "strictly increasing prices -> last minus first",
+        "all prices equal -> 0",
+        "exactly two days"
+      ],
+      "followUps": [
+        {
+          "q": "What if you may make unlimited transactions?",
+          "a": "Sum every positive consecutive difference: buy before each rise and sell at each peak. One pass, O(N), and it works because any longer upward run decomposes into the same total."
+        },
+        {
+          "q": "At most two transactions? At most k?",
+          "a": "Now you need state: dynamic programming over (day, transactions used, holding or not). For k transactions that is O(N * k) states. Once k exceeds N/2 it collapses back to the unlimited case."
+        },
+        {
+          "q": "What if there is a cooldown after selling?",
+          "a": "Still DP, with three states per day — holding, just sold (in cooldown), free. That is Best Time to Buy and Sell Stock with Cooldown, in the 2-D DP section."
+        },
+        {
+          "q": "Return which days to buy and sell, not just the profit.",
+          "a": "Record the index of `minSoFar` and the index at which the maximum profit improved. Remember to capture the buy index at the time the profit improves, not the current `minSoFar`, or you can report a buy day after the sell day."
+        }
+      ],
+      "related": [
+        "maximum-subarray",
+        "best-time-to-buy-sell-stock-with-cooldown",
+        "maximum-product-subarray"
+      ],
+      "core": true
     },
     {
       "id": "3",
@@ -69,10 +156,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=wiGpQwVHdE0"
       },
       "pattern": "Sliding Window",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Longest contiguous stretch satisfying a constraint.",
+        "The constraint is monotone: a window with a repeat stays bad as it grows, and shrinking from the left eventually fixes it.",
+        "You need to know what is *currently inside* the window — a set or a count map."
+      ],
       "keyInsight": "Expand right pointer. If char already in window (set), shrink from left until it's removed. Window always contains unique chars.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate every substring and check each for duplicate characters.",
+        "time": "O(N^3), or O(N^2) if the set is built incrementally",
+        "space": "O(min(N, alphabet))",
+        "whyItFails": "Substrings overlap enormously: \"abcd\" and \"bcde\" share three characters, yet the brute force rebuilds the set from scratch. A window keeps that set and adjusts only at the edges."
+      },
+      "approach": [
+        "Keep a set of the characters currently inside the window, and a `left` edge starting at 0.",
+        "Walk `right` across the string.",
+        "While `s[right]` is already in the set, remove `s[left]` from the set and advance `left`.",
+        "This is a `while`, not an `if` — the duplicate may sit several positions in.",
+        "Add `s[right]` to the set; the window is now valid again.",
+        "Record `right - left + 1` if it beats the best length seen."
+      ],
       "code": {
         "python": "def lengthOfLongestSubstring(s):\n    char_set = set()\n    l = 0\n    result = 0\n    for r in range(len(s)):\n        while s[r] in char_set:\n            char_set.remove(s[l])\n            l += 1\n        char_set.add(s[r])\n        result = max(result, r - l + 1)\n    return result",
         "cpp": "class Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        unordered_set<char> chars;\n        int l = 0, result = 0;\n        for (int r = 0; r < s.size(); r++) {\n            while (chars.count(s[r])) {\n                chars.erase(s[l]);\n                l++;\n            }\n            chars.insert(s[r]);\n            result = max(result, r - l + 1);\n        }\n        return result;\n    }\n};",
@@ -81,15 +184,80 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(min(N, 26))"
+        "space": "O(min(N, K))",
+        "note": "Each character is added once and removed at most once, so the inner `while` costs O(N) across the whole run rather than O(N) per step. Space is bounded by the window, which cannot exceed the alphabet size K — 26, 128 or 256 depending on the input domain."
       },
       "dryRun": "s = \"abcabcbb\"\n\nr=0 'a': set={a}, len=1\nr=1 'b': set={a,b}, len=2\nr=2 'c': set={a,b,c}, len=3  ← max so far\nr=3 'a': 'a' in set! remove 'a', l=1. set={b,c,a}, len=3\nr=4 'b': 'b' in set! remove 'b', l=2. set={c,a,b}, len=3\nr=5 'c': 'c' in set! remove 'c', l=3. set={a,b,c}, len=3\nr=6 'b': 'b' in set! remove 'a',l=4. still in! remove 'b',l=5. set={c,b}, len=2\nr=7 'b': 'b' in set! remove 'c',l=6. remove 'b',l=7. set={b}, len=1\nAnswer: 3",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            "a",
+            "b",
+            "c",
+            "a",
+            "b",
+            "c",
+            "b",
+            "b"
+          ],
+          "window": {
+            "from": 2,
+            "to": 4,
+            "label": "window"
+          },
+          "pointers": [
+            {
+              "at": 2,
+              "label": "l",
+              "tone": "accent"
+            },
+            {
+              "at": 4,
+              "label": "r",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "At right = 4 the window \"cab\" is valid and 3 long — the answer for this input. Extending to index 5 would repeat 'c', so left advances instead of the window growing."
+      },
+      "pitfalls": [
+        "Using `if` instead of `while` when shrinking. One removal is often not enough, and this quietly returns a too-large answer.",
+        "Computing the window length as `right - left`, missing the `+ 1`.",
+        "In the index-jump variant — where a map stores each character's last position — forgetting to clamp with `left = max(left, lastSeen + 1)`. Without it a stale index drags `left` backwards and the window becomes invalid.",
+        "Forgetting to delete a character from the set when its count reaches zero, in the count-map version."
+      ],
+      "edgeCases": [
+        "empty string -> 0",
+        "all characters identical, e.g. \"bbbb\" -> 1",
+        "all characters distinct -> the whole length",
+        "a single character -> 1",
+        "spaces and symbols, which are ordinary characters here"
+      ],
+      "followUps": [
+        {
+          "q": "Longest substring with at most k distinct characters?",
+          "a": "Same skeleton; the validity test becomes `len(window) <= k` and the window holds counts rather than a plain set. The structure barely changes, which is the point of learning the template."
+        },
+        {
+          "q": "Return the substring itself, not its length.",
+          "a": "Track the best left index alongside the best length and slice at the end. Capture it exactly when the best improves."
+        },
+        {
+          "q": "Can you avoid shrinking one character at a time?",
+          "a": "Yes. Store each character's most recent index in a map and jump `left` straight past the previous occurrence, clamped so it never moves backwards. Same O(N), fewer operations, and a common follow-up."
+        },
+        {
+          "q": "What about Unicode?",
+          "a": "The set works unchanged on code points, so time stays O(N) and space becomes O(K) in distinct code points. If user-perceived characters matter, iterate grapheme clusters instead — \"e\" plus a combining accent is one character to a reader and two to the loop."
+        }
+      ],
+      "related": [
+        "longest-repeating-character-replacement",
+        "permutation-in-string",
+        "minimum-window-substring"
+      ],
+      "core": true
     },
     {
       "id": "424",
@@ -107,10 +275,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=gqXU1UyA8pk"
       },
       "pattern": "Sliding Window",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You are given a **budget** — *at most k changes, deletions or swaps* — and asked for the longest valid stretch.",
+        "A window is valid exactly when the cost to repair it fits the budget, and that cost is computable from the window's contents.",
+        "Growing a window can only increase the repair cost, which is the monotonicity the two pointers need."
+      ],
       "keyInsight": "In a valid window, (window_length - count_of_most_frequent_char) ≤ k. This is the number of chars we need to replace. If invalid, shrink from left.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every start and end, count the characters in that window and check whether `length - mostFrequentCount` is at most k.",
+        "time": "O(N^2 * K)",
+        "space": "O(K)",
+        "whyItFails": "Quadratic in the number of windows, and each check recounts from scratch. The counts of a window differ from its neighbour by one character, so they should be maintained incrementally."
+      },
+      "approach": [
+        "Keep a count of each character currently in the window, and the count of the most frequent one.",
+        "Walk `right` across the string, incrementing the count for `s[right]` and updating the most frequent count.",
+        "The number of characters that would need replacing is `windowLength - maxCount`.",
+        "While that exceeds k, decrement the count for `s[left]` and advance `left`.",
+        "The window is now valid; record its length against the best seen.",
+        "Return the best length."
+      ],
       "code": {
         "python": "def characterReplacement(s, k):\n    count = {}\n    l = 0\n    max_freq = 0\n    result = 0\n    for r in range(len(s)):\n        count[s[r]] = count.get(s[r], 0) + 1\n        max_freq = max(max_freq, count[s[r]])\n        # Window is invalid if replacements needed > k\n        while (r - l + 1) - max_freq > k:\n            count[s[l]] -= 1\n            l += 1\n        result = max(result, r - l + 1)\n    return result",
         "cpp": "class Solution {\npublic:\n    int characterReplacement(string s, int k) {\n        int count[26] = {}, l = 0, maxFreq = 0, result = 0;\n        for (int r = 0; r < s.size(); r++) {\n            maxFreq = max(maxFreq, ++count[s[r] - 'A']);\n            while (r - l + 1 - maxFreq > k) {\n                count[s[l] - 'A']--;\n                l++;\n            }\n            result = max(result, r - l + 1);\n        }\n        return result;\n    }\n};",
@@ -119,15 +303,79 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(26) = O(1)"
+        "space": "O(1)",
+        "note": "One pass, with `left` only ever advancing. The count table is fixed at 26 entries for uppercase letters, so the space does not grow with N. Recomputing `maxCount` by scanning those 26 entries would add a constant factor, not a logarithmic one — see the follow-up on why you need not recompute it at all."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "s = \"AABABBA\", k = 1\n\nA window is valid when  (length - maxCount) <= k,\nwhere maxCount is the count of its most frequent character.\n\n  r  ch  window      maxCount  need repl.  action   best\n  0  A   \"A\"            1          0                   1\n  1  A   \"AA\"           2          0                   2\n  2  B   \"AAB\"          2          1                   3\n  3  A   \"AABA\"         3          1                   4   <- answer\n  4  B   \"ABAB\"         3          1        shrink     4\n  5  B   \"BABB\"         3          1        shrink     4\n  6  A   \"ABBA\"         3          1        shrink     4\n\nreturn 4\n\nAt r=3 the window \"AABA\" is 4 long with three A's, so one B needs\nreplacing — exactly the budget.\n\nNotice maxCount stays 3 from r=3 onward even though later windows\nnever actually contain three of one character. That staleness is\nharmless: it can only make `left` lag, producing windows no longer\nthan the true best — never longer. See the follow-up.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            "A",
+            "A",
+            "B",
+            "A",
+            "B",
+            "B",
+            "A"
+          ],
+          "window": {
+            "from": 1,
+            "to": 5,
+            "label": "k = 2"
+          },
+          "pointers": [
+            {
+              "at": 1,
+              "label": "l",
+              "tone": "accent"
+            },
+            {
+              "at": 5,
+              "label": "r",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "Window \"ABABB\" is 5 long with maxCount('B') = 3, so 5 - 3 = 2 replacements — exactly the budget. Valid, and the answer for k = 2."
+      },
+      "pitfalls": [
+        "Shrinking with `if` rather than `while`. Here a single shrink per step happens to suffice because the window grows by one each iteration, but writing `while` is the habit that transfers to every other window problem.",
+        "Decrementing `maxCount` when a character leaves the window. It looks wrong not to, and it is the subtlety of this problem — see the follow-up. Decrementing is not incorrect, but it is unnecessary work.",
+        "Returning `maxCount + k` instead of the window length. It happens to coincide on many inputs and breaks when k exceeds the remaining characters.",
+        "Assuming the alphabet is uppercase-only when the statement does not say so."
+      ],
+      "edgeCases": [
+        "k = 0 -> the longest run of a single repeated character",
+        "k at least the string length -> the whole string",
+        "all characters identical -> the whole string, with no replacements used",
+        "a single character -> 1",
+        "empty string -> 0"
+      ],
+      "followUps": [
+        {
+          "q": "Why does maxCount never need to decrease?",
+          "a": "The answer only ever improves when the window grows, and the window can only grow when some character's count exceeds the old maxCount. A stale, too-large maxCount makes the window look *more* valid than it is, so `left` lags — but that only produces windows no longer than the true best, never longer. The recorded maximum therefore stays correct. This is the question this problem exists to ask."
+        },
+        {
+          "q": "What if the alphabet is large or Unicode?",
+          "a": "Swap the 26-slot array for a hash map. Space becomes O(K) in distinct characters, and if you do choose to recompute maxCount by scanning, that scan is now O(K) — which is the situation where the argument above earns its keep."
+        },
+        {
+          "q": "What if you need exactly k replacements, not at most k?",
+          "a": "Compute the answer for at most k and for at most k-1; if they differ, the longer window genuinely uses k. Beware that a window may be unable to use all k if it is uniform and short."
+        },
+        {
+          "q": "Longest substring with at most k distinct characters — same thing?",
+          "a": "Different validity test, identical machinery: `len(counts) <= k` instead of `length - maxCount <= k`. Recognising that only the predicate changes is what makes this category fast to work through."
+        }
+      ],
+      "related": [
+        "longest-substring-without-repeating-characters",
+        "minimum-window-substring",
+        "permutation-in-string"
+      ],
+      "core": true
     },
     {
       "id": "567",
@@ -146,10 +394,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=UbyhOgBN834"
       },
       "pattern": "Fixed Sliding Window",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "The window size is **fixed** by the input — here the length of the pattern — so there is no inner shrink loop at all.",
+        "You are matching an *unordered* property of the window: a permutation, an anagram, a multiset of characters.",
+        "The words *permutation*, *anagram* or *contains a rearrangement of*."
+      ],
       "keyInsight": "Use a fixed window of size len(s1). Track how many character frequencies match between the window and s1. When all 26 match, we found a permutation.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every window of length len(s1) in s2, count its characters and compare with s1's counts — or sort both and compare.",
+        "time": "O(N * K) counting, O(N * K log K) sorting",
+        "space": "O(K)",
+        "whyItFails": "Not catastrophic, but each window recounts characters that overlap with the previous one by all but two positions. Sliding the window should cost O(1): add the entering character, remove the leaving one."
+      },
+      "approach": [
+        "Return false immediately if s1 is longer than s2.",
+        "Build character counts for s1, and counts for the first window of s2 of the same length.",
+        "Track how many of the 26 counts currently match between the two tables.",
+        "Slide the window one position at a time: increment for the entering character, decrement for the leaving one.",
+        "After each of those two updates, adjust the match counter for just the affected letter — this is what makes the slide O(1).",
+        "If all 26 counts ever match, a permutation exists; return true."
+      ],
       "code": {
         "python": "def checkInclusion(s1, s2):\n    if len(s1) > len(s2):\n        return False\n    s1_count = [0] * 26\n    window = [0] * 26\n    for c in s1:\n        s1_count[ord(c) - ord('a')] += 1\n    \n    for i in range(len(s2)):\n        window[ord(s2[i]) - ord('a')] += 1\n        if i >= len(s1):  # remove leftmost from window\n            window[ord(s2[i - len(s1)]) - ord('a')] -= 1\n        if window == s1_count:\n            return True\n    return False",
         "cpp": "class Solution {\npublic:\n    bool checkInclusion(string s1, string s2) {\n        if (s1.size() > s2.size()) return false;\n        int count[26] = {};\n        for (char c : s1) count[c - 'a']++;\n        for (int i = 0; i < s2.size(); i++) {\n            count[s2[i] - 'a']--;\n            if (i >= s1.size()) count[s2[i - s1.size()] - 'a']++;\n            bool allZero = true;\n            for (int j = 0; j < 26; j++) if (count[j]) { allZero = false; break; }\n            if (allZero) return true;\n        }\n        return false;\n    }\n};",
@@ -157,16 +421,81 @@
         "js": "var checkInclusion = function(s1, s2) {\n    if (s1.length > s2.length) return false;\n    const count = new Array(26).fill(0);\n    const a = 'a'.charCodeAt(0);\n    for (const c of s1) count[c.charCodeAt(0) - a]++;\n    for (let i = 0; i < s2.length; i++) {\n        count[s2.charCodeAt(i) - a]--;\n        if (i >= s1.length) count[s2.charCodeAt(i - s1.length) - a]++;\n        if (count.every(c => c === 0)) return true;\n    }\n    return false;\n};"
       },
       "complexity": {
-        "time": "O(N) where N=len(s2)",
-        "space": "O(1)"
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "N is the length of s2. Each slide does constant work because only two letters change. The count tables are 26 fixed slots, so space does not grow with input. Comparing whole tables each slide would be O(26 * N) — still linear, but the match counter makes the constant honest."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "s1 = \"ab\", s2 = \"eidbaooo\"\n\nneed = {a: 1, b: 1}, window width fixed at len(s1) = 2.\n\n  window         contents   counts            match?\n  s2[0..1]       \"ei\"       {e:1, i:1}        no\n  s2[1..2]       \"id\"       {i:1, d:1}        no\n  s2[2..3]       \"db\"       {d:1, b:1}        no\n  s2[3..4]       \"ba\"       {a:1, b:1}        YES -> return true\n\nEach slide changes only two letters. Moving from \"db\" to \"ba\":\n\n  'd' leaves at index 2   ->  count[d] 1 -> 0\n  'a' enters at index 4   ->  count[a] 0 -> 1\n\nSo the slide is O(1), not O(26) — only the two touched letters need\ntheir match status re-examined.\n\nThere is no inner shrink loop anywhere: the width never changes.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            "e",
+            "i",
+            "d",
+            "b",
+            "a",
+            "o",
+            "o",
+            "o"
+          ],
+          "window": {
+            "from": 3,
+            "to": 4,
+            "label": "len(s1) = 2"
+          },
+          "pointers": [
+            {
+              "at": 3,
+              "label": "l",
+              "tone": "accent"
+            },
+            {
+              "at": 4,
+              "label": "r",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "s1 = \"ab\", s2 = \"eidbaooo\". The fixed 2-wide window reaches \"ba\" at indices 3..4, whose counts match s1's — a permutation, so the answer is true."
+      },
+      "pitfalls": [
+        "Not checking `len(s1) > len(s2)` first, which then indexes past the end of s2 while building the first window.",
+        "Off-by-one when sliding: the character leaving is at `right - len(s1)`, not at `right - len(s1) + 1`.",
+        "Updating the match counter before the count change, or only for one of the two changed letters.",
+        "Comparing the window against s1 **before** the window is full, which reports a false positive on short prefixes."
+      ],
+      "edgeCases": [
+        "s1 longer than s2 -> false",
+        "s1 and s2 the same length -> a plain anagram check",
+        "s1 with repeated characters, e.g. \"aab\"",
+        "s2 containing no character of s1 at all",
+        "either string empty"
+      ],
+      "followUps": [
+        {
+          "q": "Return every starting index instead of a boolean.",
+          "a": "Do not return on the first match — append `right - len(s1) + 1` and keep sliding. That is Find All Anagrams in a String, same code with a different output."
+        },
+        {
+          "q": "What if the alphabet is Unicode?",
+          "a": "Replace the fixed arrays with hash maps and keep a counter of how many keys currently differ. Maintaining that counter matters more here, since comparing whole maps per slide would be O(K) each time."
+        },
+        {
+          "q": "Can you do it with a single count table?",
+          "a": "Yes — hold s1's counts and decrement as characters enter the window, incrementing back as they leave. All zeros means a match. One table, same complexity, and a tidier thing to write on a whiteboard."
+        },
+        {
+          "q": "What if s2 arrives as a stream?",
+          "a": "It works unchanged: the algorithm only ever needs the entering character and the one leaving the window, so it needs a buffer of len(s1) characters and nothing more."
+        }
+      ],
+      "related": [
+        "valid-anagram",
+        "minimum-window-substring",
+        "longest-repeating-character-replacement"
+      ],
+      "core": true
     },
     {
       "id": "76",
@@ -184,10 +513,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=jSto1m652Dw"
       },
       "pattern": "Sliding Window",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "**Smallest** window satisfying a requirement, rather than largest — which flips when you record the answer: after shrinking, not after growing.",
+        "The requirement is 'contains all of these, with multiplicity'.",
+        "Grow until valid, then shrink while still valid. Both phases are needed, which is what makes this the hardest shape in the category."
+      ],
       "keyInsight": "Expand right to include all chars of t. Once valid, shrink from left to find minimum. Track \"have\" (matched chars) vs \"need\" (required chars).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Check every substring of s for whether it contains all characters of t with the right multiplicities, keeping the shortest.",
+        "time": "O(N^2 * M)",
+        "space": "O(M)",
+        "whyItFails": "There are O(N^2) substrings and each check walks t again. Since a window's contents change by one character at a time, the containment test should be maintained incrementally rather than recomputed."
+      },
+      "approach": [
+        "Count the characters of t into `need`, and let `required` be the number of **distinct** characters in t.",
+        "Keep a `window` count map and a counter `formed` for how many distinct characters currently meet their full required multiplicity.",
+        "Advance `right`, adding `s[right]` to the window. If that character's window count now exactly equals its need, increment `formed`.",
+        "While `formed == required`, the window is valid: record it if it is shorter than the best so far.",
+        "Still inside that loop, remove `s[left]` and advance `left`. If that drops a character below its need, decrement `formed`.",
+        "Continue until `right` reaches the end.",
+        "Return the best window, or the empty string if none was ever valid."
+      ],
       "code": {
         "python": "def minWindow(s, t):\n    if not t: return \"\"\n    need = {}\n    for c in t:\n        need[c] = need.get(c, 0) + 1\n    \n    window = {}\n    have, required = 0, len(need)  # unique chars needed\n    result, result_len = [-1, -1], float('inf')\n    l = 0\n\n    for r in range(len(s)):\n        window[s[r]] = window.get(s[r], 0) + 1\n        if s[r] in need and window[s[r]] == need[s[r]]:\n            have += 1\n\n        while have == required:\n            # Update result\n            if (r - l + 1) < result_len:\n                result = [l, r]\n                result_len = r - l + 1\n            # Shrink from left\n            window[s[l]] -= 1\n            if s[l] in need and window[s[l]] < need[s[l]]:\n                have -= 1\n            l += 1\n\n    l, r = result\n    return s[l:r+1] if result_len != float('inf') else \"\"",
         "cpp": "class Solution {\npublic:\n    string minWindow(string s, string t) {\n        unordered_map<char, int> need, have;\n        for (char c : t) need[c]++;\n        int required = need.size(), formed = 0;\n        int l = 0, minLen = INT_MAX, minL = 0;\n        for (int r = 0; r < s.size(); r++) {\n            have[s[r]]++;\n            if (need.count(s[r]) && have[s[r]] == need[s[r]]) formed++;\n            while (formed == required) {\n                if (r - l + 1 < minLen) { minLen = r - l + 1; minL = l; }\n                have[s[l]]--;\n                if (need.count(s[l]) && have[s[l]] < need[s[l]]) formed--;\n                l++;\n            }\n        }\n        return minLen == INT_MAX ? \"\" : s.substr(minL, minLen);\n    }\n};",
@@ -196,15 +542,50 @@
       },
       "complexity": {
         "time": "O(N + M)",
-        "space": "O(N + M)"
+        "space": "O(K)",
+        "note": "Each pointer traverses s once, so each character is added once and removed at most once. The `formed == required` trick is what keeps validity O(1) per step — comparing the two maps instead would cost O(K) per move."
       },
-      "dryRun": null,
+      "dryRun": "s = \"ADOBECODEBANC\", t = \"ABC\"\n\nneed = {A:1, B:1, C:1}, required = 3 distinct characters.\n`formed` counts how many of those currently hit their full count.\n\nGrow right until formed == 3, then shrink left while still valid,\nrecording the answer after each shrink.\n\n  valid window        len    best so far\n  s[0..5]  \"ADOBEC\"     6    \"ADOBEC\"\n  s[1..10] \"DOBECODEBA\" 10   \"ADOBEC\"\n  s[2..10] \"OBECODEBA\"   9   \"ADOBEC\"\n  s[3..10] \"BECODEBA\"    8   \"ADOBEC\"\n  s[4..10] \"ECODEBA\"     7   \"ADOBEC\"\n  s[5..10] \"CODEBA\"      6   \"ADOBEC\"\n  s[6..12] \"ODEBANC\"     7   \"ADOBEC\"\n  s[7..12] \"DEBANC\"      6   \"ADOBEC\"\n  s[8..12] \"EBANC\"       5   \"EBANC\"\n  s[9..12] \"BANC\"        4   \"BANC\"   <- answer\n\nreturn \"BANC\"\n\nTwo things to take from this trace:\n\n  1. The answer is recorded AFTER shrinking, never after growing.\n     \"ADOBEC\" was valid at length 6, but \"BANC\" is the same set of\n     requirements with four fewer wasted characters.\n\n  2. `formed` rises only when a character reaches EXACTLY its needed\n     count. With t = \"AABC\" a third A would add nothing, and counting\n     it would wrongly declare the window valid.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Incrementing `formed` whenever a needed character is added, rather than only when its count reaches **exactly** its requirement. With t = \"AABC\", a third A must not count again.",
+        "Recording the answer after growing instead of after shrinking. The minimum is only known once the window has been tightened as far as it can go.",
+        "Comparing `len(window) == len(need)` as the validity test. That ignores multiplicities entirely.",
+        "Forgetting that t can contain duplicates at all — this is the single most common source of wrong answers here.",
+        "Returning a window of length 0 as 'best' because the initial best length was initialised to 0 rather than infinity."
+      ],
+      "edgeCases": [
+        "t longer than s -> empty string",
+        "no valid window exists -> empty string",
+        "t with duplicate characters, e.g. s = \"a\", t = \"aa\" -> empty string",
+        "s equals t -> the whole of s",
+        "either string empty",
+        "the valid window being the entire string"
+      ],
+      "followUps": [
+        {
+          "q": "Return all minimum windows, not just one.",
+          "a": "Keep a list and reset it whenever a strictly shorter window appears, appending when one ties the current best. No change in complexity."
+        },
+        {
+          "q": "What if the alphabet is large and t is short?",
+          "a": "The `formed`/`required` counters already avoid scanning the alphabet, so nothing degrades. This is precisely why that counter is preferred over comparing maps — it makes the complexity independent of the alphabet."
+        },
+        {
+          "q": "Minimum window **subsequence** instead of substring?",
+          "a": "A different problem — order must be preserved but characters may be skipped, so sliding windows no longer apply. Dynamic programming over (position in s, position in t) is the standard approach."
+        },
+        {
+          "q": "Why record the answer inside the shrink loop?",
+          "a": "Because a valid window may still be shrinkable. Recording on growth captures windows with useless characters on the left; recording after each shrink step guarantees you see the tightest window for every right edge."
+        }
+      ],
+      "related": [
+        "longest-substring-without-repeating-characters",
+        "permutation-in-string",
+        "longest-repeating-character-replacement"
+      ],
+      "core": true
     },
     {
       "id": "239",
@@ -222,10 +603,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=DfljaUwZsOk"
       },
       "pattern": "Monotonic Deque",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You need an aggregate — maximum or minimum — over **every** window of a fixed size.",
+        "Recomputing per window is O(N*K), and the target is O(N), so old elements must be discardable permanently.",
+        "A new element makes certain earlier elements irrelevant forever. That is the signal for a monotonic structure."
+      ],
       "keyInsight": "Maintain a decreasing deque of indices. Front = index of max in current window. Remove from back if smaller than new element (they'll never be the max). Remove from front if outside window.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each window, scan its k elements for the maximum. Or push everything into a max-heap and pop stale entries.",
+        "time": "O(N * K) scanning, O(N log N) with a heap",
+        "space": "O(1) or O(N)",
+        "whyItFails": "Scanning rediscovers the maximum from scratch when the window shifts by one. The insight it misses: if a new element is larger than the ones behind it, those can never be the maximum of any future window, so they can be thrown away rather than re-examined."
+      },
+      "approach": [
+        "Keep a deque of **indices** whose values are in decreasing order. The front is always the index of the current window's maximum.",
+        "For each new index, pop from the **back** while the value there is less than or equal to the new value — those elements are now permanently irrelevant.",
+        "Push the new index onto the back.",
+        "Pop from the **front** if that index has fallen outside the window, i.e. is at or before `right - k`.",
+        "Once the window is full (`right >= k - 1`), append the value at the front index to the results.",
+        "Return the results."
+      ],
       "code": {
         "python": "from collections import deque\n\ndef maxSlidingWindow(nums, k):\n    dq = deque()  # stores indices, values are decreasing\n    result = []\n    for i in range(len(nums)):\n        # Remove indices outside window\n        while dq and dq[0] < i - k + 1:\n            dq.popleft()\n        # Remove smaller elements from back\n        while dq and nums[dq[-1]] < nums[i]:\n            dq.pop()\n        dq.append(i)\n        if i >= k - 1:\n            result.append(nums[dq[0]])\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> maxSlidingWindow(vector<int>& nums, int k) {\n        deque<int> dq;\n        vector<int> result;\n        for (int i = 0; i < nums.size(); i++) {\n            while (!dq.empty() && dq.front() < i - k + 1) dq.pop_front();\n            while (!dq.empty() && nums[dq.back()] < nums[i]) dq.pop_back();\n            dq.push_back(i);\n            if (i >= k - 1) result.push_back(nums[dq.front()]);\n        }\n        return result;\n    }\n};",
@@ -234,15 +631,80 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(K)"
+        "space": "O(K)",
+        "note": "Each index is pushed exactly once and popped at most once, so the total deque work is O(N) despite the inner loop — the amortised cost per step is constant. The deque never holds more than k indices, since anything older is evicted from the front."
       },
       "dryRun": "nums = [1,3,-1,-3,5,3,6,7], k=3\n\ni=0: dq=[0]           (val 1)\ni=1: remove 0 (1<3), dq=[1]   (val 3)\ni=2: dq=[1,2]         → result=[3]  (max=nums[1]=3)\ni=3: dq=[1,2,3]       → result=[3,3]\ni=4: pop all (5>all), dq=[4]  → result=[3,3,5]\ni=5: dq=[4,5]         → result=[3,3,5,5]\ni=6: pop all, dq=[6]  → result=[3,3,5,5,6]\ni=7: pop all, dq=[7]  → result=[3,3,5,5,6,7]",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            1,
+            3,
+            -1,
+            -3,
+            5,
+            3,
+            6,
+            7
+          ],
+          "window": {
+            "from": 2,
+            "to": 4,
+            "label": "k = 3"
+          },
+          "highlight": [
+            4
+          ],
+          "pointers": [
+            {
+              "at": 4,
+              "label": "max = 5",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Window [-1, -3, 5]. Adding 5 evicts both -1 and -3 from the back: neither can be the maximum of any window containing 5, so they are discarded permanently rather than rescanned."
+      },
+      "pitfalls": [
+        "Storing values instead of indices. Without the index you cannot tell when an element has slid out of the window.",
+        "Popping from the wrong end. Smaller-than-new elements leave from the **back**; out-of-window elements leave from the **front**.",
+        "Using `<` instead of `<=` when evicting. Both are correct for the maximum's value, but `<` keeps duplicates around and grows the deque unnecessarily.",
+        "Appending to the results before the window is full, which produces k-1 spurious leading entries.",
+        "Getting the eviction bound wrong — the front is stale when `front <= right - k`, not `right - k + 1`."
+      ],
+      "edgeCases": [
+        "k = 1 -> the answer is the input itself",
+        "k equal to the array length -> a single value, the global maximum",
+        "strictly increasing values -> the deque never holds more than one index",
+        "strictly decreasing values -> the deque holds k indices, its worst case",
+        "all values equal",
+        "negative values throughout, which breaks any code that initialises a maximum to 0"
+      ],
+      "followUps": [
+        {
+          "q": "Show the time really is O(N), given the inner while loop.",
+          "a": "Amortise it: each index enters the deque once and leaves once, so across the whole run there are at most N pushes and N pops. The inner loop can be long on one step only because it was short on many others — total work is linear even though per-step work is not constant."
+        },
+        {
+          "q": "Sliding window minimum instead?",
+          "a": "Flip the comparison: keep the deque increasing and evict from the back while the value there is greater than or equal to the new one. Everything else is identical."
+        },
+        {
+          "q": "Why not just use a heap?",
+          "a": "A heap gives O(N log N) because stale entries accumulate; you either delete by index — which heaps do not support cheaply — or lazily discard entries as they surface. The deque wins because it can prove an element will never be needed again, which a heap cannot."
+        },
+        {
+          "q": "What if the window size changes as you go?",
+          "a": "The deque still works for the front-eviction rule, since it only needs the current bound. If windows can also shrink from the right the structure breaks, and a segment tree or sparse table over ranges is the general answer."
+        }
+      ],
+      "related": [
+        "daily-temperatures",
+        "largest-rectangle-in-histogram",
+        "trapping-rain-water"
+      ],
+      "core": true
     }
   ]
 }
