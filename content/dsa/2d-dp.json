@@ -3,9 +3,32 @@
   "title": "2-D Dynamic Programming",
   "icon": "🧩",
   "order": 14,
-  "concept": null,
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "concept": {
+    "heading": "Core Concepts",
+    "body": "Two-dimensional DP asks the same four questions as the 1-D kind — state, recurrence, base cases, fill order — but the state needs **two indices**. Almost always those two indices are positions in two different sequences, or one position plus a remaining budget.\n\nFour shapes cover this whole category.\n\n**Two sequences.** `dp[i][j]` is the answer for the first i characters of A against the first j of B. Edit Distance, Longest Common Subsequence, Interleaving String, Distinct Subsequences and Regular Expression Matching are all this. The recurrence compares `A[i-1]` with `B[j-1]` and branches on whether they match.\n\n**Position plus budget.** `dp[i][j]` is the answer using the first i items with j of some resource left. That is knapsack — Coin Change II and Target Sum.\n\n**Interval DP.** `dp[i][j]` is the answer for the subarray from i to j, filled by increasing **length** rather than increasing index, usually by choosing a split point inside. Burst Balloons.\n\n**State machine.** Sometimes the second dimension is not an index at all but a *mode* — holding, sold, resting. Then the table is O(N) by a small constant and collapses to a few variables.\n\nThe practical method: draw the table, fill the first row and column by hand — those are the base cases, and they encode \"one sequence is empty\" — then write a single cell's recurrence by asking what choices exist at that cell.",
+    "bullets": [
+      "**Size the table (m+1) x (n+1) and index it 1-based.** Row 0 and column 0 then represent \"this sequence is empty\", which removes almost every off-by-one. Remember the character is `A[i-1]`, not `A[i]`.",
+      "**The base row and column are the problem's boundary rules**, not filler. For Edit Distance they are i and j (delete everything); for LCS they are 0; for counting problems they are usually 1.",
+      "**Fill order must respect dependencies.** Row by row works when a cell needs (i-1, j), (i, j-1) and (i-1, j-1). Interval DP needs increasing length, because dp[i][j] depends on shorter intervals inside it.",
+      "**Space optimisation:** if `dp[i][j]` only reads row i-1 and the current row, keep two rows — O(min(m, n)) by iterating over the shorter dimension. Some problems collapse to a single row if you iterate it in the right direction.",
+      "**Reductions are often the real work.** Target Sum looks like a signed-assignment problem and is actually subset-sum counting. Burst Balloons looks intractable forwards and becomes clean when you ask which balloon bursts *last*.",
+      "**Top-down is often easier to get right first.** Write the recursion with memoisation, confirm it works, then convert to a table if space matters. The recursion makes the base cases obvious in a way an empty table does not."
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": {
+    "python": "# --- Shape 1: two sequences. dp[i][j] = answer for A[:i] vs B[:j] ---\nm, n = len(a), len(b)\ndp = [[0] * (n + 1) for _ in range(m + 1)]\n\n# base row and column: one sequence is empty\nfor i in range(m + 1):\n    dp[i][0] = base_for_empty_b(i)\nfor j in range(n + 1):\n    dp[0][j] = base_for_empty_a(j)\n\nfor i in range(1, m + 1):\n    for j in range(1, n + 1):\n        if a[i - 1] == b[j - 1]:          # NOTE: i-1, not i\n            dp[i][j] = dp[i - 1][j - 1] + 1       # consume both\n        else:\n            dp[i][j] = max(dp[i - 1][j],          # skip from a\n                           dp[i][j - 1])          # skip from b\nreturn dp[m][n]\n\n# Space: only row i-1 and row i are ever read -> keep two rows.\nprev = [0] * (n + 1)\nfor i in range(1, m + 1):\n    cur = [0] * (n + 1)\n    for j in range(1, n + 1):\n        cur[j] = ...                      # uses prev[j], cur[j-1], prev[j-1]\n    prev = cur\n\n# --- Shape 2: knapsack. dp[j] = answer with j of the resource left ---\ndp = [0] * (target + 1)\ndp[0] = 1                                 # one way to make nothing\nfor item in items:                        # coins OUTER -> combinations\n    for j in range(item, target + 1):     # upward -> unlimited reuse\n        dp[j] += dp[j - item]\n#   downward range(target, item-1, -1)    -> each item used at most once\n\n# --- Shape 3: interval DP. Fill by LENGTH, not by index ---\ndp = [[0] * n for _ in range(n)]\nfor length in range(2, n + 1):            # shorter intervals first\n    for i in range(0, n - length + 1):\n        j = i + length - 1\n        for k in range(i + 1, j):         # the split point\n            dp[i][j] = max(dp[i][j],\n                           dp[i][k] + dp[k][j] + value(i, k, j))\nreturn dp[0][n - 1]\n\n# --- Shape 4: state machine. The second dimension is a MODE ---\nhold, sold, rest = float('-inf'), 0, 0\nfor price in prices:\n    hold, sold, rest = (max(hold, rest - price),   # buy, or keep holding\n                        hold + price,              # sell what we hold\n                        max(rest, sold))           # cool down, or stay free\nreturn max(sold, rest)",
+    "cpp": "// --- Shape 1: two sequences. dp[i][j] = answer for a[0..i) vs b[0..j) ---\nint m = a.size(), n = b.size();\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n\nfor (int i = 0; i <= m; i++) dp[i][0] = baseForEmptyB(i);\nfor (int j = 0; j <= n; j++) dp[0][j] = baseForEmptyA(j);\n\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (a[i - 1] == b[j - 1])          // NOTE: i-1, not i\n            dp[i][j] = dp[i - 1][j - 1] + 1;\n        else\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);\n    }\n}\nreturn dp[m][n];\n\n// --- Shape 2: knapsack ---\nvector<long> dp(target + 1, 0);\ndp[0] = 1;\nfor (int item : items)                     // items OUTER -> combinations\n    for (int j = item; j <= target; j++)   // upward -> unlimited reuse\n        dp[j] += dp[j - item];\n//  for (int j = target; j >= item; j--)   -> each item at most once\n\n// --- Shape 3: interval DP. Fill by LENGTH ---\nvector<vector<int>> dp(n, vector<int>(n, 0));\nfor (int len = 2; len <= n; len++)\n    for (int i = 0; i + len - 1 < n; i++) {\n        int j = i + len - 1;\n        for (int k = i + 1; k < j; k++)    // the split point\n            dp[i][j] = max(dp[i][j], dp[i][k] + dp[k][j] + value(i, k, j));\n    }\nreturn dp[0][n - 1];\n\n// --- Shape 4: state machine ---\nint hold = INT_MIN, sold = 0, rest = 0;\nfor (int price : prices) {\n    int prevSold = sold;\n    sold = hold + price;\n    hold = max(hold, rest - price);\n    rest = max(rest, prevSold);\n}\nreturn max(sold, rest);",
+    "java": "// --- Shape 1: two sequences ---\nint m = a.length(), n = b.length();\nint[][] dp = new int[m + 1][n + 1];\n\nfor (int i = 0; i <= m; i++) dp[i][0] = baseForEmptyB(i);\nfor (int j = 0; j <= n; j++) dp[0][j] = baseForEmptyA(j);\n\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (a.charAt(i - 1) == b.charAt(j - 1))   // NOTE: i-1, not i\n            dp[i][j] = dp[i - 1][j - 1] + 1;\n        else\n            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n    }\n}\nreturn dp[m][n];\n\n// --- Shape 2: knapsack ---\nlong[] dp = new long[target + 1];\ndp[0] = 1;\nfor (int item : items)                     // items OUTER -> combinations\n    for (int j = item; j <= target; j++)   // upward -> unlimited reuse\n        dp[j] += dp[j - item];\n//  for (int j = target; j >= item; j--)   -> each item at most once\n\n// --- Shape 3: interval DP. Fill by LENGTH ---\nint[][] dp = new int[n][n];\nfor (int len = 2; len <= n; len++)\n    for (int i = 0; i + len - 1 < n; i++) {\n        int j = i + len - 1;\n        for (int k = i + 1; k < j; k++)    // the split point\n            dp[i][j] = Math.max(dp[i][j],\n                                dp[i][k] + dp[k][j] + value(i, k, j));\n    }\nreturn dp[0][n - 1];\n\n// --- Shape 4: state machine ---\nint hold = Integer.MIN_VALUE, sold = 0, rest = 0;\nfor (int price : prices) {\n    int prevSold = sold;\n    sold = hold + price;\n    hold = Math.max(hold, rest - price);\n    rest = Math.max(rest, prevSold);\n}\nreturn Math.max(sold, rest);",
+    "js": "// --- Shape 1: two sequences. dp[i][j] = answer for a[0..i) vs b[0..j) ---\nconst m = a.length, n = b.length;\nconst dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));\n\nfor (let i = 0; i <= m; i++) dp[i][0] = baseForEmptyB(i);\nfor (let j = 0; j <= n; j++) dp[0][j] = baseForEmptyA(j);\n\nfor (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (a[i - 1] === b[j - 1])             // NOTE: i-1, not i\n      dp[i][j] = dp[i - 1][j - 1] + 1;\n    else\n      dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n  }\n}\nreturn dp[m][n];\n\n// Careful: Array(m+1).fill([]) shares ONE array across every row.\n// Always use Array.from with a factory.\n\n// --- Shape 2: knapsack ---\nconst dp = new Array(target + 1).fill(0);\ndp[0] = 1;\nfor (const item of items)                  // items OUTER -> combinations\n  for (let j = item; j <= target; j++)     // upward -> unlimited reuse\n    dp[j] += dp[j - item];\n//  for (let j = target; j >= item; j--)   -> each item at most once\n\n// --- Shape 3: interval DP. Fill by LENGTH ---\nfor (let len = 2; len <= n; len++)\n  for (let i = 0; i + len - 1 < n; i++) {\n    const j = i + len - 1;\n    for (let k = i + 1; k < j; k++)        // the split point\n      dp[i][j] = Math.max(dp[i][j], dp[i][k] + dp[k][j] + value(i, k, j));\n  }\nreturn dp[0][n - 1];\n\n// --- Shape 4: state machine ---\nlet hold = -Infinity, sold = 0, rest = 0;\nfor (const price of prices) {\n  [hold, sold, rest] = [Math.max(hold, rest - price),\n                        hold + price,\n                        Math.max(rest, sold)];\n}\nreturn Math.max(sold, rest);"
+  },
+  "recognitionTriggers": [
+    "**Two sequences** to align, compare, transform or interleave. The state is a position in each, so the table is 2-D almost by definition.",
+    "A **grid** where each cell's answer depends on its neighbours — and if the dependency is not strictly one-directional, it is memoised DFS rather than a table you can fill in a fixed order.",
+    "A position **plus a remaining quantity** — budget, capacity, count of transactions, number of stops. The second dimension is the resource.",
+    "*Minimum operations to turn A into B*, *how many ways to form B from A*, *is C an interleaving of A and B* — all two-sequence tables.",
+    "An **interval** or subarray where you choose a split point, and the subproblems are shorter intervals. Fill by length."
+  ],
   "problems": [
     {
       "id": "62",
@@ -22,25 +45,132 @@
         "leetcode": "https://leetcode.com/problems/unique-paths/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=IlEsdxuD4lY"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Grid DP",
+      "patternTriggers": [
+        "**Count the paths** through a grid with restricted moves.",
+        "Each cell's answer is a sum over the cells it can be reached from, and those predecessors are a fixed small set.",
+        "The movement restriction (right and down only) means the dependency is strictly one-directional, so a simple row-by-row fill works."
+      ],
+      "keyInsight": "Every cell is reachable only from above or from the left, and those two sets of paths are disjoint — a path's final move is either downward or rightward, never both. So `dp[i][j] = dp[i-1][j] + dp[i][j-1]`, with the first row and first column all 1 because there is exactly one way to walk straight along an edge. It is Climbing Stairs in two dimensions, and it is the cleanest place to practise reading base cases off the geometry rather than guessing them.",
+      "bruteForce": {
+        "idea": "Recurse from the top-left, branching right and down, counting the recursions that land exactly on the destination.",
+        "time": "O(2^(m+n))",
+        "space": "O(m+n)",
+        "whyItFails": "Enormously many paths — a 10x10 grid has 48,620 of them, and a 20x20 grid has over 35 billion. But the number of ways to *reach a given cell* does not depend on which path got you near it, so that count should be computed once per cell. There are only m x n cells."
+      },
+      "approach": [
+        "Define the state: `dp[i][j]` is the number of distinct paths from the start to cell (i, j).",
+        "Base cases: the entire first row and first column are 1, since along an edge there is only one possible route.",
+        "Recurrence: `dp[i][j] = dp[i-1][j] + dp[i][j-1]` — arrive from above or from the left, and the two sets of paths are disjoint.",
+        "Fill row by row, which guarantees both dependencies are already computed.",
+        "Return `dp[m-1][n-1]`.",
+        "Note each row only reads the row above and the cell to its left, so a single row updated in place suffices for O(n) space."
+      ],
       "code": {
         "python": "def uniquePaths(m, n):\n    dp = [1] * n\n    for _ in range(m - 1):\n        for j in range(1, n):\n            dp[j] += dp[j - 1]\n    return dp[-1]",
         "cpp": "class Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<int> dp(n, 1);\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++) dp[j] += dp[j-1];\n        return dp[n-1];\n    }\n};",
         "java": "class Solution {\n    public int uniquePaths(int m, int n) {\n        int[] dp = new int[n];\n        Arrays.fill(dp, 1);\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++) dp[j] += dp[j-1];\n        return dp[n-1];\n    }\n}",
         "js": "var uniquePaths = function(m, n) {\n    const dp = new Array(n).fill(1);\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++) dp[j] += dp[j-1];\n    return dp[n-1];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(n)",
+        "note": "One pass over the grid with constant work per cell. A single row updated left to right is enough, because `dp[j]` before the write holds the value from the row above and `dp[j-1]` after its own write holds the value to the left — the in-place update gives you both. There is also a closed form: the answer is C(m+n-2, m-1), computable in O(min(m,n))."
+      },
+      "dryRun": "A 3 x 7 grid.  dp[i][j] = number of paths from the start to (i, j).\n\n         c0  c1  c2  c3  c4  c5  c6\n    r0    1   1   1   1   1   1   1\n    r1    1   2   3   4   5   6   7\n    r2    1   3   6  10  15  21  28\n\n  answer = 28\n\nThe first row and column are all 1 because along an edge there is only\none possible route — you can only ever keep going straight. Those are\nnot arbitrary initial values; they are read directly off the geometry.\n\nEvery other cell is the sum of the one above and the one to its left:\n\n  dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2\n  dp[2][3] = dp[1][3] + dp[2][2] = 4 + 6 = 10\n\nThe two sets of paths are disjoint — a path's final move into a cell is\neither downward or rightward, never both — which is why they simply\nadd with no risk of double counting.\n\nNotice the diagonals: 1, 1 / 1, 2, 1 / 1, 3, 3, 1 is Pascal's triangle.\nThat is not a coincidence. Any path makes exactly m-1 down-moves and\nn-1 right-moves in some order, so the count is the number of ways to\nchoose which moves are downward:\n\n  C(m + n - 2, m - 1) = C(8, 2) = 28\n\nverified against the table above.\n\nOnly the row above and the cell to the left are read, so a single row\nupdated left to right suffices — before the write, dp[j] still holds\nthe value from the row above, and dp[j-1] already holds the value to\nthe left.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6"
+          ],
+          "cells": [
+            [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              1,
+              3,
+              6,
+              10,
+              15,
+              21,
+              28
+            ]
+          ],
+          "highlight": [
+            [
+              2,
+              6
+            ]
+          ]
+        },
+        "caption": "A 3 x 7 grid. Each cell is the sum of the one above and the one to its left; the edges are all 1. The answer is 28 — and the diagonals are the binomial coefficients, which is why the closed form C(m+n-2, m-1) works."
+      },
+      "pitfalls": [
+        "Initialising the whole table to 0 and then relying on the recurrence. The first row and column have no predecessor on one side, so they must be seeded to 1 explicitly.",
+        "In JavaScript, building the table with `Array(m).fill(new Array(n))` or `fill([])`, which makes every row the *same* array object. Use `Array.from({length: m}, () => new Array(n).fill(0))`.",
+        "Confusing m and n — one is the number of rows and the other of columns, and a square test grid will not catch the mix-up.",
+        "Returning `dp[m][n]` on a table sized m x n, which indexes out of range.",
+        "For the closed form, computing the factorials separately and overflowing. Multiply and divide alternately instead."
+      ],
+      "edgeCases": [
+        "a 1 x 1 grid -> 1 path, the trivial empty path",
+        "a single row or single column -> 1",
+        "a 2 x 2 grid -> 2",
+        "a 3 x 7 grid -> 28",
+        "large dimensions, where the count exceeds 32-bit range"
+      ],
+      "followUps": [
+        {
+          "q": "What if some cells were blocked?",
+          "a": "Set `dp[i][j] = 0` for an obstacle — there are no paths through it — and let the recurrence handle the rest. The only subtlety is the base row and column: once an obstacle appears along an edge, every cell after it on that edge is also 0. That is Unique Paths II."
+        },
+        {
+          "q": "Is there a formula?",
+          "a": "Yes. Any path makes exactly m-1 downward and n-1 rightward moves in some order, so the count is the number of ways to choose which moves are downward: C(m+n-2, m-1). O(min(m,n)) with careful multiplication, and it is why the DP table's diagonals are Pascal's triangle."
+        },
+        {
+          "q": "What if diagonal moves were allowed?",
+          "a": "Add `dp[i-1][j-1]` to the sum, giving the Delannoy numbers. The structure is unchanged; only the set of predecessors grows — a good check that you derived the recurrence from the movement rules rather than memorised it."
+        },
+        {
+          "q": "Count paths with a minimum or maximum cost instead.",
+          "a": "Change the combining operation from a sum to a min or max and add the cell's own cost. That is Minimum Path Sum — identical table, different aggregation, which is the general lesson of this category."
+        }
+      ],
+      "related": [
+        "longest-common-subsequence",
+        "climbing-stairs",
+        "longest-increasing-path-in-a-matrix"
+      ],
+      "core": true
     },
     {
       "id": "1143",
@@ -57,25 +187,151 @@
         "leetcode": "https://leetcode.com/problems/longest-common-subsequence/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Ua0GhsJSlWM"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Two-Sequence DP",
+      "patternTriggers": [
+        "**Two sequences** compared, where elements may be skipped in either — that is a subsequence, so sliding windows do not apply.",
+        "The state is naturally a position in each string, which is what makes the table 2-D.",
+        "The words *common subsequence*, *align*, *longest shared*."
+      ],
       "keyInsight": "If chars match: dp[i][j] = 1 + dp[i-1][j-1]. If not: dp[i][j] = max(dp[i-1][j], dp[i][j-1]).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate every subsequence of the first string and check which also appear in the second.",
+        "time": "O(2^m * n)",
+        "space": "O(m)",
+        "whyItFails": "Exponentially many subsequences. The key realisation is that the answer for prefixes `a[:i]` and `b[:j]` depends only on i and j — not on how those prefixes were traversed — so there are only m x n distinct subproblems."
+      },
+      "approach": [
+        "Define the state: `dp[i][j]` is the length of the longest common subsequence of the first i characters of A and the first j of B.",
+        "Base cases: `dp[0][j] = 0` and `dp[i][0] = 0`, since an empty sequence shares nothing.",
+        "If `A[i-1] == B[j-1]`, those characters can be paired, so `dp[i][j] = dp[i-1][j-1] + 1`.",
+        "Pairing them is always safe — there is never a reason to decline a free match, which is why no max is needed in this branch.",
+        "If they differ, one of them must be dropped: `dp[i][j] = max(dp[i-1][j], dp[i][j-1])`.",
+        "Fill row by row and return `dp[m][n]`.",
+        "Size the table (m+1) x (n+1) and index 1-based, so the base cases live in row 0 and column 0 and the character is `A[i-1]`."
+      ],
       "code": {
         "python": "def longestCommonSubsequence(text1, text2):\n    m, n = len(text1), len(text2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(m - 1, -1, -1):\n        for j in range(n - 1, -1, -1):\n            if text1[i] == text2[j]:\n                dp[i][j] = 1 + dp[i+1][j+1]\n            else:\n                dp[i][j] = max(dp[i+1][j], dp[i][j+1])\n    return dp[0][0]",
         "cpp": "class Solution {\npublic:\n    int longestCommonSubsequence(string text1, string text2) {\n        int m = text1.size(), n = text2.size();\n        vector<int> dp(n + 1, 0);\n        for (int i = 1; i <= m; i++) {\n            int prev = 0;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                dp[j] = text1[i-1] == text2[j-1] ? prev + 1 : max(dp[j], dp[j-1]);\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n};",
         "java": "class Solution {\n    public int longestCommonSubsequence(String text1, String text2) {\n        int m = text1.length(), n = text2.length();\n        int[] dp = new int[n + 1];\n        for (int i = 1; i <= m; i++) {\n            int prev = 0;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                dp[j] = text1.charAt(i-1) == text2.charAt(j-1) ? prev + 1 : Math.max(dp[j], dp[j-1]);\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n}",
         "js": "var longestCommonSubsequence = function(text1, text2) {\n    const m = text1.length, n = text2.length;\n    const dp = new Array(n + 1).fill(0);\n    for (let i = 1; i <= m; i++) {\n        let prev = 0;\n        for (let j = 1; j <= n; j++) {\n            const tmp = dp[j];\n            dp[j] = text1[i-1] === text2[j-1] ? prev + 1 : Math.max(dp[j], dp[j-1]);\n            prev = tmp;\n        }\n    }\n    return dp[n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(min(m, n))",
+        "note": "Every cell is computed once with constant work. Only the previous row is read, so two rows suffice — and iterating so the inner loop runs over the shorter string makes it O(min(m, n)). Reconstructing the actual subsequence needs the full table, so the space optimisation costs you that."
+      },
+      "dryRun": "a = \"abcde\",  b = \"ace\"\ndp[i][j] = LCS length of the first i of a against the first j of b.\n\n          \"\"   a   c   e\n     \"\"    0   0   0   0\n      a    0   1   1   1\n      b    0   1   1   1\n      c    0   1   2   2\n      d    0   1   2   2\n      e    0   1   2   3\n\n  answer = dp[5][3] = 3,  the subsequence \"ace\"\n\nThree cells did the work, each a diagonal step on a match:\n\n  dp[1][1]: a == a  ->  dp[0][0] + 1 = 1\n  dp[3][2]: c == c  ->  dp[2][1] + 1 = 2\n  dp[5][3]: e == e  ->  dp[4][2] + 1 = 3\n\nEverywhere else the characters differ, so the cell inherits the better\nof its upper and left neighbours — meaning \"drop a character from one\nstring or the other and keep the best\".\n\nOn a match there is no max, only the diagonal step. Pairing two equal\ncharacters is never a mistake: declining a free match can only lose\nlength, so there is nothing to choose between.\n\nTo recover the subsequence itself, walk back from dp[5][3]: on a match\nstep diagonally and record the character, otherwise move toward the\nlarger neighbour. That yields \"ace\" — but it needs the full table,\nwhich is what the two-row space optimisation gives up.\n\nNote the row label is the character at index i-1. With a 1-based table\nrow 3 is 'c', the third character — getting this off by one shifts\nevery comparison.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "\"\"",
+            "a",
+            "b",
+            "c",
+            "d",
+            "e"
+          ],
+          "colLabels": [
+            "\"\"",
+            "a",
+            "c",
+            "e"
+          ],
+          "cells": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              1,
+              2,
+              2
+            ],
+            [
+              0,
+              1,
+              2,
+              2
+            ],
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "highlight": [
+            [
+              1,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              5,
+              3
+            ]
+          ]
+        },
+        "caption": "A = \"abcde\", B = \"ace\". The highlighted diagonal steps are the three matches — a, c, e — each adding 1 to the cell diagonally above-left. The answer is dp[5][3] = 3."
+      },
+      "pitfalls": [
+        "Indexing the strings with `A[i]` instead of `A[i-1]`. With a 1-based table the character for row i is at index i-1, and getting this wrong shifts the whole comparison.",
+        "Taking a max in the matching branch as well. When the characters match, pairing them is always optimal, and adding a max there is both unnecessary and a sign the recurrence is not understood.",
+        "Confusing subsequence with substring. A substring must be contiguous, which is a different and easier problem solved by a different recurrence.",
+        "Returning `dp[m-1][n-1]` on a 1-based table, which answers for one character fewer in each string.",
+        "Optimising to two rows and then trying to reconstruct the subsequence, which needs the whole table."
+      ],
+      "edgeCases": [
+        "either string empty -> 0",
+        "identical strings -> the full length",
+        "no common characters -> 0",
+        "one string a subsequence of the other -> the shorter length",
+        "repeated characters, e.g. \"aaa\" and \"aa\" -> 2",
+        "a single character in common"
+      ],
+      "followUps": [
+        {
+          "q": "Return the subsequence itself, not just its length.",
+          "a": "Walk backwards from `dp[m][n]`: if the characters match, that character is in the answer and you move diagonally; otherwise move toward whichever neighbour holds the larger value. O(m + n) to trace, but it needs the full table — which is the trade against the two-row space optimisation."
+        },
+        {
+          "q": "What is the Longest Common Substring, and how does the recurrence change?",
+          "a": "Contiguity means a mismatch resets rather than propagates: `dp[i][j] = dp[i-1][j-1] + 1` on a match and **0** otherwise, with the answer being the maximum anywhere in the table rather than the last cell. That is the \"ending exactly here\" state shape again."
+        },
+        {
+          "q": "How does this relate to Edit Distance?",
+          "a": "Closely. For strings with only insertions and deletions allowed, the minimum edits is `m + n - 2 * LCS`. Edit Distance adds substitution as a third operation, which is why its recurrence has three predecessors instead of two."
+        },
+        {
+          "q": "Can it be done faster than O(m*n)?",
+          "a": "Not in general — there is a conditional lower bound tying it to the Strong Exponential Time Hypothesis. For special cases there are better bounds: the Hunt-Szymanski algorithm is fast when the number of matching pairs is small, which is the common situation in diff tools."
+        }
+      ],
+      "related": [
+        "edit-distance",
+        "distinct-subsequences",
+        "longest-increasing-subsequence"
+      ],
+      "core": true
     },
     {
       "id": "309",
@@ -92,25 +348,80 @@
         "leetcode": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=I7j0F7AHpb8"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "State Machine DP",
+      "patternTriggers": [
+        "You are in one of a few **modes** at each step, and the transitions between them are constrained.",
+        "The second dimension of the state is not an index but a situation — holding, sold, resting.",
+        "A rule like a cooldown couples consecutive decisions, so a single running value cannot capture the state."
+      ],
       "keyInsight": "State machine: hold, sold, rest. hold = max(hold, rest-price). sold = hold+price. rest = max(rest, sold).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse over every day with a flag for whether you hold stock, branching on buy, sell or do nothing.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "The branches reconverge — the best profit from day i onwards depends only on the day and your current mode, not on the sequence of trades that got you there. With three modes and N days there are only 3N states, which is what collapses the exponential tree."
+      },
+      "approach": [
+        "Identify the modes. **Hold**: you own stock. **Sold**: you sold today, so tomorrow is a forced cooldown. **Rest**: you own nothing and are free to buy.",
+        "Write each transition. You can hold by continuing to hold, or by buying today from rest: `hold = max(hold, rest - price)`.",
+        "You can be in sold only by selling today the stock you held: `sold = hold + price`.",
+        "You can rest by continuing to rest, or by having been in sold yesterday — the cooldown day: `rest = max(rest, soldYesterday)`.",
+        "Initialise hold to negative infinity (impossible before any purchase), and sold and rest to 0.",
+        "Update all three from the **previous** day's values, so snapshot anything you overwrite.",
+        "The answer is `max(sold, rest)` — you should not finish holding stock."
+      ],
       "code": {
         "python": "def maxProfit(prices):\n    sold, hold, rest = 0, float('-inf'), 0\n    for p in prices:\n        prev_sold = sold\n        sold = hold + p\n        hold = max(hold, rest - p)\n        rest = max(rest, prev_sold)\n    return max(sold, rest)",
         "cpp": "class Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        int sold = 0, held = INT_MIN, rest = 0;\n        for (int p : prices) {\n            int prevSold = sold;\n            sold = held + p;\n            held = max(held, rest - p);\n            rest = max(rest, prevSold);\n        }\n        return max(sold, rest);\n    }\n};",
         "java": "class Solution {\n    public int maxProfit(int[] prices) {\n        int sold = 0, held = Integer.MIN_VALUE, rest = 0;\n        for (int p : prices) {\n            int prevSold = sold;\n            sold = held + p;\n            held = Math.max(held, rest - p);\n            rest = Math.max(rest, prevSold);\n        }\n        return Math.max(sold, rest);\n    }\n}",
         "js": "var maxProfit = function(prices) {\n    let sold = 0, held = -Infinity, rest = 0;\n    for (const p of prices) {\n        const prevSold = sold;\n        sold = held + p;\n        held = Math.max(held, rest - p);\n        rest = Math.max(rest, prevSold);\n    }\n    return Math.max(sold, rest);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass over the prices with three variables. The state space is only three modes per day, so the \"2-D\" table is N x 3 and collapses immediately. Being able to see the cooldown as an extra *mode* rather than an extra index is what keeps this linear."
+      },
+      "dryRun": "prices = [1, 2, 3, 0, 2].   Three modes, updated together each day.\n\n   day  price     hold     sold     rest\n     -      -     -inf        0        0\n     0      1       -1     -inf        0\n     1      2       -1        1        0\n     2      3       -1        2        1\n     3      0        1       -1        2\n     4      2        1        3        2\n\n  answer = max(sold, rest) = max(3, 2) = 3\n\nThe optimal plan: buy at 1, sell at 2 (profit 1), cool down through\nday 2, buy at 0, sell at 2 (profit 2) — total 3.\n\nRead the transitions off the table.\n\n  Day 0: hold = max(-inf, rest - 1) = -1. You bought. sold = -inf,\n         because you cannot have sold anything yet.\n  Day 3: hold = max(-1, rest - 0) = max(-1, 2 - 0) = 2?  No — it is 1,\n         because rest on day 2 was 1, not 2. Every update reads the\n         PREVIOUS day's values, which is why they must be snapshotted.\n  Day 3: rest = max(rest, soldYesterday) = max(1, 2) = 2. This is the\n         cooldown day: you sold on day 2 and are now resting.\n  Day 4: sold = hold + price = 1 + 2 = 3.\n\nThat day-3 line is the whole reason the three updates cannot be written\nsequentially in place. Compute all three from the previous row, or\nsnapshot `sold` before overwriting it.\n\nThe answer excludes `hold`: finishing while still holding stock is not\na realised profit. And hold starts at negative infinity rather than 0,\nbecause owning stock before buying any is impossible — initialise it\nto 0 and the answer inflates by the first price.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Updating the three variables in sequence so that one uses today's already-updated value. Snapshot the previous `sold` before overwriting it, or compute all three into temporaries first.",
+        "Initialising hold to 0, which implies owning stock for free and inflates the profit by the first price.",
+        "Returning `max(hold, sold, rest)`. Ending while holding stock is not a realised profit.",
+        "Modelling the cooldown as \"skip a day\" in a loop, which tangles the indices. Making it a mode keeps every transition local.",
+        "Forgetting that resting is allowed indefinitely, so `rest` needs the `max` against its own previous value."
+      ],
+      "edgeCases": [
+        "a single day -> 0, no trade is possible",
+        "strictly decreasing prices -> 0",
+        "strictly increasing prices, where the cooldown genuinely costs you profit",
+        "two days -> the gain if positive, else 0",
+        "all prices equal -> 0",
+        "[1, 2, 3, 0, 2] -> 3, by buy, sell, cooldown, buy, sell"
+      ],
+      "followUps": [
+        {
+          "q": "What about a transaction fee instead of a cooldown?",
+          "a": "Only two modes are needed, holding and free, with the fee subtracted on sale: `free = max(free, hold + price - fee)`. The cooldown is what forces a third mode, and noticing that is the point of comparing the variants."
+        },
+        {
+          "q": "At most k transactions?",
+          "a": "Now the transaction count is a genuine second dimension: `dp[day][k][holding]`, which is O(N * k) states. Once k exceeds N/2 it stops binding and the problem becomes the unlimited-transactions version, which is just summing every positive consecutive difference."
+        },
+        {
+          "q": "How do you derive a state machine from a problem statement?",
+          "a": "List the situations you can be in, then for each one ask which situations can lead into it and at what cost. Each answer becomes one term in a max. Drawing the three nodes and their arrows on paper before writing code is what makes these problems mechanical."
+        },
+        {
+          "q": "What if the cooldown were k days rather than 1?",
+          "a": "Either add k-1 cooling modes, or keep `rest` as a max over `sold` from k days ago, which needs a small rolling buffer. The mode count growing with k is the sign that a sliding-window maximum would tidy it up."
+        }
+      ],
+      "related": [
+        "best-time-to-buy-and-sell-stock",
+        "house-robber",
+        "maximum-subarray"
+      ],
+      "core": true
     },
     {
       "id": "518",
@@ -127,25 +438,80 @@
         "leetcode": "https://leetcode.com/problems/coin-change-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=Mjy4hd2xgrs"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Unbounded Knapsack (Count)",
+      "patternTriggers": [
+        "**Count the combinations** that reach a target, with items reusable without limit.",
+        "Order does not matter — 1+2 and 2+1 are the same combination, which is precisely what the loop order controls.",
+        "The words *how many ways*, *number of combinations*, *using any number of each*."
+      ],
       "keyInsight": "Count combinations (not permutations). Iterate coins in outer loop. dp[a] += dp[a - coin].",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse over every sequence of coins summing to the amount, then deduplicate the sequences that are permutations of each other.",
+        "time": "exponential",
+        "space": "O(amount)",
+        "whyItFails": "It generates permutations and then has to collapse them, which is both slow and fiddly. Fixing an order on the coins — by putting the coin loop outside — means each combination is generated exactly once, so no deduplication is ever needed."
+      },
+      "approach": [
+        "Define the state: `dp[a]` is the number of combinations that make amount a.",
+        "Base case: `dp[0] = 1`. There is exactly one way to make zero — use nothing — and this is what every other count is built from.",
+        "Put the **coins in the outer loop** and the amounts in the inner loop.",
+        "For each coin, iterate amounts **upward** from the coin's value, adding `dp[a - coin]` to `dp[a]`.",
+        "Upward iteration permits unlimited reuse of the current coin, which is what makes this unbounded rather than 0/1.",
+        "The coin-outer order is what counts combinations rather than permutations: by the time you move to the next coin, every combination using only earlier coins is final.",
+        "Return `dp[amount]`."
+      ],
       "code": {
         "python": "def change(amount, coins):\n    dp = [0] * (amount + 1)\n    dp[0] = 1\n    for coin in coins:\n        for a in range(coin, amount + 1):\n            dp[a] += dp[a - coin]\n    return dp[amount]",
         "cpp": "class Solution {\npublic:\n    int change(int amount, vector<int>& coins) {\n        vector<int> dp(amount + 1, 0);\n        dp[0] = 1;\n        for (int c : coins)\n            for (int i = c; i <= amount; i++) dp[i] += dp[i - c];\n        return dp[amount];\n    }\n};",
         "java": "class Solution {\n    public int change(int amount, int[] coins) {\n        int[] dp = new int[amount + 1];\n        dp[0] = 1;\n        for (int c : coins)\n            for (int i = c; i <= amount; i++) dp[i] += dp[i - c];\n        return dp[amount];\n    }\n}",
         "js": "var change = function(amount, coins) {\n    const dp = new Array(amount + 1).fill(0);\n    dp[0] = 1;\n    for (const c of coins)\n        for (let i = c; i <= amount; i++) dp[i] += dp[i - c];\n    return dp[amount];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(amount * number of coins)",
+        "space": "O(amount)",
+        "note": "Every (coin, amount) pair is visited once. Although conceptually a 2-D table indexed by coin and amount, the coin dimension is consumed in place — which is exactly why the loop order matters, since the in-place update is what encodes \"only coins considered so far\"."
+      },
+      "dryRun": "coins = [1, 2, 5], amount = 5.   dp[a] = number of COMBINATIONS.\nCoins in the OUTER loop, amounts ascending in the inner.\n\n           0   1   2   3   4   5\n  start    1   0   0   0   0   0\n     +1    1   1   1   1   1   1\n     +2    1   1   2   2   3   3\n     +5    1   1   2   2   3   4\n\n  answer = 4     the combinations 5, 2+2+1, 2+1+1+1, 1+1+1+1+1\n\nRead the rows as \"using only the coins so far\".\n\n  after +1:  exactly one way to make each amount, all ones\n  after +2:  dp[4] = 3, namely 1x4, 2+1+1, 2+2\n  after +5:  only dp[5] changes, gaining the single coin 5\n\nNow the same table with the loops swapped — amounts outer, coins inner:\n\n  that answers 9, not 4\n\nThose 9 count PERMUTATIONS: 1+2+2, 2+1+2 and 2+2+1 are tallied\nseparately. With coins outer, by the time you move on to the next coin\nevery combination using only earlier coins is already final, so each\nmultiset is built in exactly one canonical order and counted once.\nWith amounts outer, every coin is available at every amount, so the\nsame multiset is reached by every ordering of its elements.\n\nOne swapped loop, two different questions, same table size. This is\nthe single most important thing to be able to explain about knapsack\ncounting.\n\nAlso note dp[0] = 1 — one way to make nothing, by taking nothing. Every\nother entry is built from it, so setting it to 0 zeroes the table.\n\nAnd the inner loop runs UPWARD, which permits reusing the current coin\nany number of times. Downward would allow each coin at most once.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Swapping the loops. Amounts outer and coins inner counts **permutations**, so [1,2] and [2,1] are both tallied and the answer is too large. This is the defining subtlety of the problem — the same table, the same size, two different questions.",
+        "Iterating amounts downward, which forbids reusing a coin and solves the 0/1 version instead.",
+        "Setting `dp[0] = 0`, which makes every count zero.",
+        "Expecting the counts to fit in a 32-bit integer. They grow quickly, so use a 64-bit type if the constraints allow large amounts.",
+        "Confusing this with Coin Change, which minimises the coin count and — unlike this problem — gives the same answer under either loop order."
+      ],
+      "edgeCases": [
+        "amount 0 -> 1, the empty combination",
+        "no coins and a positive amount -> 0",
+        "no combination reaching the amount, e.g. coins [2] and amount 3 -> 0",
+        "a coin equal to the amount -> contributes 1",
+        "coins [1,2,5] amount 5 -> 4: 5, 2+2+1, 2+1+1+1, 1x5",
+        "duplicate coin values, which would double-count and should be deduplicated first"
+      ],
+      "followUps": [
+        {
+          "q": "Explain precisely why the loop order changes the answer.",
+          "a": "With coins outer, `dp[a]` after processing coins c1..ck counts combinations drawn only from those coins — so each multiset is built in one canonical order and counted once. With amounts outer, every coin is available at every amount, so the same multiset is reached by every ordering of its elements and counted once per ordering. Combinations versus permutations, decided by one swap."
+        },
+        {
+          "q": "What if each coin could be used at most once?",
+          "a": "Iterate the amounts **downward** inside the coin loop, so `dp[a - coin]` still refers to the state before this coin was considered. That is 0/1 knapsack — the same shape as Partition Equal Subset Sum."
+        },
+        {
+          "q": "Count permutations instead of combinations.",
+          "a": "Put the amounts in the outer loop. That is Combination Sum IV, which despite its name counts ordered sequences — a naming trap worth knowing."
+        },
+        {
+          "q": "Why does Coin Change not care about loop order?",
+          "a": "Because a minimum is order-insensitive: `min` over the same set of candidates gives the same result however you reach them. Counting is not — each path contributes, so the number of paths matters. That distinction is the real lesson of the two problems side by side."
+        }
+      ],
+      "related": [
+        "coin-change",
+        "partition-equal-subset-sum",
+        "target-sum"
+      ],
+      "core": true
     },
     {
       "id": "494",
@@ -161,25 +527,82 @@
         "leetcode": "https://leetcode.com/problems/target-sum/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=g0npyaQtAQM"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Subset Sum (Reduction)",
+      "patternTriggers": [
+        "Assign one of a few signs or labels to every element and count the assignments reaching a target.",
+        "The problem looks like it needs a 2-D table over (index, running sum) and turns out to be a 1-D subset count after an algebraic step.",
+        "The words *add + or -*, *how many ways to assign*, *expression equals target*."
+      ],
+      "keyInsight": "The reduction is the whole problem. Assigning + or - to every number splits them into a positive set P and a negative set N. Then `sum(P) - sum(N) = target` and `sum(P) + sum(N) = total`, so adding the two gives `sum(P) = (target + total) / 2`. Counting signed assignments therefore becomes **counting subsets with a fixed sum** — plain 0/1 knapsack. If `(target + total)` is odd or negative, no assignment exists and the answer is 0 before any DP runs.",
+      "bruteForce": {
+        "idea": "Recurse over every element, branching on + and -, and count the leaves that hit the target.",
+        "time": "O(2^N)",
+        "space": "O(N)",
+        "whyItFails": "Correct but exponential. Memoising on (index, running sum) already fixes it, giving O(N * sum) states — and the algebraic reduction goes further, turning it into a single 1-D subset-sum count with a smaller constant and much simpler code."
+      },
+      "approach": [
+        "Compute the total of all numbers.",
+        "Derive the target subset sum: `P = (target + total) / 2`.",
+        "Reject immediately if `target + total` is odd, or if the absolute value of the target exceeds the total — no assignment can work.",
+        "Now count subsets summing to exactly P, which is 0/1 knapsack.",
+        "Initialise `dp[0] = 1` and all other entries to 0.",
+        "For each number, iterate the sums **downward** from P, adding `dp[j - num]` to `dp[j]`.",
+        "Downward iteration ensures each number is used at most once.",
+        "Return `dp[P]`."
+      ],
       "code": {
         "python": "def findTargetSumWays(nums, target):\n    dp = defaultdict(int)\n    dp[0] = 1\n    for num in nums:\n        new_dp = defaultdict(int)\n        for s, count in dp.items():\n            new_dp[s + num] += count\n            new_dp[s - num] += count\n        dp = new_dp\n    return dp[target]",
         "cpp": "class Solution {\npublic:\n    int findTargetSumWays(vector<int>& nums, int target) {\n        int sum = accumulate(nums.begin(), nums.end(), 0);\n        if ((sum + target) % 2 || abs(target) > sum) return 0;\n        int t = (sum + target) / 2;\n        vector<int> dp(t + 1, 0);\n        dp[0] = 1;\n        for (int n : nums)\n            for (int j = t; j >= n; j--) dp[j] += dp[j - n];\n        return dp[t];\n    }\n};",
         "java": "class Solution {\n    public int findTargetSumWays(int[] nums, int target) {\n        int sum = Arrays.stream(nums).sum();\n        if ((sum + target) % 2 != 0 || Math.abs(target) > sum) return 0;\n        int t = (sum + target) / 2;\n        int[] dp = new int[t + 1];\n        dp[0] = 1;\n        for (int n : nums)\n            for (int j = t; j >= n; j--) dp[j] += dp[j - n];\n        return dp[t];\n    }\n}",
         "js": "var findTargetSumWays = function(nums, target) {\n    const sum = nums.reduce((a, b) => a + b, 0);\n    if ((sum + target) % 2 || Math.abs(target) > sum) return 0;\n    const t = (sum + target) / 2;\n    const dp = new Array(t + 1).fill(0);\n    dp[0] = 1;\n    for (const n of nums)\n        for (let j = t; j >= n; j--) dp[j] += dp[j - n];\n    return dp[t];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N * (target + total) / 2)",
+        "space": "O((target + total) / 2)",
+        "note": "N numbers times the derived subset target. This is pseudo-polynomial, like all subset-sum DP — linear in the numeric value of the sum rather than the input size. The reduction also shrinks the table compared with the direct (index, running sum) memoisation, which would need to span negative sums too."
+      },
+      "dryRun": "nums = [1, 1, 1, 1, 1], target = 3.\n\nThe reduction first. Let P be the numbers given +, N those given -.\n\n    P - N = target = 3\n    P + N = total  = 5\n    adding:  2P = 8,  so  P = 4\n\nSo the question becomes: how many subsets sum to exactly 4? That is\n0/1 subset-sum counting.\n\n             0   1   2   3   4\n    start    1   0   0   0   0\n       +1    1   1   0   0   0\n       +1    1   2   1   0   0\n       +1    1   3   3   1   0\n       +1    1   4   6   4   1\n       +1    1   5  10  10   5\n\n  answer = dp[4] = 5\n\nThose are the C(5,4) = 5 ways to choose which four of the five ones get\na plus sign; the remaining one gets a minus. Check: 1+1+1+1-1 = 3.\n\nThe table is Pascal's triangle, which makes sense — counting subsets of\na given size from identical items is exactly a binomial coefficient.\n\nThe sums are iterated DOWNWARD, so dp[j - num] always refers to the\nstate before this number was considered and each number is used at most\nonce. Upward would let one number be reused.\n\n\nThe rejections, which must come before any DP:\n\n  nums = [1], target = 2:   target + total = 3, which is ODD\n                            -> no integer P exists, answer 0\n\n\nAnd the zero case, which the reduction handles for free:\n\n  nums = [1, 0], target = 1, total = 1, so P = 1\n\n             0   1\n    start    1   0\n       +1    1   1\n       +0    2   2\n\n    answer = 2\n\nThe 0 doubles every entry, because `dp[j] += dp[j - 0]` is `dp[j] +=\ndp[j]`. That is correct: +0 and -0 are two distinct sign assignments\nproducing the same sum, so each zero genuinely doubles the count.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Skipping the parity check. If `target + total` is odd there is no integer subset sum, and dividing anyway produces a wrong table size and a wrong answer.",
+        "Forgetting that the target can be negative, or larger in absolute value than the total — both mean 0 ways.",
+        "Iterating the sums upward, which reuses numbers and counts invalid assignments.",
+        "Handling zeros carelessly. A zero can be assigned + or - with the same effect, so it doubles the count — the subset-sum formulation handles this correctly without special cases, but a hand-rolled recursion often does not.",
+        "Memoising the direct recursion on the running sum without offsetting for negative values, which indexes out of range."
+      ],
+      "edgeCases": [
+        "target larger than the total -> 0",
+        "target + total odd -> 0",
+        "zeros in the input, which double the count each",
+        "a single number equal to the target -> 1",
+        "a single number with target 0 -> 0 unless that number is 0",
+        "[1,1,1,1,1] with target 3 -> 5",
+        "target 0, where the count can be large"
+      ],
+      "followUps": [
+        {
+          "q": "Derive the reduction out loud.",
+          "a": "Let P be the numbers given +, and N those given -. Then P - N = target and P + N = total. Adding: 2P = target + total, so P = (target + total)/2. Every valid assignment corresponds to exactly one subset summing to P, and vice versa — so the counts are equal. Being able to produce that in three lines is what the question is testing."
+        },
+        {
+          "q": "What if you solved it without the reduction?",
+          "a": "Memoise on (index, running sum), offsetting the sum by the total so the index is non-negative. O(N * total) states and perfectly acceptable — just a larger table and more care with bounds. Worth mentioning as the solution you would reach for if the algebra did not occur to you."
+        },
+        {
+          "q": "Why do zeros double the count?",
+          "a": "A zero contributes nothing either way, so each zero independently doubles the number of distinct sign assignments producing the same sum. The subset-sum DP captures this automatically, because a zero makes `dp[j] += dp[j]` for every j — exactly a doubling."
+        },
+        {
+          "q": "Could the same reduction apply elsewhere?",
+          "a": "Yes, whenever you partition a set and know both the difference and the total. Last Stone Weight II uses it to minimise the difference rather than count exact matches, and Partition Equal Subset Sum is the special case where the target difference is 0."
+        }
+      ],
+      "related": [
+        "partition-equal-subset-sum",
+        "coin-change-ii",
+        "coin-change"
+      ],
+      "core": true
     },
     {
       "id": "97",
@@ -196,25 +619,80 @@
         "leetcode": "https://leetcode.com/problems/interleaving-string/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=3Rw3nDVAMSs"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Two-Sequence DP",
+      "patternTriggers": [
+        "Two sequences merged while preserving each one's internal order — an interleaving or shuffle.",
+        "A greedy choice is tempting at every step and demonstrably wrong when both candidates match.",
+        "The state is a pair of consumption counts, and the third sequence's position falls out as their sum."
+      ],
+      "keyInsight": "At each position of the result, the next character must come from either s1 or s2 — and if it matches both, you cannot greedily pick one, because the wrong choice can strand the rest. So the state is **how many characters have been consumed from each string**, `dp[i][j]`, and from there `s3` is determined: its length is always `i + j`. That single observation is what turns an apparently three-string problem into an ordinary two-dimensional table.",
+      "bruteForce": {
+        "idea": "Recurse: at each step take the next character from s1 if it matches, or from s2 if it matches, and try both branches.",
+        "time": "O(2^(m+n))",
+        "space": "O(m+n)",
+        "whyItFails": "Both branches frequently reconverge on the same (i, j) pair, so subproblems repeat exponentially. Since the position in s3 is always i + j, the state is fully described by i and j — only (m+1) x (n+1) distinct subproblems exist."
+      },
+      "approach": [
+        "Reject immediately if `len(s1) + len(s2) != len(s3)` — no interleaving can have the wrong length.",
+        "Define the state: `dp[i][j]` is true when the first i characters of s1 and the first j of s2 can interleave to form the first i+j characters of s3.",
+        "Base case: `dp[0][0] = true`.",
+        "The first row and column handle one string being unused: `dp[0][j]` is true only while s2's prefix matches s3's, and likewise for `dp[i][0]`.",
+        "Recurrence: `dp[i][j]` is true if either `dp[i-1][j]` is true and `s1[i-1] == s3[i+j-1]`, or `dp[i][j-1]` is true and `s2[j-1] == s3[i+j-1]`.",
+        "Fill row by row and return `dp[m][n]`.",
+        "Only the previous row is read, so two rows — or one, updated carefully — suffice."
+      ],
       "code": {
         "python": "def isInterleave(s1, s2, s3):\n    if len(s1) + len(s2) != len(s3): return False\n    dp = [[False]*(len(s2)+1) for _ in range(len(s1)+1)]\n    dp[0][0] = True\n    for i in range(len(s1)+1):\n        for j in range(len(s2)+1):\n            if i > 0 and s1[i-1] == s3[i+j-1]:\n                dp[i][j] |= dp[i-1][j]\n            if j > 0 and s2[j-1] == s3[i+j-1]:\n                dp[i][j] |= dp[i][j-1]\n    return dp[-1][-1]",
         "cpp": "class Solution {\npublic:\n    bool isInterleave(string s1, string s2, string s3) {\n        int m = s1.size(), n = s2.size();\n        if (m + n != s3.size()) return false;\n        vector<bool> dp(n + 1, false);\n        for (int i = 0; i <= m; i++)\n            for (int j = 0; j <= n; j++) {\n                if (i == 0 && j == 0) dp[j] = true;\n                else if (i == 0) dp[j] = dp[j-1] && s2[j-1] == s3[j-1];\n                else if (j == 0) dp[j] = dp[j] && s1[i-1] == s3[i-1];\n                else dp[j] = (dp[j] && s1[i-1] == s3[i+j-1]) || (dp[j-1] && s2[j-1] == s3[i+j-1]);\n            }\n        return dp[n];\n    }\n};",
         "java": "class Solution {\n    public boolean isInterleave(String s1, String s2, String s3) {\n        int m = s1.length(), n = s2.length();\n        if (m + n != s3.length()) return false;\n        boolean[] dp = new boolean[n + 1];\n        for (int i = 0; i <= m; i++)\n            for (int j = 0; j <= n; j++) {\n                if (i == 0 && j == 0) dp[j] = true;\n                else if (i == 0) dp[j] = dp[j-1] && s2.charAt(j-1) == s3.charAt(j-1);\n                else if (j == 0) dp[j] = dp[j] && s1.charAt(i-1) == s3.charAt(i-1);\n                else dp[j] = (dp[j] && s1.charAt(i-1) == s3.charAt(i+j-1)) || (dp[j-1] && s2.charAt(j-1) == s3.charAt(i+j-1));\n            }\n        return dp[n];\n    }\n}",
         "js": "var isInterleave = function(s1, s2, s3) {\n    const m = s1.length, n = s2.length;\n    if (m + n !== s3.length) return false;\n    const dp = new Array(n + 1).fill(false);\n    for (let i = 0; i <= m; i++)\n        for (let j = 0; j <= n; j++) {\n            if (i === 0 && j === 0) dp[j] = true;\n            else if (i === 0) dp[j] = dp[j-1] && s2[j-1] === s3[j-1];\n            else if (j === 0) dp[j] = dp[j] && s1[i-1] === s3[i-1];\n            else dp[j] = (dp[j] && s1[i-1] === s3[i+j-1]) || (dp[j-1] && s2[j-1] === s3[i+j-1]);\n        }\n    return dp[n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(n)",
+        "note": "Every (i, j) pair is evaluated once with constant work. Two rows suffice, and a single row works if updated left to right since `dp[j-1]` is already the current row and `dp[j]` is still the previous. The length check at the top makes the rest of the logic safe."
+      },
+      "dryRun": "s1 = \"a\", s2 = \"ab\", s3 = \"aab\"   — the smallest case that breaks greedy\n\n       \"\"   a   b\n  \"\"    T   T   .\n   a    T   T   T\n\n  answer = dp[1][2] = True\n\nThe interleaving is s1's 'a', then s2's \"ab\": a | ab = \"aab\".\n\nNow see why greedy fails. The first character of s3 is 'a', which\nmatches the head of BOTH inputs. The table keeps both options alive —\ndp[1][0] and dp[0][1] are both true — and only one of them extends to\na full match. A greedy that commits to one has a 50% chance of being\nstranded, with no way to know in advance.\n\n\nThe full example:  s1 = \"aabcc\", s2 = \"dbbca\", s3 = \"aadbbcbcac\"\n\n        \"\"   d   b   b   c   a\n   \"\"    T   .   .   .   .   .\n    a    T   .   .   .   .   .\n    a    T   T   T   T   T   .\n    b    .   T   T   .   T   .\n    c    .   .   T   T   T   T\n    c    .   .   .   T   .   T\n\n  answer = True\n\nFollow the true cells as a path from top-left to bottom-right: each\nstep right consumes a character of s2, each step down consumes one of\ns1, and the character consumed must equal s3 at position i+j-1.\n\n\nThe negative case:  s3 = \"aadbbbaccc\"\n\n        \"\"   d   b   b   c   a\n   \"\"    T   .   .   .   .   .\n    a    T   .   .   .   .   .\n    a    T   T   T   T   .   .\n    b    .   T   T   T   .   .\n    c    .   .   .   .   .   .\n    c    .   .   .   .   .   .\n\n  answer = False — the frontier dies at row 'c' and never reaches the\n  bottom-right corner.\n\nThe position in s3 is always i + j, which is what makes a two-index\nstate sufficient for a three-string problem. With a 1-based table the\nnext character to match sits at index i + j - 1.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting the length check. Without it the indexing into s3 can run past its end.",
+        "Indexing s3 with `i + j` instead of `i + j - 1`. With a 1-based table, having consumed i and j characters means the next one to match is at index i+j-1.",
+        "Greedily taking from whichever string matches. When both match you must explore both, which is exactly why this needs DP — s1=\"a\", s2=\"ab\", s3=\"aab\" is the smallest input that breaks greedy.",
+        "Mishandling the base row and column. They must stop being true at the first mismatch and stay false afterwards, not re-evaluate independently.",
+        "Mixing up which string s1 and s2 are, which a symmetric test case will not reveal."
+      ],
+      "edgeCases": [
+        "all three strings empty -> true",
+        "one input empty, so the answer is whether the other equals s3",
+        "lengths not summing correctly -> false",
+        "s1 and s2 sharing characters, where greedy fails",
+        "s1=\"a\", s2=\"ab\", s3=\"aab\" -> true, but only by taking from s1 first",
+        "s1=\"abc\", s2=\"def\", s3=\"adbecf\" -> true"
+      ],
+      "followUps": [
+        {
+          "q": "Show why greedy fails.",
+          "a": "Take s1=\"a\", s2=\"ab\", s3=\"aab\". The first character of s3 is 'a', which matches the head of both inputs. Taking from s2 leaves s1=\"a\" and s2=\"b\" against \"ab\" — which works out — but taking from s1 leaves s2=\"ab\" against \"ab\", which also works. Construct it slightly differently and one branch dies; since you cannot tell in advance, both must be explored."
+        },
+        {
+          "q": "Can the space be reduced to one row?",
+          "a": "Yes. Iterating j left to right, `dp[j-1]` already holds the current row's value and `dp[j]` still holds the previous row's — exactly the two predecessors needed. One array of size n+1, which is the same trick as in Unique Paths."
+        },
+        {
+          "q": "What if there were three input strings to interleave?",
+          "a": "The state gains a dimension: `dp[i][j][k]`, O(mnp) time and space. The pattern generalises, but the cost multiplies — which is why problems of this shape are usually posed with two."
+        },
+        {
+          "q": "How is this different from Longest Common Subsequence?",
+          "a": "LCS lets you skip characters in both strings and maximises matches. Here every character of both strings must be used, in order, and the question is feasibility rather than a maximum. Same table geometry, different recurrence and different base cases — a good illustration that the shape does not determine the content."
+        }
+      ],
+      "related": [
+        "longest-common-subsequence",
+        "edit-distance",
+        "distinct-subsequences"
+      ],
+      "core": true
     },
     {
       "id": "329",
@@ -232,25 +710,80 @@
         "leetcode": "https://leetcode.com/problems/longest-increasing-path-in-a-matrix/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=wCc_nd-GiDw"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Memoised DFS on a Grid",
+      "patternTriggers": [
+        "A grid where each cell's answer depends on its neighbours, with **no fixed fill order** available.",
+        "The dependency is monotonic — strictly increasing or decreasing — which makes the implicit graph acyclic.",
+        "The words *longest increasing path*, *longest path in a matrix*."
+      ],
+      "keyInsight": "This is DP, but the dependencies do not run in any fixed row or column order — a cell's answer depends on its *larger* neighbours, which can lie in any direction. So you cannot fill a table in a predetermined sweep; you recurse and memoise instead. The saving grace is that strictly increasing paths can never revisit a cell, so the implicit graph is a **DAG** and no visited set is needed — the monotonic condition is what guarantees termination.",
+      "bruteForce": {
+        "idea": "DFS from every cell, exploring every strictly increasing path, and keep the longest found.",
+        "time": "exponential",
+        "space": "O(m*n)",
+        "whyItFails": "Paths through the same cell are re-explored once per route that reaches it. But the longest increasing path *starting at* a cell is a property of that cell alone — it does not depend on how you arrived — so it should be computed once. That is the memo, and it collapses the exponential search to one value per cell."
+      },
+      "approach": [
+        "Define the state: `memo[i][j]` is the length of the longest strictly increasing path starting at cell (i, j).",
+        "Recurse: from a cell, try all four neighbours whose value is strictly greater.",
+        "The answer for the cell is 1 plus the maximum over those neighbours, or 1 if none qualify.",
+        "Cache the result before returning, and return the cached value on any later visit.",
+        "No visited set is needed: strict increase means a path can never return to a cell, so there are no cycles to guard against.",
+        "Run the recursion from every cell and take the overall maximum.",
+        "Each cell is computed once, and each of its four edges examined once."
+      ],
       "code": {
         "python": "def longestIncreasingPath(matrix):\n    rows, cols = len(matrix), len(matrix[0])\n    cache = {}\n    def dfs(r, c):\n        if (r,c) in cache: return cache[(r,c)]\n        result = 1\n        for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<rows and 0<=nc<cols and matrix[nr][nc]>matrix[r][c]:\n                result = max(result, 1 + dfs(nr, nc))\n        cache[(r,c)] = result\n        return result\n    return max(dfs(r,c) for r in range(rows) for c in range(cols))",
         "cpp": "class Solution {\npublic:\n    int longestIncreasingPath(vector<vector<int>>& matrix) {\n        int m = matrix.size(), n = matrix[0].size(), result = 0;\n        vector<vector<int>> memo(m, vector<int>(n, 0));\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                result = max(result, dfs(matrix, memo, i, j));\n        return result;\n    }\n    int dfs(vector<vector<int>>& mat, vector<vector<int>>& memo, int i, int j) {\n        if (memo[i][j]) return memo[i][j];\n        int dirs[] = {0,1,0,-1,0};\n        memo[i][j] = 1;\n        for (int d = 0; d < 4; d++) {\n            int ni = i+dirs[d], nj = j+dirs[d+1];\n            if (ni>=0 && nj>=0 && ni<mat.size() && nj<mat[0].size() && mat[ni][nj] > mat[i][j])\n                memo[i][j] = max(memo[i][j], 1 + dfs(mat, memo, ni, nj));\n        }\n        return memo[i][j];\n    }\n};",
         "java": "class Solution {\n    int[][] memo;\n    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n    public int longestIncreasingPath(int[][] matrix) {\n        int m = matrix.length, n = matrix[0].length, result = 0;\n        memo = new int[m][n];\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                result = Math.max(result, dfs(matrix, i, j));\n        return result;\n    }\n    int dfs(int[][] mat, int i, int j) {\n        if (memo[i][j] != 0) return memo[i][j];\n        memo[i][j] = 1;\n        for (int[] d : dirs) {\n            int ni = i+d[0], nj = j+d[1];\n            if (ni>=0 && nj>=0 && ni<mat.length && nj<mat[0].length && mat[ni][nj] > mat[i][j])\n                memo[i][j] = Math.max(memo[i][j], 1 + dfs(mat, ni, nj));\n        }\n        return memo[i][j];\n    }\n}",
         "js": "var longestIncreasingPath = function(matrix) {\n    const m = matrix.length, n = matrix[0].length;\n    const memo = Array.from({length: m}, () => new Array(n).fill(0));\n    const dfs = (i, j) => {\n        if (memo[i][j]) return memo[i][j];\n        memo[i][j] = 1;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<m && nj<n && matrix[ni][nj] > matrix[i][j])\n                memo[i][j] = Math.max(memo[i][j], 1 + dfs(ni, nj));\n        }\n        return memo[i][j];\n    };\n    let result = 0;\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) result = Math.max(result, dfs(i, j));\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(m * n)",
+        "note": "Each cell's value is computed once and then read from the cache, and each cell has at most four edges — so the total work is linear in the number of cells. Space is the memo plus a recursion depth that can reach O(m*n) on a monotone snake, which is the practical reason to consider the topological-order alternative."
+      },
+      "dryRun": "grid:\n         c0  c1  c2\n    r0    9   9   4\n    r1    6   6   8\n    r2    2   1   1\n\nmemo[r][c] = length of the longest strictly increasing path STARTING\nat that cell:\n\n         c0  c1  c2\n    r0    1   1   2\n    r1    2   2   1\n    r2    3   4   2\n\n  answer = max over the memo = 4\n\nThe best start is (2,1), and the path is\n\n    (2,1)=1  ->  (2,0)=2  ->  (1,0)=6  ->  (0,0)=9        length 4\n\nWork through two cells to see the recursion.\n\n  (0,2), value 4.  Two neighbours exceed it:\n       (0,1) = 9  ->  1 + memo[0][1] = 1 + 1 = 2\n       (1,2) = 8  ->  1 + memo[1][2] = 1 + 1 = 2\n     memo[0][2] = 2\n\n  (0,0), value 9.  No neighbour exceeds 9, so memo = 1.\n     The cell itself is a path of length 1 — returning 0 for a cell\n     with no larger neighbours is a common slip.\n\n  (2,1), value 1.  Two neighbours exceed it:\n       (1,1) = 6  ->  1 + memo[1][1] = 1 + 2 = 3\n       (2,0) = 2  ->  1 + memo[2][0] = 1 + 3 = 4     <- the winner\n     memo[2][1] = 4\n\nNote that the winning step goes to the SMALLER of the two eligible\nneighbours. Taking 6 looks more promising locally and leads to a\nshorter path, which is why no greedy rule works here.\n\nThere is no fixed order in which this table could be filled. (2,1)\ndepends on (2,0), which depends on (1,0), which depends on (0,0) — the\ndependencies run in every direction, so you recurse and cache rather\nthan sweep.\n\nAnd no visited set is needed. Because the path must STRICTLY increase,\nit can never return to a cell it has left, so the implicit graph is a\nDAG. Adding a visited set would actually break the memo: a cell marked\nvisited on one path would be skipped instead of read from the cache.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Adding a visited set as you would for an ordinary grid DFS. It is unnecessary here, and worse, it makes the memo wrong — a cell marked visited on one path would be skipped rather than read from the cache.",
+        "Using `>=` instead of `>` for the neighbour comparison, which permits equal values, creates cycles, and makes the recursion non-terminating.",
+        "Caching before the recursion completes, which stores a partial value.",
+        "Returning 0 for a cell with no larger neighbours. The cell itself is a path of length 1.",
+        "Recursing on a large grid without considering stack depth — a 200x200 monotone grid can nest 40,000 frames deep."
+      ],
+      "edgeCases": [
+        "a 1x1 grid -> 1",
+        "all values equal -> 1, since the increase must be strict",
+        "a strictly increasing snake through the whole grid -> m*n",
+        "a single row or column",
+        "an empty grid -> 0",
+        "several paths of equal maximum length"
+      ],
+      "followUps": [
+        {
+          "q": "Why is no visited set needed?",
+          "a": "Because the path must strictly increase, so values along it are distinct and always growing — it can never return to a cell it has left. The implicit graph, with an edge from each cell to each strictly larger neighbour, is therefore a DAG. The monotonic condition is doing the work that a visited set normally does."
+        },
+        {
+          "q": "Could you solve it without recursion?",
+          "a": "Yes. Sort all cells by value descending and process them in that order, so every larger neighbour is already finalised when a cell is handled. O(mn log(mn)) for the sort but no recursion and no stack risk. Equivalently, peel the DAG by out-degree, which is topological sorting."
+        },
+        {
+          "q": "What if equal values could be stepped between?",
+          "a": "The graph gains cycles, so longest-path becomes NP-hard in general. You would first contract each equal-valued connected region into a single node, producing a DAG again, then run longest-path on that. A good demonstration of how much the strictness assumption buys."
+        },
+        {
+          "q": "Why is this in 2-D DP rather than with the graph problems?",
+          "a": "It is genuinely both. The state is two-dimensional and the solution is memoisation, which is DP; the structure is a DAG and the technique is longest-path, which is graphs. The useful takeaway is that memoised DFS is what you reach for when a DP has no natural fill order."
+        }
+      ],
+      "related": [
+        "number-of-islands",
+        "unique-paths",
+        "course-schedule-ii"
+      ],
+      "core": true
     },
     {
       "id": "115",
@@ -267,25 +800,81 @@
         "leetcode": "https://leetcode.com/problems/distinct-subsequences/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=-RDzMJ33nx8"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Two-Sequence DP (Count)",
+      "patternTriggers": [
+        "**Count** the subsequences of one string equal to another — a counting version of the two-sequence table.",
+        "The recurrence sums over disjoint choices rather than maximising, which is the signature of a counting DP.",
+        "The words *how many distinct subsequences*, *number of ways to form*."
+      ],
+      "keyInsight": "Counting rather than optimising, so the recurrence **adds** instead of taking a max. When `s[i-1] == t[j-1]` you have two independent choices: use this character of s to match t's, contributing `dp[i-1][j-1]`, or skip it and match t's character later, contributing `dp[i-1][j]`. Both are valid and they count disjoint sets of subsequences, so they sum. When the characters differ, only skipping is available. The base case `dp[i][0] = 1` is the one people get wrong — there is exactly one way to form the empty target: take nothing.",
+      "bruteForce": {
+        "idea": "Generate every subsequence of s and count those equal to t.",
+        "time": "O(2^m)",
+        "space": "O(m)",
+        "whyItFails": "Exponentially many subsequences, almost all irrelevant. The number of ways to form `t[:j]` from `s[:i]` depends only on i and j, so there are m x n subproblems — and most of the table is reachable with small values, making the count tractable even though the enumeration is not."
+      },
+      "approach": [
+        "Define the state: `dp[i][j]` is the number of distinct subsequences of the first i characters of s that equal the first j characters of t.",
+        "Base case `dp[i][0] = 1` for every i: there is exactly one way to form the empty target, by selecting nothing.",
+        "Base case `dp[0][j] = 0` for j > 0: a non-empty target cannot be formed from an empty source.",
+        "If `s[i-1] == t[j-1]`, sum the two independent options: match them, giving `dp[i-1][j-1]`, or skip this character of s, giving `dp[i-1][j]`.",
+        "If they differ, only the skip is possible: `dp[i][j] = dp[i-1][j]`.",
+        "Fill row by row and return `dp[m][n]`.",
+        "Only the previous row is read, so two rows suffice — or one row iterated **right to left**, so that `dp[j-1]` still holds the previous row's value."
+      ],
       "code": {
         "python": "def numDistinct(s, t):\n    dp = [[0]*(len(t)+1) for _ in range(len(s)+1)]\n    for i in range(len(s)+1): dp[i][0] = 1\n    for i in range(1, len(s)+1):\n        for j in range(1, len(t)+1):\n            dp[i][j] = dp[i-1][j]\n            if s[i-1] == t[j-1]:\n                dp[i][j] += dp[i-1][j-1]\n    return dp[-1][-1]",
         "cpp": "class Solution {\npublic:\n    int numDistinct(string s, string t) {\n        int m = s.size(), n = t.size();\n        vector<unsigned long> dp(n + 1, 0);\n        dp[0] = 1;\n        for (int i = 1; i <= m; i++)\n            for (int j = n; j >= 1; j--)\n                if (s[i-1] == t[j-1]) dp[j] += dp[j-1];\n        return dp[n];\n    }\n};",
         "java": "class Solution {\n    public int numDistinct(String s, String t) {\n        int m = s.length(), n = t.length();\n        long[] dp = new long[n + 1];\n        dp[0] = 1;\n        for (int i = 1; i <= m; i++)\n            for (int j = n; j >= 1; j--)\n                if (s.charAt(i-1) == t.charAt(j-1)) dp[j] += dp[j-1];\n        return (int)dp[n];\n    }\n}",
         "js": "var numDistinct = function(s, t) {\n    const m = s.length, n = t.length;\n    const dp = new Array(n + 1).fill(0);\n    dp[0] = 1;\n    for (let i = 1; i <= m; i++)\n        for (let j = n; j >= 1; j--)\n            if (s[i-1] === t[j-1]) dp[j] += dp[j-1];\n    return dp[n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(n)",
+        "note": "Every cell computed once with constant work. The single-row optimisation requires iterating j downward, because the recurrence reads `dp[j-1]` from the *previous* row — going upward would read the already-updated current row. Counts can be astronomically large, so the problem usually guarantees the answer fits in a 32-bit integer; otherwise use 64-bit."
+      },
+      "dryRun": "s = \"rabbbit\", t = \"rabbit\".\ndp[i][j] = number of subsequences of s[:i] equal to t[:j].\n\n          \"\"   r   a   b   b   i   t\n     \"\"    1   0   0   0   0   0   0\n      r    1   1   0   0   0   0   0\n      a    1   1   1   0   0   0   0\n      b    1   1   1   1   0   0   0\n      b    1   1   1   2   1   0   0\n      b    1   1   1   3   3   0   0\n      i    1   1   1   3   3   3   0\n      t    1   1   1   3   3   3   3\n\n  answer = 3\n\nThe three come from choosing which two of the three b's in s match the\ntwo b's in t: indices (2,3), (2,4) and (3,4).\n\nThe whole j = 0 column is 1. There is exactly one way to form the empty\ntarget — select nothing — and every other count is built from it. Set\nit to 0 and the entire table collapses to zeros.\n\nWatch dp[5][3] = 3 (row 'b', the third b). The characters match, so:\n\n    dp[5][3] = dp[4][2] + dp[4][3]\n             =    1     +    2       = 3\n                  ^          ^\n              use this b   skip it and\n              to match     match t's b with\n              t's b        a later s character\n\nBoth branches must be counted. Dropping the skip branch would find only\none answer, because it would force each target character to be matched\nby the earliest available source character.\n\nAnd the operation is a SUM, not a max — this is a counting problem, and\nthe two branches enumerate disjoint sets of index choices.\n\n\nA second example:  s = \"bbb\", t = \"bb\"\n\n          \"\"   b   b\n     \"\"    1   0   0\n      b    1   1   0\n      b    1   2   1\n      b    1   3   3\n\n  answer = 3, the index pairs (0,1), (0,2), (1,2)\n\nIdentical substrings at different positions count separately, which is\nexactly why the skip branch matters.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Setting `dp[i][0] = 0`, which zeroes the whole table. The empty target has one match, not none.",
+        "Taking a max instead of a sum in the matching branch. This is a counting problem, and the two options count disjoint sets of subsequences.",
+        "Forgetting the skip option when the characters match. With s=\"bbb\" and t=\"bb\" the answer is 3, which requires counting every choice of which two b's to use.",
+        "Iterating a single row left to right, which reads the current row's `dp[j-1]` instead of the previous row's. Go right to left.",
+        "Overflowing a 32-bit accumulator on inputs where the count is large."
+      ],
+      "edgeCases": [
+        "t empty -> 1",
+        "s empty and t non-empty -> 0",
+        "s shorter than t -> 0",
+        "s equal to t -> 1",
+        "s=\"bbb\", t=\"bb\" -> 3",
+        "s=\"rabbbit\", t=\"rabbit\" -> 3",
+        "no character of t appearing in s -> 0"
+      ],
+      "followUps": [
+        {
+          "q": "Why must the skip branch be counted even when the characters match?",
+          "a": "Because the same target character may be matchable by a later source character, producing a genuinely different subsequence — different index sets count separately. With s=\"bbb\" and t=\"bb\" the three answers use index pairs (0,1), (0,2) and (1,2). Dropping the skip branch would find only one."
+        },
+        {
+          "q": "Why does the single-row version iterate backwards?",
+          "a": "The recurrence reads `dp[i-1][j-1]`, which is the previous row's left neighbour. Iterating j downward means `dp[j-1]` has not yet been overwritten this pass, so it still holds the previous row's value. Iterating upward would read the current row and silently permit reusing a character."
+        },
+        {
+          "q": "How does this compare with Longest Common Subsequence?",
+          "a": "Same table geometry, different operation: LCS maximises and so takes a max over the skip branches; this counts and so sums them. LCS's base cases are 0; this one's are 1 along the j=0 column. Seeing that the shape is shared but the content is not is the point of doing them together."
+        },
+        {
+          "q": "Could you use a greedy or two-pointer approach?",
+          "a": "Only for the easier question of whether t is *a* subsequence of s at all, which a single two-pointer pass answers in O(m). Counting *how many* distinct ways requires exploring every choice, which is why the DP is necessary."
+        }
+      ],
+      "related": [
+        "longest-common-subsequence",
+        "interleaving-string",
+        "edit-distance"
+      ],
+      "core": true
     },
     {
       "id": "72",
@@ -302,25 +891,145 @@
         "leetcode": "https://leetcode.com/problems/edit-distance/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=XYi2-LPVdmI"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Two-Sequence DP",
+      "patternTriggers": [
+        "Transform one sequence into another with a fixed set of **unit-cost operations**.",
+        "The state is a position in each string, and each operation corresponds to one predecessor cell.",
+        "The words *edit distance*, *minimum operations*, *Levenshtein*, *spell correction*, *diff*."
+      ],
       "keyInsight": "dp[i][j] = min edits to convert word1[0:i] to word2[0:j]. If chars match, skip. Else min of insert, delete, replace + 1.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Recurse: if the characters match, advance both; otherwise try insert, delete and replace, and take the cheapest.",
+        "time": "O(3^(m+n))",
+        "space": "O(m+n)",
+        "whyItFails": "The three branches reconverge constantly — the cost of transforming `s[:i]` into `t[:j]` does not depend on the route taken there. Caching on (i, j) reduces the exponential tree to m x n states, which is the whole algorithm."
+      },
+      "approach": [
+        "Define the state: `dp[i][j]` is the minimum operations to turn the first i characters of s into the first j characters of t.",
+        "Base cases: `dp[i][0] = i`, because emptying a prefix means i deletions, and `dp[0][j] = j`, because building a prefix from nothing means j insertions.",
+        "If `s[i-1] == t[j-1]`, no operation is needed: `dp[i][j] = dp[i-1][j-1]`.",
+        "Otherwise take 1 plus the minimum of three predecessors.",
+        "`dp[i-1][j-1]` is a **replace** — consume both characters, paying once.",
+        "`dp[i-1][j]` is a **delete** — drop s's character and keep t's position.",
+        "`dp[i][j-1]` is an **insert** — add t's character and keep s's position.",
+        "Fill row by row and return `dp[m][n]`."
+      ],
       "code": {
         "python": "def minDistance(word1, word2):\n    m, n = len(word1), len(word2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = i\n    for j in range(n+1): dp[0][j] = j\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if word1[i-1] == word2[j-1]:\n                dp[i][j] = dp[i-1][j-1]\n            else:\n                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[m][n]",
         "cpp": "class Solution {\npublic:\n    int minDistance(string word1, string word2) {\n        int m = word1.size(), n = word2.size();\n        vector<int> dp(n + 1);\n        iota(dp.begin(), dp.end(), 0);\n        for (int i = 1; i <= m; i++) {\n            int prev = dp[0]; dp[0] = i;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                if (word1[i-1] == word2[j-1]) dp[j] = prev;\n                else dp[j] = 1 + min({dp[j], dp[j-1], prev});\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n};",
         "java": "class Solution {\n    public int minDistance(String word1, String word2) {\n        int m = word1.length(), n = word2.length();\n        int[] dp = new int[n + 1];\n        for (int j = 0; j <= n; j++) dp[j] = j;\n        for (int i = 1; i <= m; i++) {\n            int prev = dp[0]; dp[0] = i;\n            for (int j = 1; j <= n; j++) {\n                int tmp = dp[j];\n                if (word1.charAt(i-1) == word2.charAt(j-1)) dp[j] = prev;\n                else dp[j] = 1 + Math.min(dp[j], Math.min(dp[j-1], prev));\n                prev = tmp;\n            }\n        }\n        return dp[n];\n    }\n}",
         "js": "var minDistance = function(word1, word2) {\n    const m = word1.length, n = word2.length;\n    const dp = Array.from({length: n+1}, (_, i) => i);\n    for (let i = 1; i <= m; i++) {\n        let prev = dp[0]; dp[0] = i;\n        for (let j = 1; j <= n; j++) {\n            const tmp = dp[j];\n            if (word1[i-1] === word2[j-1]) dp[j] = prev;\n            else dp[j] = 1 + Math.min(dp[j], dp[j-1], prev);\n            prev = tmp;\n        }\n    }\n    return dp[n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(min(m, n))",
+        "note": "Each cell computed once from three neighbours. Only the previous row is needed, so two rows suffice, and iterating so the inner loop spans the shorter string gives O(min(m,n)). Recovering the actual edit script needs the full table, which is the trade for the optimisation."
+      },
+      "dryRun": "\"horse\" -> \"ros\"\ndp[i][j] = minimum operations to turn the first i of a into the first j of b.\n\n          \"\"   r   o   s\n     \"\"    0   1   2   3\n      h    1   1   2   3\n      o    2   2   1   2\n      r    3   2   2   2\n      s    4   3   3   2\n      e    5   4   4   3\n\n  answer = 3\n\nThe base row and column are the problem's boundary rules, not padding.\ndp[i][0] = i means \"delete all i characters\"; dp[0][j] = j means\n\"insert all j characters\". Initialise them to 0 and every distance\ncomes out far too small.\n\nThe three predecessors, read off dp[1][1] where 'h' != 'r':\n\n    dp[1][1] = 1 + min( dp[0][0],   dp[0][1],   dp[1][0] )\n             = 1 + min(    0,          1,          1     )  = 1\n                        replace     insert      delete\n\nAnd the free case, dp[2][2] where 'o' == 'o':\n\n    dp[2][2] = dp[1][1] = 1       no operation, inherit diagonally\n\nCharging 1 for a match is the most common error here; a match costs\nnothing.\n\nTracing back from dp[5][3] gives one optimal edit script:\n  horse -> rorse  (replace h with r)\n        -> rose   (delete r)\n        -> ros    (delete e)\n  three operations, matching the table.\n\n\nThe larger example confirms the method scales:\n\n  \"intention\" -> \"execution\"  gives dp[9][9] = 5\n\n  intention -> inention  (delete t)\n            -> enention  (replace i with e)\n            -> exention  (replace n with x)\n            -> exection  (replace n with c)\n            -> execution (insert u)\n\nFive operations. Note the diagonal of 5s running down the bottom-right\nof that table — the shared suffix \"tion\" contributes no cost, so the\nvalues stop growing once the strings align.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "\"\"",
+            "h",
+            "o",
+            "r",
+            "s",
+            "e"
+          ],
+          "colLabels": [
+            "\"\"",
+            "r",
+            "o",
+            "s"
+          ],
+          "cells": [
+            [
+              0,
+              1,
+              2,
+              3
+            ],
+            [
+              1,
+              1,
+              2,
+              3
+            ],
+            [
+              2,
+              2,
+              1,
+              2
+            ],
+            [
+              3,
+              2,
+              2,
+              2
+            ],
+            [
+              4,
+              3,
+              3,
+              2
+            ],
+            [
+              5,
+              4,
+              4,
+              3
+            ]
+          ],
+          "highlight": [
+            [
+              5,
+              3
+            ]
+          ]
+        },
+        "caption": "\"horse\" to \"ros\" costs 3. The base row and column are pure insertions and deletions. dp[2][2] = 1 because 'o' matches, inheriting dp[1][1] = 1 diagonally with no added cost."
+      },
+      "pitfalls": [
+        "Initialising the base row and column to 0. They encode deletions and insertions and must be i and j respectively — otherwise the table reports distances that are far too small.",
+        "Mixing up which neighbour is which operation. Diagonal is replace, up is delete, left is insert; getting these wrong still produces a plausible-looking table with wrong values.",
+        "Adding 1 in the matching branch. A match is free, and charging for it inflates every answer.",
+        "Indexing with `s[i]` rather than `s[i-1]` on a 1-based table.",
+        "Reducing to two rows and then attempting to reconstruct the edit script, which needs every row."
+      ],
+      "edgeCases": [
+        "both strings empty -> 0",
+        "one string empty -> the other's length",
+        "identical strings -> 0",
+        "no characters in common -> max(m, n)",
+        "\"horse\" to \"ros\" -> 3",
+        "\"intention\" to \"execution\" -> 5",
+        "strings differing by a single character -> 1"
+      ],
+      "followUps": [
+        {
+          "q": "Return the actual sequence of edits.",
+          "a": "Walk backwards from `dp[m][n]`, at each step choosing the predecessor that produced the value: diagonal with equal characters means \"keep\", diagonal otherwise means \"replace\", up means \"delete\", left means \"insert\". O(m + n) to trace, and it requires the full table — which is exactly what `diff` tools do."
+        },
+        {
+          "q": "What if the operations had different costs?",
+          "a": "Replace the three 1s with the respective costs. A notable special case: if replacement costs more than an insert plus a delete, the replace branch is never chosen and the problem reduces to the LCS-based formula `m + n - 2 * LCS`."
+        },
+        {
+          "q": "What if only one edit were allowed?",
+          "a": "No DP needed — compare lengths and scan once. If the lengths are equal, count mismatches and require at most one; if they differ by one, check whether the shorter is obtainable by deleting a single character from the longer. O(m + n). That is One Edit Distance, and recognising that the general machinery is overkill is part of the skill."
+        },
+        {
+          "q": "Can it be done in less than O(m*n) time?",
+          "a": "In general no, barring a breakthrough — there is a conditional lower bound based on the Strong Exponential Time Hypothesis. But when the distance d is small, the Ukkonen band algorithm runs in O(d * min(m,n)) by only computing cells near the diagonal, which is what makes real diff tools fast on nearly identical files."
+        }
+      ],
+      "related": [
+        "longest-common-subsequence",
+        "distinct-subsequences",
+        "interleaving-string"
+      ],
+      "core": true
     },
     {
       "id": "312",
@@ -337,25 +1046,80 @@
         "leetcode": "https://leetcode.com/problems/burst-balloons/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=VFskby7lUbw"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": "Think of last balloon to burst in range [l,r]. dp[l][r] = max coins from bursting all between l and r. For each k as last burst: nums[l]*nums[k]*nums[r] + dp[l][k] + dp[k][r].",
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Interval DP",
+      "patternTriggers": [
+        "An **interval** or subarray where you choose one element to handle, and the choice splits the rest into independent pieces.",
+        "Thinking forwards makes the subproblems interact, which is the signal to reverse the order of reasoning.",
+        "The words *burst*, *remove*, *merge*, where removing an element changes its neighbours' relationships."
+      ],
+      "keyInsight": "Thinking forwards is hopeless: bursting a balloon changes who its neighbours are, so the subproblems left behind are not independent. Reverse the question — for the interval `(i, j)`, ask which balloon is burst **last**. By the time it bursts, every other balloon inside has gone, so its neighbours are exactly the boundary balloons i and j, which are known and fixed. That makes the two sides genuinely independent subproblems, and the whole thing becomes a clean interval DP. Padding the array with 1s at both ends removes every boundary special case.",
+      "bruteForce": {
+        "idea": "Try every order in which to burst the balloons and keep the best total.",
+        "time": "O(N!)",
+        "space": "O(N)",
+        "whyItFails": "Factorially many orders. Worse, the obvious divide-and-conquer fix does not work: choosing which balloon to burst *first* leaves two sides that are not independent, because they become adjacent to each other once the middle is gone. Reversing to \"burst last\" is what restores independence."
+      },
+      "approach": [
+        "Pad the array with a 1 at each end, so every balloon has neighbours and no boundary cases are needed.",
+        "Define the state: `dp[i][j]` is the maximum coins obtainable by bursting all the balloons strictly between indices i and j.",
+        "Both i and j are boundaries that are **not** burst in this subproblem — the open interval is the key to the independence.",
+        "For each interval, try every k strictly between i and j as the **last** balloon burst in it.",
+        "When k is burst last, its neighbours are i and j by definition, so it yields `nums[i] * nums[k] * nums[j]`.",
+        "The two sides contribute `dp[i][k]` and `dp[k][j]`, which are now independent because each keeps its own untouched boundaries.",
+        "Fill by increasing interval length, so both sub-intervals are already solved, and return `dp[0][n+1]`."
+      ],
       "code": {
         "python": "def maxCoins(nums):\n    nums = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * n for _ in range(n)]\n    for length in range(2, n):\n        for l in range(n - length):\n            r = l + length\n            for k in range(l+1, r):\n                dp[l][r] = max(dp[l][r],\n                    nums[l]*nums[k]*nums[r] + dp[l][k] + dp[k][r])\n    return dp[0][n-1]",
         "cpp": "class Solution {\npublic:\n    int maxCoins(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> a = {1};\n        a.insert(a.end(), nums.begin(), nums.end());\n        a.push_back(1);\n        vector<vector<int>> dp(n + 2, vector<int>(n + 2, 0));\n        for (int len = 1; len <= n; len++)\n            for (int l = 1; l <= n - len + 1; l++) {\n                int r = l + len - 1;\n                for (int k = l; k <= r; k++)\n                    dp[l][r] = max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n            }\n        return dp[1][n];\n    }\n};",
         "java": "class Solution {\n    public int maxCoins(int[] nums) {\n        int n = nums.length;\n        int[] a = new int[n + 2];\n        a[0] = a[n + 1] = 1;\n        System.arraycopy(nums, 0, a, 1, n);\n        int[][] dp = new int[n + 2][n + 2];\n        for (int len = 1; len <= n; len++)\n            for (int l = 1; l <= n - len + 1; l++) {\n                int r = l + len - 1;\n                for (int k = l; k <= r; k++)\n                    dp[l][r] = Math.max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n            }\n        return dp[1][n];\n    }\n}",
         "js": "var maxCoins = function(nums) {\n    const n = nums.length;\n    const a = [1, ...nums, 1];\n    const dp = Array.from({length: n+2}, () => new Array(n+2).fill(0));\n    for (let len = 1; len <= n; len++)\n        for (let l = 1; l <= n - len + 1; l++) {\n            const r = l + len - 1;\n            for (let k = l; k <= r; k++)\n                dp[l][r] = Math.max(dp[l][r], dp[l][k-1] + a[l-1]*a[k]*a[r+1] + dp[k+1][r]);\n        }\n    return dp[1][n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^3)",
+        "space": "O(N^2)",
+        "note": "There are O(N^2) intervals and each tries O(N) split points. The table is O(N^2). The cubic cost is unavoidable with this formulation and is the standard bound for interval DP — matrix chain multiplication and optimal binary search tree construction have the same shape."
+      },
+      "dryRun": "nums = [3, 1, 5, 8],  padded with 1s:  [1, 3, 1, 5, 8, 1]\n                       indices:          0  1  2  3  4  5\n\ndp[i][j] = max coins from bursting everything STRICTLY between i and j.\nBoth i and j stay untouched — the interval is open at both ends.\n\n         j=0  j=1  j=2  j=3  j=4  j=5\n   i=0     0    0    3   30  159  167\n   i=1     0    0    0   15  135  159\n   i=2     0    0    0    0   40   48\n   i=3     0    0    0    0    0   40\n   i=4     0    0    0    0    0    0\n   i=5     0    0    0    0    0    0\n\n  answer = dp[0][5] = 167\n\nFilled by increasing interval LENGTH, because dp[i][j] depends on\nshorter intervals inside it. Sweeping by i or j would read cells that\nare not yet computed.\n\nWork one cell. dp[0][5] tries every k from 1 to 4 as the balloon burst\nLAST in the whole range. The winner is k = 4, the balloon of value 8:\n\n    dp[0][4] + dp[4][5] + pad[0] * pad[4] * pad[5]\n  =   159    +    0     +    1   *   8    *   1\n  =   167\n\nBecause 8 is burst last, everything else inside (0, 5) has already\ngone, so its neighbours at that moment are exactly the boundaries\npad[0] = 1 and pad[5] = 1. That is why it contributes 1 x 8 x 1 and\nnot 5 x 8 x 1.\n\nThis is the entire trick. Had you chosen which balloon to burst FIRST,\nthe two sides would become adjacent to each other once the middle was\ngone, so dp[i][k] and dp[k][j] would not be independent and the split\nwould be invalid. Bursting last keeps each side's boundaries intact.\n\nThe padding with 1 is deliberate: 1 is the multiplicative identity, so\na boundary balloon contributes nothing to the product while still being\na valid neighbour. Padding with 0 would zero every boundary burst.\n\nThe full optimal order, read out of the table, is 1, then 5, then 3,\nthen 8 — giving 3*1*5 + 3*5*8 + 1*3*8 + 1*8*1 = 15 + 120 + 24 + 8 = 167.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Choosing which balloon to burst **first** instead of last. The two sides then become adjacent to each other, so they are not independent and the recurrence is simply wrong — this is the entire difficulty of the problem.",
+        "Treating i and j as burst within the interval. They are untouched boundaries; the interval is open on both ends.",
+        "Filling the table by increasing i or j rather than by increasing **length**. The dependencies are shorter intervals, so length is the only safe order.",
+        "Forgetting the padding, which then requires special handling at both ends and is where most attempts break.",
+        "Multiplying by `nums[k-1]` and `nums[k+1]` — the immediate neighbours in the original array — rather than by the interval's boundaries i and j."
+      ],
+      "edgeCases": [
+        "a single balloon -> its value, since both padded neighbours are 1",
+        "two balloons",
+        "all values equal",
+        "a 1 inside the array, which is often best burst early",
+        "an empty array -> 0",
+        "[3, 1, 5, 8] -> 167"
+      ],
+      "followUps": [
+        {
+          "q": "Explain precisely why 'burst last' works and 'burst first' does not.",
+          "a": "If k is burst first, the balloons on its left and right become adjacent, so a later burst on the left can have a right-neighbour from the right side — the subproblems are coupled. If k is burst last, everything inside has already gone, so k's neighbours at that moment are exactly the fixed boundaries i and j, and neither side ever sees the other. Independence is what licenses the split."
+        },
+        {
+          "q": "What other problems have this shape?",
+          "a": "Matrix Chain Multiplication (choose the last multiplication), Optimal Binary Search Tree (choose the root), Minimum Cost to Merge Stones, and Remove Boxes. The common signature is an interval plus a choice that splits it, filled by increasing length, at O(N^3)."
+        },
+        {
+          "q": "Why pad with 1 rather than 0?",
+          "a": "Because the coins are a product, and 1 is the multiplicative identity — a boundary balloon of 1 contributes nothing to the product while still being a valid neighbour. Padding with 0 would zero out every burst touching a boundary."
+        },
+        {
+          "q": "Can it be done faster than O(N^3)?",
+          "a": "Not in general for this problem. Some interval DPs admit the Knuth-Yao speedup to O(N^2) when the cost function satisfies a quadrangle inequality, but Burst Balloons does not qualify. Knowing that the optimisation exists and that it does not apply here is the complete answer."
+        }
+      ],
+      "related": [
+        "coin-change",
+        "longest-palindromic-substring",
+        "edit-distance"
+      ],
+      "core": true
     },
     {
       "id": "10",
@@ -373,24 +1137,82 @@
         "leetcode": "https://leetcode.com/problems/regular-expression-matching/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=HAA8mgxlov8"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Two-Sequence DP with Wildcards",
+      "patternTriggers": [
+        "Pattern matching where one pattern element can consume a variable number of input characters.",
+        "A greedy or single-pass approach fails because a star's length cannot be decided locally.",
+        "The words *regular expression*, *wildcard*, *'*' matches zero or more*."
+      ],
+      "keyInsight": "The only hard part is `*`, because it matches a **variable** number of characters, so one pattern position no longer corresponds to one text position. Resolve it with two options at each cell: the star matches zero occurrences, so skip the whole `x*` pair and look at `dp[i][j-2]`; or it matches one more occurrence, so consume one text character and keep the pattern where it is, looking at `dp[i-1][j]`. Reading `x*` as a single two-character unit rather than two separate symbols is what makes the recurrence tractable.",
+      "bruteForce": {
+        "idea": "Recurse, trying every possible number of characters for each star.",
+        "time": "exponential",
+        "space": "O(m+n)",
+        "whyItFails": "Each star multiplies the branching by the remaining text length, and the branches reconverge on the same (i, j) pairs. Caching on (text position, pattern position) gives m x n states — the standard recursion-plus-memo route, which is the easiest way to arrive at this solution correctly."
+      },
+      "approach": [
+        "Define the state: `dp[i][j]` is true when the first i characters of the text match the first j characters of the pattern.",
+        "Base case `dp[0][0] = true`. For the first row, a pattern can match empty text only through stars: `dp[0][j]` is true when `p[j-1]` is `*` and `dp[0][j-2]` is true.",
+        "For a normal character or `.`, the match is positional: if `p[j-1]` is `.` or equals `s[i-1]`, then `dp[i][j] = dp[i-1][j-1]`.",
+        "For `*`, treat `p[j-2..j-1]` as one unit and take two options.",
+        "Zero occurrences: `dp[i][j-2]`, skipping the unit entirely.",
+        "One more occurrence: valid only if the preceding pattern character matches `s[i-1]`, giving `dp[i-1][j]` — the pattern position does not advance.",
+        "Combine the two with an OR, fill row by row, and return `dp[m][n]`."
+      ],
       "code": {
         "python": "def isMatch(s, p):\n    cache = {}\n    def dfs(i, j):\n        if (i,j) in cache: return cache[(i,j)]\n        if j == len(p): return i == len(s)\n        match = i < len(s) and (s[i]==p[j] or p[j]=='.')\n        if j+1 < len(p) and p[j+1] == '*':\n            cache[(i,j)] = dfs(i, j+2) or (match and dfs(i+1, j))\n        else:\n            cache[(i,j)] = match and dfs(i+1, j+1)\n        return cache[(i,j)]\n    return dfs(0, 0)",
         "cpp": "class Solution {\npublic:\n    bool isMatch(string s, string p) {\n        int m = s.size(), n = p.size();\n        vector<vector<bool>> dp(m+1, vector<bool>(n+1, false));\n        dp[0][0] = true;\n        for (int j = 2; j <= n; j++) if (p[j-1] == '*') dp[0][j] = dp[0][j-2];\n        for (int i = 1; i <= m; i++)\n            for (int j = 1; j <= n; j++) {\n                if (p[j-1] == '*') {\n                    dp[i][j] = dp[i][j-2] || ((p[j-2] == '.' || p[j-2] == s[i-1]) && dp[i-1][j]);\n                } else {\n                    dp[i][j] = dp[i-1][j-1] && (p[j-1] == '.' || p[j-1] == s[i-1]);\n                }\n            }\n        return dp[m][n];\n    }\n};",
         "java": "class Solution {\n    public boolean isMatch(String s, String p) {\n        int m = s.length(), n = p.length();\n        boolean[][] dp = new boolean[m+1][n+1];\n        dp[0][0] = true;\n        for (int j = 2; j <= n; j++) if (p.charAt(j-1) == '*') dp[0][j] = dp[0][j-2];\n        for (int i = 1; i <= m; i++)\n            for (int j = 1; j <= n; j++) {\n                if (p.charAt(j-1) == '*')\n                    dp[i][j] = dp[i][j-2] || ((p.charAt(j-2) == '.' || p.charAt(j-2) == s.charAt(i-1)) && dp[i-1][j]);\n                else\n                    dp[i][j] = dp[i-1][j-1] && (p.charAt(j-1) == '.' || p.charAt(j-1) == s.charAt(i-1));\n            }\n        return dp[m][n];\n    }\n}",
         "js": "var isMatch = function(s, p) {\n    const m = s.length, n = p.length;\n    const dp = Array.from({length: m+1}, () => new Array(n+1).fill(false));\n    dp[0][0] = true;\n    for (let j = 2; j <= n; j++) if (p[j-1] === '*') dp[0][j] = dp[0][j-2];\n    for (let i = 1; i <= m; i++)\n        for (let j = 1; j <= n; j++) {\n            if (p[j-1] === '*')\n                dp[i][j] = dp[i][j-2] || ((p[j-2] === '.' || p[j-2] === s[i-1]) && dp[i-1][j]);\n            else\n                dp[i][j] = dp[i-1][j-1] && (p[j-1] === '.' || p[j-1] === s[i-1]);\n        }\n    return dp[m][n];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(m * n)",
+        "space": "O(m * n)",
+        "note": "Every (text, pattern) position pair is evaluated once with constant work. The table can be reduced to two rows, but the star case reads `dp[i][j-2]` on the same row and `dp[i-1][j]` on the previous, so the reduction needs care — keeping the full table is usually the right call for a problem this fiddly."
+      },
+      "dryRun": "dp[i][j] = do the first i characters of s match the first j of p?\n\n  s = \"aa\", p = \"a\"   ->  False\n\n       \"\"   a\n  \"\"    T   .\n   a    .   T\n   a    .   .\n\n  The pattern runs out after one character; the second 'a' has nothing\n  to match it.\n\n\n  s = \"aa\", p = \"a*\"   ->  True\n\n       \"\"   a   *\n  \"\"    T   .   T\n   a    .   T   T\n   a    .   .   T\n\n  Two things to read here. The top row has dp[0][2] = T: the pattern\n  \"a*\" matches the EMPTY string, because the star may take zero\n  occurrences. That comes from dp[0][j] = dp[0][j-2], skipping the\n  whole two-character unit.\n\n  And dp[2][2] = T comes from the repeat branch: p[j-2] is 'a', which\n  matches s[1], so dp[2][2] inherits dp[1][2] — the text pointer\n  advances while the PATTERN POINTER STAYS PUT. That is how one star\n  absorbs many characters.\n\n\n  s = \"ab\", p = \".*\"   ->  True\n\n       \"\"   .   *\n  \"\"    T   .   T\n   a    .   T   T\n   b    .   .   T\n\n  \".*\" absorbs anything, one character per step down the last column.\n\n\n  s = \"mississippi\", p = \"mis*is*p*.\"   ->  False\n\n  Worth tracing by hand: \"mis*\" consumes \"mis\", \"is*\" consumes \"iss\",\n  \"p*\" takes zero p's, and the final \".\" matches one character — but\n  that leaves characters unconsumed, so no assignment of star lengths\n  works out.\n\n\nThe single idea behind all of it: read `x*` as ONE two-character unit\nwith two options at every cell.\n\n    zero occurrences      ->  dp[i][j-2]      skip the unit\n    one more occurrence   ->  dp[i-1][j]      only if p[j-2] matches\n                                              s[i-1]; j does NOT move\n\nTreating `*` as a standalone symbol and skipping only j-1 is the bug\nthat makes this problem feel impossible.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Treating `*` as a standalone symbol. It always belongs to the character before it, so the unit is two pattern positions wide and the skip is `j-2`, not `j-1`.",
+        "Getting the first row wrong. A pattern like `a*b*c*` must match empty text, which only works if the base row propagates through every star pair.",
+        "Checking the preceding character's match before confirming the text is non-empty, which indexes `s[-1]`.",
+        "Allowing the one-more-occurrence branch without checking that the preceding pattern character actually matches the current text character.",
+        "Confusing this with glob-style wildcards, where `*` matches any sequence on its own. That is Wildcard Matching, and it has a different recurrence."
+      ],
+      "edgeCases": [
+        "both empty -> true",
+        "empty text with pattern \"a*\" -> true",
+        "empty text with pattern \"a\" -> false",
+        "empty pattern with non-empty text -> false",
+        "s=\"aa\", p=\"a\" -> false",
+        "s=\"aa\", p=\"a*\" -> true",
+        "s=\"ab\", p=\".*\" -> true",
+        "s=\"mississippi\", p=\"mis*is*p*.\" -> false",
+        "a pattern that is all stars"
+      ],
+      "followUps": [
+        {
+          "q": "How does Wildcard Matching differ?",
+          "a": "There `*` matches any sequence by itself, with no preceding character, so the unit is one position wide: `dp[i][j] = dp[i][j-1] or dp[i-1][j]`. Simpler, and it also admits a greedy two-pointer solution with backtracking on the last star — which this problem does not, because a star's character constrains what it can absorb."
+        },
+        {
+          "q": "Would you write it top-down or bottom-up?",
+          "a": "Top-down with memoisation, and say why: the base cases for the first row are easy to get wrong in a table and fall out naturally from the recursion. Convert to a table afterwards if asked. Leading with the table and fumbling the star row is the common failure mode here."
+        },
+        {
+          "q": "How do real regex engines work?",
+          "a": "They compile the pattern to a nondeterministic finite automaton and simulate it, tracking a set of active states in O(m * n) — essentially this DP in a different vocabulary. Backtracking engines like PCRE are exponential on some patterns, which is the cause of real-world ReDoS vulnerabilities."
+        },
+        {
+          "q": "What about supporting `+` or `?`",
+          "a": "`x?` is `x*` capped at one occurrence, so drop the repeat branch. `x+` is `x` followed by `x*`, so require one match then fall into the star logic. Both reduce to the existing machinery, which is a good sign the two-character unit was the right abstraction."
+        }
+      ],
+      "related": [
+        "edit-distance",
+        "longest-common-subsequence",
+        "design-add-and-search-words-data-structure"
+      ],
       "core": false
     }
   ]
