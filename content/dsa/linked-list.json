@@ -4,18 +4,29 @@
   "icon": "🔗",
   "order": 6,
   "concept": {
-    "heading": "Core Patterns",
-    "body": "",
+    "heading": "Core Concepts",
+    "body": "A linked list gives you **O(1) insert and delete at a known position** and nothing else cheaply — no indexing, no backwards movement, no length without walking. Every technique here exists to work around one of those limitations.\n\nFour ideas cover almost all of it. **Fast and slow pointers** extract positional information (the middle, the nth from the end, whether a cycle exists) in one pass without knowing the length. **Three-pointer reversal** rewires direction in place. A **dummy head** removes the special case where the result's first node is not the input's first node. And a **hash map alongside the list** buys random access when the structure alone cannot.\n\nThe recurring trap is pointer order: once you overwrite `curr.next`, the rest of the list is unreachable unless you saved it first.",
     "bullets": [
-      "**Fast & Slow pointers:** Cycle detection, find middle",
-      "**Reverse:** prev/curr/next three-pointer technique",
-      "**Dummy head:** Simplifies edge cases when head might change",
-      "**Merge:** Compare heads, advance the smaller one"
+      "**Fast & slow pointers:** cycle detection, finding the middle, nth from the end — all in one pass, no length needed.",
+      "**Reverse:** the prev / curr / next three-pointer dance. Save next *before* rewiring.",
+      "**Dummy head:** when the head itself might change or be removed, a sentinel node deletes the edge case entirely.",
+      "**Merge:** compare the two heads, append the smaller, advance only that list.",
+      "**Draw it.** Three boxes and arrows on paper beats reasoning about pointers in your head, every time."
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# Dummy head: build a result without special-casing the first node.\ndummy = ListNode(0)\ntail = dummy\nwhile ...:\n    tail.next = chosen_node\n    tail = tail.next\nreturn dummy.next          # the real head, whatever it turned out to be\n\n# Three-pointer reversal, in place, O(1) space.\nprev, curr = None, head\nwhile curr:\n    nxt = curr.next        # SAVE first — the next line destroys it\n    curr.next = prev       # flip the arrow backwards\n    prev, curr = curr, nxt # shuffle both forward\nreturn prev                # prev is the new head\n\n# Fast and slow: middle, cycle detection, nth from end.\nslow = fast = head\nwhile fast and fast.next:  # BOTH checks, or you dereference None\n    slow = slow.next\n    fast = fast.next.next\n    if slow is fast:\n        ...                # a cycle exists\n# slow is now at the middle (the second middle for even length)",
+    "cpp": "// Dummy head: build a result without special-casing the first node.\nListNode dummy(0);\nListNode* tail = &dummy;\nwhile (...) {\n    tail->next = chosen;\n    tail = tail->next;\n}\nreturn dummy.next;         // the real head, whatever it turned out to be\n\n// Three-pointer reversal, in place, O(1) space.\nListNode *prev = nullptr, *curr = head;\nwhile (curr) {\n    ListNode* nxt = curr->next;   // SAVE first\n    curr->next = prev;            // flip the arrow backwards\n    prev = curr;\n    curr = nxt;\n}\nreturn prev;               // prev is the new head\n\n// Fast and slow: middle, cycle detection, nth from end.\nListNode *slow = head, *fast = head;\nwhile (fast && fast->next) {      // BOTH checks\n    slow = slow->next;\n    fast = fast->next->next;\n    if (slow == fast) { /* cycle */ }\n}",
+    "java": "// Dummy head: build a result without special-casing the first node.\nListNode dummy = new ListNode(0);\nListNode tail = dummy;\nwhile (...) {\n    tail.next = chosen;\n    tail = tail.next;\n}\nreturn dummy.next;         // the real head, whatever it turned out to be\n\n// Three-pointer reversal, in place, O(1) space.\nListNode prev = null, curr = head;\nwhile (curr != null) {\n    ListNode nxt = curr.next;     // SAVE first\n    curr.next = prev;             // flip the arrow backwards\n    prev = curr;\n    curr = nxt;\n}\nreturn prev;               // prev is the new head\n\n// Fast and slow: middle, cycle detection, nth from end.\nListNode slow = head, fast = head;\nwhile (fast != null && fast.next != null) {   // BOTH checks\n    slow = slow.next;\n    fast = fast.next.next;\n    if (slow == fast) { /* cycle */ }\n}",
+    "js": "// Dummy head: build a result without special-casing the first node.\nconst dummy = new ListNode(0);\nlet tail = dummy;\nwhile (...) {\n  tail.next = chosen;\n  tail = tail.next;\n}\nreturn dummy.next;         // the real head, whatever it turned out to be\n\n// Three-pointer reversal, in place, O(1) space.\nlet prev = null, curr = head;\nwhile (curr) {\n  const nxt = curr.next;   // SAVE first — the next line destroys it\n  curr.next = prev;        // flip the arrow backwards\n  prev = curr;\n  curr = nxt;\n}\nreturn prev;               // prev is the new head\n\n// Fast and slow: middle, cycle detection, nth from end.\nlet slow = head, fast = head;\nwhile (fast && fast.next) {   // BOTH checks, or you dereference null\n  slow = slow.next;\n  fast = fast.next.next;\n  if (slow === fast) { /* a cycle exists */ }\n}"
+  },
+  "recognitionTriggers": [
+    "You must rewire structure rather than move data — the problem is about **pointers**, and copying values into an array would be cheating or impossible.",
+    "O(1) extra space is required, which rules out dumping the list into an array.",
+    "You need a *position* (middle, nth from end, cycle entry) but cannot index. Two pointers at different speeds or with a fixed gap extract it in one pass.",
+    "The head itself might be removed or replaced — reach for a dummy node before writing any branches."
+  ],
   "problems": [
     {
       "id": "206",
@@ -33,10 +44,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=G0_I-ZF0S38"
       },
       "pattern": "Iterative Reverse",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Direction must be flipped in place, with O(1) extra space.",
+        "It appears as a *subroutine* far more often than as a question — reorder, palindrome check, k-group reversal and add-two-numbers variants all call it.",
+        "You need the previous node, which a singly linked list does not give you, so you must carry it yourself."
+      ],
       "keyInsight": "Three pointers: prev, curr, next. Save next, reverse curr's pointer, advance all three.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Walk the list pushing values into an array, then walk again writing them back in reverse order.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It reverses the *values* rather than the *structure*, which some callers will not accept, and it costs O(N) space. The three-pointer version rewires the arrows themselves in one pass with three variables."
+      },
+      "approach": [
+        "Hold three references: `prev` starting as null, `curr` starting at the head, and a temporary `next`.",
+        "While `curr` is not null, first save `curr.next` into `next` — the following step destroys it.",
+        "Point `curr.next` at `prev`, flipping that one arrow backwards.",
+        "Advance `prev` to `curr` and `curr` to `next`.",
+        "When `curr` falls off the end, `prev` is the last node visited and therefore the new head. Return it."
+      ],
       "code": {
         "python": "def reverseList(head):\n    prev, curr = None, head\n    while curr:\n        nxt = curr.next   # save\n        curr.next = prev  # reverse\n        prev = curr       # advance prev\n        curr = nxt        # advance curr\n    return prev",
         "cpp": "class Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        ListNode* prev = nullptr;\n        while (head) {\n            ListNode* next = head->next;\n            head->next = prev;\n            prev = head;\n            head = next;\n        }\n        return prev;\n    }\n};",
@@ -45,15 +71,70 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "One pass, three pointers, no allocation. The recursive version is also O(N) time but O(N) space for the call stack — which on a million-node list is a real stack overflow, not a theoretical one."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "list: 1 -> 2 -> 3 -> null\n\n  start:   prev = null    curr = 1\n\n  step 1   save nxt = 2\n           1.next -> null          reversed part: 1 -> null\n           prev = 1, curr = 2\n\n  step 2   save nxt = 3\n           2.next -> 1             reversed part: 2 -> 1 -> null\n           prev = 2, curr = 3\n\n  step 3   save nxt = null\n           3.next -> 2             reversed part: 3 -> 2 -> 1 -> null\n           prev = 3, curr = null\n\n  curr is null  ->  return prev = 3\n\n  result: 3 -> 2 -> 1 -> null\n\nThe save is not optional. At step 2, `2.next -> 1` overwrites the only\nreference to node 3. Without `nxt` the list ends there and you return\n2 -> 1 -> null, having silently lost a node.\n\nNote also why prev starts as null rather than head: the original head\nmust become the tail, and the tail's next is null. Initialising prev\nto null does that on the very first step with no special case.",
+      "diagram": {
+        "kind": "linkedList",
+        "props": {
+          "nodes": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "pointers": [
+            {
+              "at": 1,
+              "label": "prev",
+              "tone": "info"
+            },
+            {
+              "at": 2,
+              "label": "curr",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Mid-reversal. Nodes 1 and 2 already point backwards; curr is at 3 with its original next still intact. Saving curr.next before rewriting it is what keeps 4 reachable."
+      },
+      "pitfalls": [
+        "Rewriting `curr.next` before saving it. The remainder of the list becomes unreachable and the loop terminates early — the single most common mistake here.",
+        "Returning `head` instead of `prev`. The original head is now the *tail*, and its `next` is null, so you return a one-node list.",
+        "Forgetting that the original head must end up pointing at null. Starting `prev` as null handles this for free, which is why it is null and not the head.",
+        "Writing it recursively on a long list and overflowing the stack."
+      ],
+      "edgeCases": [
+        "empty list -> null",
+        "a single node -> itself, unchanged",
+        "two nodes, the smallest case where the rewiring is visible",
+        "a list with duplicate values, which must not be deduplicated"
+      ],
+      "followUps": [
+        {
+          "q": "Write it recursively.",
+          "a": "Recurse to the end, then on the way back set `head.next.next = head` and `head.next = null`, returning the new head unchanged up the stack. Elegant, but O(N) stack space — say that out loud, because it is the reason the iterative version is preferred."
+        },
+        {
+          "q": "Reverse only a sublist, from position m to n.",
+          "a": "Walk to the node before m, reverse exactly n - m + 1 nodes, then reconnect both ends. A dummy head saves you from special-casing m = 1, which is the whole difficulty."
+        },
+        {
+          "q": "Reverse in groups of k.",
+          "a": "Reverse k nodes at a time, stitching each reversed group to the previous group's tail, and leave a trailing remainder of fewer than k alone. That is Reverse Nodes in k-Group."
+        },
+        {
+          "q": "Why not just swap the values?",
+          "a": "You would need to reach node i from both ends, which a singly linked list cannot do without an extra pass or extra storage. And if nodes carry identity — other references point at them — moving values breaks those callers while rewiring does not."
+        }
+      ],
+      "related": [
+        "reorder-list",
+        "reverse-nodes-in-k-group",
+        "merge-two-sorted-lists"
+      ],
+      "core": true
     },
     {
       "id": "21",
@@ -71,10 +152,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=XIdigk956u0"
       },
       "pattern": "Dummy Head",
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "patternTriggers": [
+        "Two (or more) sorted sequences must be combined into one sorted sequence.",
+        "The output's first node is not necessarily either input's first node — the signal for a dummy head.",
+        "It shows up as the merge step inside bigger problems: merge k lists, sort a list, reorder."
+      ],
+      "keyInsight": "A **dummy head** removes every edge case at once. Without it you must special-case which list starts smaller, whether either list is empty, and how to remember the eventual head. With it, you always do the same thing — append to `tail.next`, advance `tail` — and the real head is simply `dummy.next` at the end. The second trick is that when one list runs out you do not keep comparing: the remainder of the other list is already sorted, so you attach it wholesale in one assignment.",
+      "bruteForce": {
+        "idea": "Collect all values into an array, sort it, and build a new list.",
+        "time": "O((N + M) log(N + M))",
+        "space": "O(N + M)",
+        "whyItFails": "It throws away the fact that both inputs are already sorted, then pays a log factor to recover the ordering it was handed for free. Merging is linear and needs no new nodes at all."
+      },
+      "approach": [
+        "Create a dummy node and let `tail` point at it.",
+        "While both lists are non-empty, compare their heads.",
+        "Attach the smaller node to `tail.next`, advance that list, and advance `tail`.",
+        "When one list empties, attach the entire remaining list in a single assignment — it is already sorted.",
+        "Return `dummy.next`."
+      ],
       "code": {
         "python": "def mergeTwoLists(l1, l2):\n    dummy = ListNode()\n    curr = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            curr.next = l1\n            l1 = l1.next\n        else:\n            curr.next = l2\n            l2 = l2.next\n        curr = curr.next\n    curr.next = l1 or l2\n    return dummy.next",
         "cpp": "class Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {\n        ListNode dummy(0), *cur = &dummy;\n        while (l1 && l2) {\n            if (l1->val <= l2->val) { cur->next = l1; l1 = l1->next; }\n            else { cur->next = l2; l2 = l2->next; }\n            cur = cur->next;\n        }\n        cur->next = l1 ? l1 : l2;\n        return dummy.next;\n    }\n};",
@@ -83,15 +179,48 @@
       },
       "complexity": {
         "time": "O(N + M)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Each node is visited once and relinked, never copied, so no new nodes are allocated beyond the one dummy. The space is O(1) precisely because the result reuses the input nodes."
       },
-      "dryRun": null,
+      "dryRun": "A: 1 -> 2 -> 4 -> null\nB: 1 -> 3 -> 4 -> null\n\n  compare   decision                   result so far\n  1 <= 1    take from A (<= keeps      1\n            equal elements in order)\n  2 >  1    take from B                1 -> 1\n  2 <= 3    take from A                1 -> 1 -> 2\n  4 >  3    take from B                1 -> 1 -> 2 -> 3\n  4 <= 4    take from A                1 -> 1 -> 2 -> 3 -> 4\n\n  A is now empty. B still holds 4 -> null.\n  Attach the whole remainder in ONE assignment — it is already sorted,\n  so there is nothing left to compare:\n\n            tail.next = B               1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n  return dummy.next  ->  1 -> 1 -> 2 -> 3 -> 4 -> 4 -> null\n\nTwo things the dummy bought here. The first node of the answer came\nfrom A, but it could just as easily have come from B — with a dummy\nyou never have to know. And `tail.next = ...` is the same statement\nevery iteration, including the first.\n\nNo new nodes were allocated. The six nodes in the result are the same\nsix objects from the inputs, relinked.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Looping until both lists are empty and comparing against null inside, instead of stopping at the first empty list and attaching the rest.",
+        "Returning `dummy` rather than `dummy.next`, which prepends a spurious node.",
+        "Forgetting to advance `tail`, which overwrites the same link repeatedly and silently drops everything but the last node.",
+        "Using `<` versus `<=` carelessly. Both produce a sorted result, but only `<=` keeps equal elements in their original relative order — which matters if the merge must be stable."
+      ],
+      "edgeCases": [
+        "both lists empty -> null",
+        "one list empty -> the other, returned as-is",
+        "lists of very different lengths",
+        "all of one list smaller than all of the other",
+        "duplicate values across both lists"
+      ],
+      "followUps": [
+        {
+          "q": "Merge k sorted lists.",
+          "a": "Pair them up and merge repeatedly, halving the count each round: O(N log k). Merging them one at a time into an accumulator is O(N k) — the same total nodes but each one re-walked k times. A min-heap of the k heads is the other O(N log k) route."
+        },
+        {
+          "q": "Sort a single unsorted linked list.",
+          "a": "Merge sort is the natural fit: split at the middle with fast/slow, sort each half, merge with this exact function. O(N log N) time, O(log N) stack. Quicksort is awkward here because a list has no cheap random access for pivoting."
+        },
+        {
+          "q": "Merge them in place without a dummy node.",
+          "a": "Possible — pick the smaller head as the result head, then proceed — but you have duplicated the comparison logic and added two null checks. The dummy costs one node and removes all of that, which is usually the better trade."
+        },
+        {
+          "q": "What if they were doubly linked?",
+          "a": "Same algorithm, but every relink must also set `prev`. It is easy to set `next` correctly and leave `prev` stale, so a doubly linked merge wants a helper that attaches in both directions."
+        }
+      ],
+      "related": [
+        "merge-k-sorted-lists",
+        "reverse-linked-list",
+        "add-two-numbers"
+      ],
+      "core": true
     },
     {
       "id": "143",
@@ -108,10 +237,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=S5bfdUTrKLM"
       },
       "pattern": "Find Middle",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "The result interleaves the list with *itself reversed* — front, back, front, back.",
+        "You need the second half in reverse but have O(1) space, so it must be reversed in place rather than stored.",
+        "It is explicitly a composition of three techniques you already have, which is what makes it a good interview question."
+      ],
       "keyInsight": "3 steps: (1) Find middle with slow/fast, (2) Reverse second half, (3) Merge alternating from both halves.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Copy every node reference into an array, then relink by walking inwards from both ends.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "Perfectly correct and much easier to write — the array gives you the random access the list lacks. It only loses on the O(1) space requirement, which is exactly what the question is testing."
+      },
+      "approach": [
+        "Find the middle with slow and fast pointers: advance slow one step and fast two until fast runs out.",
+        "Split the list at the middle, setting the first half's last node's `next` to null.",
+        "Reverse the second half in place with the three-pointer technique.",
+        "Walk both halves at once, alternately attaching one node from each.",
+        "Save each node's `next` before relinking it, since the relink destroys it.",
+        "Stop when the second half is exhausted; the first half is the same length or one longer."
+      ],
       "code": {
         "python": "def reorderList(head):\n    # 1. Find middle\n    slow, fast = head, head.next\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    \n    # 2. Reverse second half\n    second = slow.next\n    slow.next = None\n    prev = None\n    while second:\n        nxt = second.next\n        second.next = prev\n        prev = second\n        second = nxt\n    \n    # 3. Merge alternating\n    first, second = head, prev\n    while second:\n        tmp1, tmp2 = first.next, second.next\n        first.next = second\n        second.next = tmp1\n        first, second = tmp1, tmp2",
         "cpp": "class Solution {\npublic:\n    void reorderList(ListNode* head) {\n        if (!head || !head->next) return;\n        // Find middle\n        ListNode *slow = head, *fast = head;\n        while (fast->next && fast->next->next) { slow = slow->next; fast = fast->next->next; }\n        // Reverse second half\n        ListNode *prev = nullptr, *cur = slow->next;\n        slow->next = nullptr;\n        while (cur) { ListNode* next = cur->next; cur->next = prev; prev = cur; cur = next; }\n        // Merge\n        ListNode *l1 = head, *l2 = prev;\n        while (l2) {\n            ListNode *n1 = l1->next, *n2 = l2->next;\n            l1->next = l2; l2->next = n1;\n            l1 = n1; l2 = n2;\n        }\n    }\n};",
@@ -120,15 +265,47 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Three linear passes — find middle, reverse, merge — which is still O(N). The space is the point: no array, just a handful of pointers."
       },
-      "dryRun": null,
+      "dryRun": "odd length — input: 1 -> 2 -> 3 -> 4 -> 5 -> null\n\n  step 1  find the middle with slow/fast\n          slow lands on 3\n\n  step 2  split there, severing the halves\n          first  = 1 -> 2 -> 3 -> null\n          second = 4 -> 5 -> null\n\n  step 3  reverse the second half in place\n          second = 5 -> 4 -> null\n\n  step 4  interleave, one node from each\n          pair (1, 5), then pair (2, 4), then second is exhausted\n\n  result: 1 -> 5 -> 2 -> 4 -> 3 -> null\n\n\neven length — input: 1 -> 2 -> 3 -> 4 -> null\n\n  step 1  slow lands on 3\n  step 2  first  = 1 -> 2 -> 3 -> null     (the LONGER half)\n          second = 4 -> null\n  step 3  second = 4 -> null\n  step 4  pair (1, 4), then second is exhausted\n\n  result: 1 -> 4 -> 2 -> 3 -> null\n\nIn both cases the first half is the same length or one node longer,\nwhich is why the merge loop is guarded by the SECOND half running out.\nGuard it on the first half instead and you dereference null.\n\nStep 2 is the one people skip. If `3.next` is left pointing at 4, the\ninterleave creates a cycle — node 3 points forward into a region that\nnow points back at it — and the list becomes infinite rather than wrong.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not severing the two halves. If the first half still points into the second, the interleaving merge creates a cycle and the list becomes infinite.",
+        "Getting the middle wrong for even lengths. You want the first half to be the longer one, so the merge ends cleanly — check where `slow` lands for both parities.",
+        "Relinking without saving both `next` pointers first. Two lists are being spliced, so there are two pointers to lose, not one.",
+        "Running the merge loop while the *first* half is non-empty. The second half is the shorter one, so it must be the loop's guard."
+      ],
+      "edgeCases": [
+        "empty list, or a single node -> unchanged",
+        "two nodes -> unchanged",
+        "three nodes, the smallest case that actually reorders",
+        "even versus odd length, which differ in where the middle falls"
+      ],
+      "followUps": [
+        {
+          "q": "Why not just use the array version?",
+          "a": "In production, do. It is shorter, obviously correct, and O(N) extra space for N nodes you already hold is rarely the bottleneck. State that, then show the O(1) version — demonstrating you know the trade is better than pretending the array solution is bad."
+        },
+        {
+          "q": "Check whether the list is a palindrome.",
+          "a": "The same first two steps — find the middle, reverse the second half — then compare the halves node by node. Politely reverse it back afterwards if the caller still owns the list."
+        },
+        {
+          "q": "How do you find the middle for an even-length list?",
+          "a": "With both pointers starting at the head and the loop condition `fast && fast.next`, slow lands on the *second* middle. Starting fast one node ahead, or using `fast.next && fast.next.next`, lands it on the first. Which you want depends on the split you need, so decide deliberately rather than by trial."
+        },
+        {
+          "q": "Can it be done in a single pass?",
+          "a": "Not in O(1) space — you cannot know where the middle is until you have walked the whole list. Three passes over N is still O(N), so there is nothing to gain by trying."
+        }
+      ],
+      "related": [
+        "reverse-linked-list",
+        "remove-nth-node-from-end-of-list",
+        "linked-list-cycle"
+      ],
+      "core": true
     },
     {
       "id": "19",
@@ -146,10 +323,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=XVuQxVej6y8"
       },
       "pattern": "Two Pointers",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A position counted **from the end** of a structure you can only traverse forwards.",
+        "You want one pass, so counting the length first and walking again is ruled out.",
+        "A fixed *gap* between two pointers converts an end-relative position into a start-relative one."
+      ],
       "keyInsight": "Advance fast pointer n steps ahead. Then move both until fast hits end. Slow is now at the node before the one to remove.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Walk the list to find its length L, then walk again to node L - n and unlink its successor.",
+        "time": "O(N) over two passes",
+        "space": "O(1)",
+        "whyItFails": "Nothing here is wrong — it is O(N) and O(1), and it is easier to reason about. The only thing the gap technique buys is a single pass, which matters if the list is a stream you cannot rewind."
+      },
+      "approach": [
+        "Create a dummy node pointing at the head, so removing the head needs no special case.",
+        "Set both `slow` and `fast` to the dummy.",
+        "Advance `fast` by n steps, opening a gap of exactly n nodes.",
+        "Advance both one step at a time until `fast` reaches the last node.",
+        "`slow` now sits immediately before the node to remove.",
+        "Unlink it with `slow.next = slow.next.next` and return `dummy.next`."
+      ],
       "code": {
         "python": "def removeNthFromEnd(head, n):\n    dummy = ListNode(0, head)\n    slow, fast = dummy, head\n    for _ in range(n):\n        fast = fast.next\n    while fast:\n        slow = slow.next\n        fast = fast.next\n    slow.next = slow.next.next\n    return dummy.next",
         "cpp": "class Solution {\npublic:\n    ListNode* removeNthFromEnd(ListNode* head, int n) {\n        ListNode dummy(0, head);\n        ListNode *fast = &dummy, *slow = &dummy;\n        for (int i = 0; i <= n; i++) fast = fast->next;\n        while (fast) { slow = slow->next; fast = fast->next; }\n        ListNode* del = slow->next;\n        slow->next = slow->next->next;\n        delete del;\n        return dummy.next;\n    }\n};",
@@ -158,15 +351,71 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "A single pass: `fast` traverses the list once and `slow` trails it. The dummy node is what makes removing the first node identical to removing any other."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "list: 1 -> 2 -> 3 -> 4 -> 5 -> null,  n = 2\n\nStart both pointers at the dummy that sits before node 1.\n\n  open the gap — advance fast n = 2 times:\n    fast -> 1\n    fast -> 2\n    now slow is at the dummy, fast is at 2 (a gap of 2 nodes)\n\n  advance both until fast is on the LAST node:\n    slow -> 1   fast -> 3\n    slow -> 2   fast -> 4\n    slow -> 3   fast -> 5     fast.next is null, stop\n\n  slow is at 3, so slow.next = 4 is the 2nd node from the end.\n  Unlink it:  slow.next = slow.next.next\n\n  result: 1 -> 2 -> 3 -> 5 -> null\n\nStarting both at the dummy rather than the head is what makes slow\nland *before* the target instead of on it — and it is also why n equal\nto the list length works: fast ends on the last node with slow still\non the dummy, so `slow.next = slow.next.next` removes the head with no\nspecial case at all.",
+      "diagram": {
+        "kind": "linkedList",
+        "props": {
+          "nodes": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "pointers": [
+            {
+              "at": 2,
+              "label": "slow",
+              "tone": "accent"
+            },
+            {
+              "at": 4,
+              "label": "fast",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "n = 2. With fast on the last node, slow sits at 3 — immediately before the second-from-last node (4), which is the one to unlink."
+      },
+      "pitfalls": [
+        "Not using a dummy node, then discovering that removing the head needs an entirely separate branch.",
+        "Off-by-one in the gap. Starting both at the dummy and advancing fast exactly n times leaves slow before the target; starting both at the head leaves slow *on* it.",
+        "Advancing fast to null rather than to the last node, which overshoots by one.",
+        "Not handling n equal to the list length, which means removing the head — the case the dummy exists for."
+      ],
+      "edgeCases": [
+        "a single node with n = 1 -> empty list",
+        "n equal to the length -> remove the head",
+        "n = 1 -> remove the tail",
+        "n larger than the length, if the problem does not guarantee validity"
+      ],
+      "followUps": [
+        {
+          "q": "Return the nth node from the end instead of removing it.",
+          "a": "Same gap, but stop when fast falls off the end and return slow. Simpler, since there is nothing to relink and no dummy needed."
+        },
+        {
+          "q": "Would you prefer the two-pass version?",
+          "a": "Often yes. It is easier to get right under pressure and has the same complexity. The one-pass version wins when you genuinely cannot traverse twice — a stream, or a list behind a network call."
+        },
+        {
+          "q": "Remove all nodes with a given value.",
+          "a": "A dummy head plus a single `prev`/`curr` walk, unlinking on match. The dummy again removes the 'what if the head matches' case, including when every node matches."
+        },
+        {
+          "q": "Find the middle node with the same idea.",
+          "a": "Use a *ratio* rather than a gap: fast moves two steps for slow's one. Fixed gaps give end-relative positions, speed ratios give fractional positions — two tools from the same family."
+        }
+      ],
+      "related": [
+        "linked-list-cycle",
+        "reorder-list",
+        "reverse-linked-list"
+      ],
+      "core": true
     },
     {
       "id": "138",
@@ -184,10 +433,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=5Y2EiZST97Y"
       },
       "pattern": "Hash Map",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A **deep copy** of a structure whose pointers can target any node, including ones not yet created.",
+        "You need to translate 'old node' into 'its copy', which is a lookup — so either a hash map or somewhere to stash the mapping.",
+        "The words *deep copy*, *clone*, *random pointer*, *arbitrary reference*."
+      ],
       "keyInsight": "Two passes: (1) Create all copied nodes, store old-to-new mapping, (2) Set next and random pointers using the map.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each node, copy it, then for each random pointer walk the original list to find its index and walk the copy to the same index.",
+        "time": "O(N^2)",
+        "space": "O(N)",
+        "whyItFails": "Every random pointer costs a full traversal to locate. A map from original node to its copy answers the same question in O(1), which is the entire difference."
+      },
+      "approach": [
+        "First pass: walk the list creating a copy of each node, storing `original -> copy` in a hash map. Do not set any pointers yet.",
+        "This resolves the ordering problem: a random pointer may target a node that appears later, so all copies must exist before any linking.",
+        "Second pass: walk the original again.",
+        "For each node, set `copy.next = map[original.next]` and `copy.random = map[original.random]`.",
+        "Map null to null so the ends need no special handling.",
+        "Return the copy of the original head."
+      ],
       "code": {
         "python": "def copyRandomList(head):\n    old_to_new = {None: None}\n    curr = head\n    while curr:  # Pass 1: create nodes\n        old_to_new[curr] = Node(curr.val)\n        curr = curr.next\n    curr = head\n    while curr:  # Pass 2: set pointers\n        old_to_new[curr].next = old_to_new[curr.next]\n        old_to_new[curr].random = old_to_new[curr.random]\n        curr = curr.next\n    return old_to_new[head]",
         "cpp": "class Solution {\npublic:\n    Node* copyRandomList(Node* head) {\n        unordered_map<Node*, Node*> map;\n        Node* cur = head;\n        while (cur) { map[cur] = new Node(cur->val); cur = cur->next; }\n        cur = head;\n        while (cur) {\n            map[cur]->next = map[cur->next];\n            map[cur]->random = map[cur->random];\n            cur = cur->next;\n        }\n        return map[head];\n    }\n};",
@@ -196,15 +461,49 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "Two linear passes and a map holding N entries. The O(N) space can be eliminated — see the follow-up — by weaving the copies into the original list so each node's own `next` carries the mapping."
       },
-      "dryRun": null,
+      "dryRun": "original list (five nodes), with random pointers:\n\n  index  value   next        random\n    0      7     -> 1        null\n    1     13     -> 2        -> 0   (value 7)\n    2     11     -> 3        -> 4   (value 1)\n    3     10     -> 4        -> 2   (value 11)\n    4      1     -> null     -> 0   (value 7)\n\nPass 1 — create every copy, set NO pointers yet:\n\n  map:  orig[0]->copy[0]  orig[1]->copy[1]  orig[2]->copy[2]\n        orig[3]->copy[3]  orig[4]->copy[4]\n\n  Look at node 2: its random points at index 4. In a single-pass\n  attempt, copy[4] would not exist yet. That forward reference is\n  the entire reason creation and linking must be separate passes.\n\nPass 2 — translate every pointer through the map:\n\n  copy[0].next = copy[1]     copy[0].random = null\n  copy[1].next = copy[2]     copy[1].random = copy[0]\n  copy[2].next = copy[3]     copy[2].random = copy[4]\n  copy[3].next = copy[4]     copy[3].random = copy[2]\n  copy[4].next = null        copy[4].random = copy[0]\n\nNote that null maps to null, so the two ends need no special case.\n\nFinal check, and the one an interviewer will make: no pointer in the\ncopy references an original node. If any did, mutating the original\nwould be visible through the copy, and it would not be a deep copy.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Trying to set pointers during the first pass. A forward random reference points at a node whose copy does not exist yet.",
+        "Not mapping null, then dereferencing it when a node's random pointer is null.",
+        "Returning the original head rather than its copy.",
+        "Copying node *values* into a map instead of node *identities*. Duplicate values are allowed, so two distinct nodes can hold the same value and must stay distinct."
+      ],
+      "edgeCases": [
+        "empty list -> null",
+        "a single node whose random points at itself",
+        "all random pointers null",
+        "random pointers forming a cycle",
+        "several nodes with identical values",
+        "a random pointer targeting the head"
+      ],
+      "followUps": [
+        {
+          "q": "Can you do it in O(1) extra space?",
+          "a": "Yes, with interleaving. Insert each copy directly after its original, so `original.next` *is* the mapping. Then set `copy.random = original.random.next`, and finally unweave the two lists. Three passes, no map — a genuinely clever trick and a common follow-up."
+        },
+        {
+          "q": "What if nodes have many arbitrary pointers, not one?",
+          "a": "The map approach scales unchanged — translate each pointer through the map. The interleaving trick also still works, since it only needs one mapping regardless of how many pointers use it."
+        },
+        {
+          "q": "How does this relate to cloning a graph?",
+          "a": "It is the same problem. Clone Graph uses exactly this map from original node to copy, usually built during a DFS. Recognising the two as one idea — 'copy the nodes, then translate the edges' — is the transferable lesson."
+        },
+        {
+          "q": "What about cycles in the next pointers?",
+          "a": "The two-pass map version handles them naturally, because the first pass is driven by `next` and terminates only if the list does. For a genuinely circular list you would switch to visiting nodes via the map itself, treating a present key as 'already copied'."
+        }
+      ],
+      "related": [
+        "clone-graph",
+        "lru-cache",
+        "merge-two-sorted-lists"
+      ],
+      "core": true
     },
     {
       "id": "2",
@@ -222,10 +521,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=wgFPrzTjm7s"
       },
       "pattern": "Simulation",
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "patternTriggers": [
+        "Simulate an arithmetic or mechanical process digit by digit, position by position.",
+        "Two sequences are consumed in lockstep but may have different lengths.",
+        "State carries from one step to the next — a carry bit, a borrow, a running remainder."
+      ],
+      "keyInsight": "The digits are already stored **least-significant first**, which is exactly the order written addition works in. So no reversal is needed: walk both lists together, add the two digits plus the carry, emit `sum % 10` and carry `sum / 10`. The thing people forget is that the carry can survive past the end of both lists — 99 + 1 produces a third digit — so the loop must continue while *either* list remains **or** the carry is non-zero.",
+      "bruteForce": {
+        "idea": "Walk each list to build an integer, add them, then split the result back into digits.",
+        "time": "O(N + M)",
+        "space": "O(N + M)",
+        "whyItFails": "It overflows. These lists can be hundreds of digits long, far beyond any fixed-width integer — and if you reach for a big-integer type you have only moved the digit-by-digit addition somewhere else. Simulating it directly has no such limit."
+      },
+      "approach": [
+        "Create a dummy head and a `tail` pointer, plus `carry` set to 0.",
+        "Loop while either list has nodes remaining **or** the carry is non-zero.",
+        "Take each list's current digit, or 0 if that list is exhausted.",
+        "Sum the two digits and the carry.",
+        "Append a new node holding `sum % 10`, and set `carry = sum / 10`.",
+        "Advance whichever lists still have nodes, then return `dummy.next`."
+      ],
       "code": {
         "python": "def addTwoNumbers(l1, l2):\n    dummy = ListNode()\n    curr = dummy\n    carry = 0\n    while l1 or l2 or carry:\n        v1 = l1.val if l1 else 0\n        v2 = l2.val if l2 else 0\n        total = v1 + v2 + carry\n        carry = total // 10\n        curr.next = ListNode(total % 10)\n        curr = curr.next\n        l1 = l1.next if l1 else None\n        l2 = l2.next if l2 else None\n    return dummy.next",
         "cpp": "class Solution {\npublic:\n    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {\n        ListNode dummy(0), *cur = &dummy;\n        int carry = 0;\n        while (l1 || l2 || carry) {\n            int sum = carry + (l1 ? l1->val : 0) + (l2 ? l2->val : 0);\n            carry = sum / 10;\n            cur->next = new ListNode(sum % 10);\n            cur = cur->next;\n            if (l1) l1 = l1->next;\n            if (l2) l2 = l2->next;\n        }\n        return dummy.next;\n    }\n};",
@@ -233,16 +548,49 @@
         "js": "var addTwoNumbers = function(l1, l2) {\n    const dummy = new ListNode(0);\n    let cur = dummy, carry = 0;\n    while (l1 || l2 || carry) {\n        const sum = carry + (l1 ? l1.val : 0) + (l2 ? l2.val : 0);\n        carry = Math.floor(sum / 10);\n        cur.next = new ListNode(sum % 10);\n        cur = cur.next;\n        if (l1) l1 = l1.next;\n        if (l2) l2 = l2.next;\n    }\n    return dummy.next;\n};"
       },
       "complexity": {
-        "time": "O(max(M,N))",
-        "space": "O(max(M,N))"
+        "time": "O(max(N, M))",
+        "space": "O(max(N, M))",
+        "note": "One pass over the longer list. The output is a new list of at most max(N, M) + 1 nodes — the extra one being the final carry — which is the only space used beyond O(1) working variables."
       },
-      "dryRun": null,
+      "dryRun": "l1 = 9 -> 9 -> 9 -> null       (the number 999)\nl2 = 1 -> null                 (the number 1)\n\nDigits are stored least-significant first, which is the order addition\nalready works in — so just walk forwards.\n\n  pos   l1    l2    carry in   sum   emit   carry out\n   0     9     1        0       10     0        1\n   1     9     -        1       10     0        1\n   2     9     -        1       10     0        1\n   3     -     -        1        1     1        0\n\n  '-' means that list is exhausted, so its digit is taken as 0.\n\n  result: 0 -> 0 -> 0 -> 1 -> null       (the number 1000)\n\nPosition 3 is the case that catches people. Both lists ended after\nposition 2, but the carry was still 1. If the loop condition is\n\"while l1 or l2\", that final 1 is dropped and 999 + 1 answers 000.\nThe condition must be:\n\n    while l1 or l2 or carry\n\nAlso note the output is least-significant first too, so appending as\nyou go is already correct — no reversal at the end.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Stopping the loop when both lists end, which drops a trailing carry: 5 -> 5 plus 5 -> 5 should give 0 -> 1 -> 1, not 0 -> 1.",
+        "Treating an exhausted list as an error instead of substituting 0, which forces three separate loops.",
+        "Advancing a pointer that is already null.",
+        "Building the result reversed. The inputs are least-significant-first and so is the required output, so appending as you go is already correct — reversing is an easy reflex to resist."
+      ],
+      "edgeCases": [
+        "both numbers zero -> a single node 0",
+        "lists of very different lengths",
+        "a carry propagating through every digit, e.g. 999 + 1",
+        "one list empty",
+        "a final carry creating a new most-significant digit"
+      ],
+      "followUps": [
+        {
+          "q": "What if the digits were stored most-significant first?",
+          "a": "Addition needs the least significant end first, so either reverse both lists (and the answer), or push both onto stacks and pop in step, or recurse to the ends and add on the way back. The stack version is usually cleanest and is Add Two Numbers II."
+        },
+        {
+          "q": "Subtract instead of add.",
+          "a": "Same shape with a borrow instead of a carry, but you must first determine which number is larger to know the sign — which, with most-significant-last storage, means comparing lengths and then digits from the far end."
+        },
+        {
+          "q": "Multiply two such numbers.",
+          "a": "Long multiplication: an array of size N + M accumulating `a[i] * b[j]` at position i + j, then a single carry-normalisation pass. That is Multiply Strings, O(N*M)."
+        },
+        {
+          "q": "Why not convert to integers for small inputs?",
+          "a": "You can, and for guaranteed-short lists it is fine. But the simulation is the same complexity, has no magnitude limit, and does not depend on a language's integer width — so there is little reason to prefer the fragile version."
+        }
+      ],
+      "related": [
+        "merge-two-sorted-lists",
+        "multiply-strings",
+        "plus-one"
+      ],
+      "core": true
     },
     {
       "id": "141",
@@ -260,10 +608,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=gBTe7lFR3vc"
       },
       "pattern": "Fast & Slow Pointers",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Does this structure loop? Equivalently: does following `next` ever terminate?",
+        "O(1) space is required, ruling out a visited set.",
+        "Two pointers moving at **different speeds** will coincide inside a loop and never coincide without one."
+      ],
       "keyInsight": "If there's a cycle, fast (2 steps) will eventually meet slow (1 step). Like two runners on a circular track.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Walk the list adding each node to a hash set; a cycle exists if you ever see a node twice.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "Correct, and genuinely the clearer solution when space is free. It fails only the O(1) space requirement — and the insight it misses is that relative speed detects a loop without remembering anything at all."
+      },
+      "approach": [
+        "Start `slow` and `fast` at the head.",
+        "Advance `slow` by one node and `fast` by two, each iteration.",
+        "Guard the loop with `fast != null && fast.next != null`, since fast dereferences two links ahead.",
+        "If `slow` and `fast` ever point at the same node, there is a cycle.",
+        "If fast reaches the end, there is none."
+      ],
       "code": {
         "python": "def hasCycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False",
         "cpp": "class Solution {\npublic:\n    bool hasCycle(ListNode *head) {\n        ListNode *slow = head, *fast = head;\n        while (fast && fast->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n            if (slow == fast) return true;\n        }\n        return false;\n    }\n};",
@@ -272,15 +635,68 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "If a cycle exists, fast closes the gap on slow by one node per iteration, so they meet within one loop length of slow entering the cycle — O(N) overall. Two pointers, no allocation."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "list: 3 -> 2 -> 0 -> -4, and -4 points back to the node holding 2.\n\nPhase 1 — detect. slow moves 1, fast moves 2.\n\n  step   slow    fast\n    1      2       0\n    2      0       2\n    3     -4      -4      same node -> a cycle exists\n\nThey met at -4, which is inside the cycle but is NOT where it starts.\n\nPhase 2 — find the entry (Linked List Cycle II). Move slow back to the\nhead and advance both one step at a time:\n\n    slow: 3 -> 2        fast: -4 -> 2        same node\n\n  the cycle begins at the node holding 2.\n\nWhy that works: let the tail before the cycle have length a, the cycle\nhave length c, and the meeting point be b steps into the cycle. Fast\ntravelled twice as far as slow, and the algebra reduces to a being\ncongruent to (c - b) modulo c — which is exactly the distance from the\nmeeting point back round to the entry. So both pointers, moving at the\nsame speed from those two places, arrive together.\n\nAcyclic contrast — list 1 -> 2 -> null:\n\n    fast starts at 1, moves to null after one step; the loop guard\n    `fast && fast.next` stops it. Checking only `fast` would\n    dereference null.next and crash.",
+      "diagram": {
+        "kind": "linkedList",
+        "props": {
+          "nodes": [
+            3,
+            2,
+            0,
+            -4
+          ],
+          "cycleTo": 1,
+          "pointers": [
+            {
+              "at": 1,
+              "label": "cycle entry",
+              "tone": "hard"
+            }
+          ]
+        },
+        "caption": "The tail points back at index 1, so following next never terminates. Fast gains one node per step on slow inside the loop, which guarantees they eventually land on the same node."
+      },
+      "pitfalls": [
+        "Checking only `fast != null`. Advancing two steps dereferences `fast.next` as well, so both checks are needed or an even-length acyclic list crashes.",
+        "Comparing values instead of node identity. Duplicate values are allowed, so `slow.val == fast.val` reports phantom cycles.",
+        "Starting fast one node ahead and then testing equality before the first move, which reports a cycle immediately.",
+        "Assuming the cycle must include the head. It can begin anywhere, which is exactly what the follow-up is about."
+      ],
+      "edgeCases": [
+        "empty list -> false",
+        "a single node with no cycle -> false",
+        "a single node pointing at itself -> true",
+        "two nodes pointing at each other -> true",
+        "a long tail leading into a short cycle",
+        "a cycle covering the entire list"
+      ],
+      "followUps": [
+        {
+          "q": "Find the node where the cycle begins.",
+          "a": "Floyd's second phase: after they meet, move one pointer back to the head and advance both one step at a time — they meet at the entry. It falls out of the algebra: if the tail is length a and they meet b into a cycle of length c, then a and the remaining distance are congruent modulo c."
+        },
+        {
+          "q": "How long is the cycle?",
+          "a": "From the meeting point, keep one pointer still and walk the other until it returns, counting steps. One extra pass, still O(1) space."
+        },
+        {
+          "q": "Why two steps rather than three?",
+          "a": "Any speed difference works — the gap shrinks by (fast speed - slow speed) each step, so they still meet. Two is chosen because a step of one guarantees the gap decreases by exactly one and so cannot skip over slow, which keeps the proof simple."
+        },
+        {
+          "q": "Where else does this apply?",
+          "a": "Anywhere a sequence is defined by repeated application of a function — `x -> f(x)` must eventually cycle in a finite space. Find the Duplicate Number turns an array into exactly such a function, and Happy Number uses it on digit-square sums."
+        }
+      ],
+      "related": [
+        "find-the-duplicate-number",
+        "remove-nth-node-from-end-of-list",
+        "happy-number"
+      ],
+      "core": true
     },
     {
       "id": "287",
@@ -298,10 +714,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=wjYnzkAhcNk"
       },
       "pattern": "Floyd's Cycle Detection",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "An array of values in `1..n` with `n+1` entries — the value range matching the index range is the tell that indices and values can be treated as pointers.",
+        "Constraints forbid both modifying the array and using extra space, which eliminates sorting, marking and hash sets in one stroke.",
+        "Any function from a finite set to itself, iterated, must eventually cycle."
+      ],
       "keyInsight": "Treat array as linked list: index i points to nums[i]. Duplicate creates a cycle. Use Floyd's to find cycle entry point.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Sort and look for adjacent equals; or use a hash set; or mark visited indices by negating values.",
+        "time": "O(N log N) sorting, O(N) with a set",
+        "space": "O(1) sorting but mutates, O(N) with a set",
+        "whyItFails": "Each violates one stated constraint: sorting mutates the input, the set costs O(N) space, negation mutates. All three are correct algorithms — mention them, then explain why the constraints push you to cycle detection."
+      },
+      "approach": [
+        "Read the array as a function: index `i` points to index `nums[i]`. Since every value is in `1..n`, every pointer is a valid index.",
+        "Because two indices share a value, two different nodes point at the same place — so the traversal from index 0 must enter a cycle, and the cycle's entry is the duplicated value.",
+        "Run Floyd's first phase from index 0: slow takes one hop (`slow = nums[slow]`), fast takes two.",
+        "When they meet, reset slow to 0 and advance both one hop at a time.",
+        "The index where they meet again is the cycle entry, which is the duplicate.",
+        "Return it."
+      ],
       "code": {
         "python": "def findDuplicate(nums):\n    slow = fast = 0\n    while True:  # Phase 1: find intersection\n        slow = nums[slow]\n        fast = nums[nums[fast]]\n        if slow == fast:\n            break\n    slow2 = 0  # Phase 2: find cycle entry\n    while slow != slow2:\n        slow = nums[slow]\n        slow2 = nums[slow2]\n    return slow",
         "cpp": "class Solution {\npublic:\n    int findDuplicate(vector<int>& nums) {\n        int slow = nums[0], fast = nums[0];\n        do { slow = nums[slow]; fast = nums[nums[fast]]; } while (slow != fast);\n        slow = nums[0];\n        while (slow != fast) { slow = nums[slow]; fast = nums[fast]; }\n        return slow;\n    }\n};",
@@ -310,15 +742,71 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Two linear phases of pointer chasing, no mutation and no allocation — the only solution that satisfies every constraint at once. The reduction is the whole content: once it is a linked list with a cycle, the algorithm is Linked List Cycle II unchanged."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [1, 3, 4, 2, 2]\n\nRead index i as a pointer to index nums[i]:\n\n    index 0 -> 1\n    index 1 -> 3\n    index 2 -> 4\n    index 3 -> 2\n    index 4 -> 2      <-- indices 3 and 4 BOTH point at 2\n\nTwo arrows into index 2 is what makes a cycle, and index 2 is the\nduplicated value. Following the chain from 0:\n\n    0 -> 1 -> 3 -> 2 -> 4 -> 2 -> 4 -> ...\n                   ^---------'\n\nPhase 1 — one hop means `x = nums[x]`:\n\n  step   slow (index)   fast (index)\n    1         1              3\n    2         3              4\n    3         2              4\n    4         4              4        met\n\nPhase 2 — slow back to index 0, both one hop at a time:\n\n    slow 1, fast 2\n    slow 3, fast 4\n    slow 2, fast 2        met at index 2\n\n  return 2\n\nStarting at index 0 is deliberate and load-bearing. Values are in\n1..n, so no index ever points at 0 — index 0 therefore has no incoming\nedge and cannot be inside the cycle. That guarantee is what makes it a\nvalid starting point for Floyd's second phase.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            1,
+            3,
+            4,
+            2,
+            2
+          ],
+          "highlight": [
+            3,
+            4
+          ],
+          "showIndices": true,
+          "pointers": [
+            {
+              "at": 2,
+              "label": "dup = 2",
+              "tone": "hard"
+            }
+          ]
+        },
+        "caption": "Indices 3 and 4 both hold 2, so both point at index 2 — two arrows into one node, which is precisely what creates the cycle. Following 0 -> 1 -> 3 -> 2 -> 4 -> 2 loops at 2."
+      },
+      "pitfalls": [
+        "Starting the traversal at index 1 or at `nums[0]` instead of index 0. The guarantee that values are in `1..n` means index 0 is never a target, so it cannot be inside the cycle — which is what makes it a safe start.",
+        "Omitting the second phase and returning the meeting point. That is a node *inside* the cycle, not its entry, and only coincidentally the answer.",
+        "Negating values to mark visits. It works and is easy, but it mutates the input, which the problem forbids.",
+        "Using fast and slow with the same step size, or forgetting that one hop means `nums[x]`, not `x + 1`."
+      ],
+      "edgeCases": [
+        "the smallest input, [1, 1] -> 1",
+        "the duplicate appearing many times, e.g. [2, 2, 2, 2]",
+        "the duplicate at the very start or very end",
+        "n + 1 elements with all other values present exactly once"
+      ],
+      "followUps": [
+        {
+          "q": "Solve it with binary search instead.",
+          "a": "Binary search the *value* range 1..n: for a candidate m, count how many elements are at most m. If that count exceeds m, the duplicate is at or below m by the pigeonhole principle. O(N log N) time, O(1) space, no mutation — slower but far easier to explain."
+        },
+        {
+          "q": "Why does the cycle entry equal the duplicate?",
+          "a": "A cycle entry is a node with two or more incoming edges. An index j has an incoming edge from every i with `nums[i] = j`, so a node with two incoming edges is exactly a value appearing twice. Index 0 has none, which is why starting there lands you outside the cycle and lets the second phase work."
+        },
+        {
+          "q": "What if there could be more than one duplicate?",
+          "a": "Floyd's finds one cycle and therefore one duplicate. To find all of them you need a different approach — counting, or in-place marking if mutation were allowed."
+        },
+        {
+          "q": "What if values were in 0..n-1 instead?",
+          "a": "The reduction breaks, because index 0 could then be a target and the start point is no longer guaranteed outside the cycle. You would need a different safe starting index, which is why the stated range is load-bearing rather than incidental."
+        }
+      ],
+      "related": [
+        "linked-list-cycle",
+        "missing-number",
+        "binary-search"
+      ],
+      "core": true
     },
     {
       "id": "146",
@@ -337,10 +825,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=7ABFKPK2hD4"
       },
       "pattern": "Hash Map + Doubly Linked List",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A design question demanding **O(1) for every operation**, including eviction.",
+        "You need both fast lookup by key and fast reordering by recency — no single structure gives both, so two must be combined.",
+        "The words *least recently used*, *cache*, *capacity*, *evict*."
+      ],
       "keyInsight": "HashMap gives O(1) lookup. Doubly linked list gives O(1) insert/delete. Most recently used at tail, LRU at head. On access, move to tail. On capacity overflow, remove head.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "A hash map of key to value plus a timestamp, scanning for the oldest entry when evicting. Or an array ordered by recency, moved on each access.",
+        "time": "O(1) get, O(N) eviction — or O(N) per access with an array",
+        "space": "O(capacity)",
+        "whyItFails": "Both put an O(N) step on a hot path. A hash map cannot tell you what is oldest; a list can, but cannot find a key. Combining them so the map stores *pointers into the list* gives both, and is the entire idea."
+      },
+      "approach": [
+        "Keep a hash map from key to the list node holding that entry, and a doubly linked list ordered from least to most recently used.",
+        "Use dummy head and tail sentinels so no insert or remove ever has to check for null.",
+        "`get`: if the key is absent return -1. Otherwise unlink its node and reattach it just before the tail, making it most recent, then return the value.",
+        "`put` on an existing key: update the value and move the node to the most recent position.",
+        "`put` on a new key: create a node at the most recent end and add it to the map.",
+        "If that exceeds capacity, remove the node after the head sentinel — the least recently used — and delete its key from the map.",
+        "The map and list must always be updated together; an entry in one but not the other is the bug to guard against."
+      ],
       "code": {
         "python": "class Node:\n    def __init__(self, key=0, val=0):\n        self.key, self.val = key, val\n        self.prev = self.next = None\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.cap = capacity\n        self.cache = {}  # key -> Node\n        self.left, self.right = Node(), Node()  # dummy head/tail\n        self.left.next, self.right.prev = self.right, self.left\n\n    def _remove(self, node):\n        node.prev.next, node.next.prev = node.next, node.prev\n\n    def _insert(self, node):  # insert before right dummy\n        node.prev, node.next = self.right.prev, self.right\n        self.right.prev.next = self.right.prev = node\n\n    def get(self, key):\n        if key in self.cache:\n            self._remove(self.cache[key])\n            self._insert(self.cache[key])\n            return self.cache[key].val\n        return -1\n\n    def put(self, key, value):\n        if key in self.cache:\n            self._remove(self.cache[key])\n        self.cache[key] = Node(key, value)\n        self._insert(self.cache[key])\n        if len(self.cache) > self.cap:\n            lru = self.left.next\n            self._remove(lru)\n            del self.cache[lru.key]",
         "cpp": "class LRUCache {\n    int cap;\n    list<pair<int,int>> cache;\n    unordered_map<int, list<pair<int,int>>::iterator> map;\npublic:\n    LRUCache(int capacity) : cap(capacity) {}\n    int get(int key) {\n        if (!map.count(key)) return -1;\n        cache.splice(cache.begin(), cache, map[key]);\n        return map[key]->second;\n    }\n    void put(int key, int value) {\n        if (map.count(key)) {\n            map[key]->second = value;\n            cache.splice(cache.begin(), cache, map[key]);\n        } else {\n            if (cache.size() == cap) {\n                map.erase(cache.back().first);\n                cache.pop_back();\n            }\n            cache.push_front({key, value});\n            map[key] = cache.begin();\n        }\n    }\n};",
@@ -348,16 +853,51 @@
         "js": "var LRUCache = function(capacity) {\n    this.cap = capacity;\n    this.cache = new Map();\n};\nLRUCache.prototype.get = function(key) {\n    if (!this.cache.has(key)) return -1;\n    const val = this.cache.get(key);\n    this.cache.delete(key);\n    this.cache.set(key, val);\n    return val;\n};\nLRUCache.prototype.put = function(key, value) {\n    this.cache.delete(key);\n    this.cache.set(key, value);\n    if (this.cache.size > this.cap) this.cache.delete(this.cache.keys().next().value);\n};"
       },
       "complexity": {
-        "time": "O(1) all operations",
-        "space": "O(capacity)"
+        "time": "O(1)",
+        "space": "O(capacity)",
+        "note": "Every operation is a constant number of hash lookups and pointer rewires. The doubly linked list is essential: unlinking a node in O(1) requires knowing its predecessor, which a singly linked list cannot provide."
       },
-      "dryRun": null,
+      "dryRun": "capacity = 2.  The list is shown least-recently-used first.\n\n  operation      returns   evicted   LRU .. MRU\n  put(1, 1)                            1:1\n  put(2, 2)                            1:1  2:2\n  get(1)            1                  2:2  1:1     <- a READ reorders\n  put(3, 3)                   key 2    1:1  3:3\n  get(2)           -1                  1:1  3:3\n  put(4, 4)                   key 1    3:3  4:4\n  get(1)           -1                  3:3  4:4\n  get(3)            3                  4:4  3:3\n  get(4)            4                  3:3  4:4\n\nThe third line is the one that defines LRU. `get(1)` does not just\nreturn a value — it marks key 1 as the most recently used, which is\nwhy key 2 (not key 1) is evicted on the next put. Skip that reorder\nand you have built a FIFO cache instead.\n\nEvery step is a constant number of operations:\n\n  find the node          one hash lookup\n  unlink it              two pointer writes (needs .prev — this is\n                         why the list must be doubly linked)\n  reattach at the end    two pointer writes\n  evict                  read head.next, unlink, delete from the map\n\nThe map and the list must change together. Evicting from the list but\nleaving the key in the map produces a key that resolves to a detached\nnode — the bug that shows up much later as a wrong answer.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using a singly linked list. Removing an arbitrary node then costs O(N) to find its predecessor, which destroys the whole guarantee.",
+        "Updating the list but not the map on eviction, leaving a key that maps to a detached node — a slow memory leak and wrong answers later.",
+        "Forgetting to move a node to the front on `get`. A read counts as a use, which is the difference between LRU and a plain FIFO cache.",
+        "Omitting the sentinels and then writing null checks in four places, which is where the off-by-one bugs live.",
+        "Treating a `put` on an existing key as an insert, which double-counts the size and can evict something still in the map."
+      ],
+      "edgeCases": [
+        "capacity 1, where every put evicts",
+        "get on a missing key -> -1",
+        "put on an existing key, which must not change the size",
+        "repeated gets on the same key",
+        "filling to capacity then putting a new key",
+        "capacity 0, if the problem permits it"
+      ],
+      "followUps": [
+        {
+          "q": "Implement LFU instead.",
+          "a": "Evict the least *frequently* used. Keep a map from frequency to a doubly linked list of entries at that frequency, plus the minimum frequency. On access, move the entry to the next frequency's list. Still O(1), and noticeably harder — the bucket-of-counts idea is the same one that makes Top K Frequent Elements linear."
+        },
+        {
+          "q": "Can you use your language's built-in structures?",
+          "a": "Yes, and you should say so: Python's `OrderedDict` has `move_to_end` and `popitem`, and Java's `LinkedHashMap` supports access-order with a `removeEldestEntry` hook. Both are this exact structure. Interviewers usually want the manual version, but knowing the built-in is the practical answer."
+        },
+        {
+          "q": "Make it thread-safe.",
+          "a": "A single lock around every operation is correct but serialises everything. Real caches shard by key hash so concurrent operations on different keys never contend, and accept approximate LRU — Redis samples a few keys rather than tracking exact recency, because exactness is not worth the coordination."
+        },
+        {
+          "q": "How would you add a TTL?",
+          "a": "Store an expiry per entry and treat an expired entry as absent on read, evicting it lazily. For eager eviction you need a second structure ordered by expiry — a heap or timer wheel — because the recency list is not ordered by time of death."
+        }
+      ],
+      "related": [
+        "copy-list-with-random-pointer",
+        "min-stack",
+        "design-twitter"
+      ],
+      "core": true
     },
     {
       "id": "23",
@@ -376,10 +916,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=q5a5OiGbT6Q"
       },
       "pattern": "Divide and Conquer",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "k already-sorted sequences must become one, and k is large enough that merging them one at a time is wasteful.",
+        "The words *merge k*, *k sorted*, *combine streams*.",
+        "Either repeatedly take the global smallest of k candidates (a heap), or halve the number of lists each round (divide and conquer)."
+      ],
       "keyInsight": "Merge lists pairwise like merge sort. K lists become K/2, then K/4... O(N log K) total.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Merge list 1 with list 2, then that result with list 3, and so on.",
+        "time": "O(N * k)",
+        "space": "O(1)",
+        "whyItFails": "The accumulator grows with every merge, so early nodes get re-walked once per remaining list — k passes over nearly all N nodes. Pairing the lists up instead means each node is walked log k times, not k."
+      },
+      "approach": [
+        "Treat the array of lists as a queue of work.",
+        "Merge lists pairwise — first with second, third with fourth, and so on — halving the count each round.",
+        "Use the two-list merge from Merge Two Sorted Lists as the subroutine.",
+        "An odd list out carries forward to the next round unchanged.",
+        "Repeat until a single list remains, and return it.",
+        "Alternatively: push all k heads into a min-heap, repeatedly pop the smallest, append it, and push its successor."
+      ],
       "code": {
         "python": "def mergeKLists(lists):\n    if not lists:\n        return None\n    while len(lists) > 1:\n        merged = []\n        for i in range(0, len(lists), 2):\n            l1 = lists[i]\n            l2 = lists[i + 1] if i + 1 < len(lists) else None\n            merged.append(mergeTwoLists(l1, l2))\n        lists = merged\n    return lists[0]",
         "cpp": "class Solution {\npublic:\n    ListNode* mergeKLists(vector<ListNode*>& lists) {\n        auto cmp = [](ListNode* a, ListNode* b) { return a->val > b->val; };\n        priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> pq(cmp);\n        for (auto* l : lists) if (l) pq.push(l);\n        ListNode dummy(0), *cur = &dummy;\n        while (!pq.empty()) {\n            cur->next = pq.top(); pq.pop();\n            cur = cur->next;\n            if (cur->next) pq.push(cur->next);\n        }\n        return dummy.next;\n    }\n};",
@@ -387,16 +943,50 @@
         "js": "var mergeKLists = function(lists) {\n    // Simple approach: collect all values, sort, rebuild\n    const vals = [];\n    for (let l of lists) while (l) { vals.push(l.val); l = l.next; }\n    vals.sort((a, b) => a - b);\n    const dummy = new ListNode(0);\n    let cur = dummy;\n    for (const v of vals) { cur.next = new ListNode(v); cur = cur.next; }\n    return dummy.next;\n};"
       },
       "complexity": {
-        "time": "O(N log K)",
-        "space": "O(log K)"
+        "time": "O(N log k)",
+        "space": "O(1) for the iterative pairwise merge, O(k) for the heap",
+        "note": "N is the total number of nodes. Pairwise merging does log k rounds, each touching all N nodes. The heap does N pops and pushes at O(log k) each — same bound, but it needs O(k) space and, unlike the merge, works on streams of unknown length."
       },
-      "dryRun": null,
+      "dryRun": "k = 4 lists (values shown as arrays for compactness):\n\n  [1, 4, 5]   [1, 3, 4]   [2, 6]   [0, 9]\n\nRound 1 — merge pairwise, halving the count:\n\n  [1, 4, 5] + [1, 3, 4]  ->  [1, 1, 3, 4, 4, 5]\n  [2, 6]    + [0, 9]     ->  [0, 2, 6, 9]\n\nRound 2 — two lists left:\n\n  [1, 1, 3, 4, 4, 5] + [0, 2, 6, 9]  ->  [0, 1, 1, 2, 3, 4, 4, 5, 6, 9]\n\n  result: 0 -> 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> 5 -> 6 -> 9 -> null\n\nTwo rounds for four lists — log2(4). Each round walks all 10 nodes\nonce, so the total is N log k.\n\nContrast the sequential version on the same input:\n\n  merge 1&2            ->  6 nodes walked\n  merge result & 3     ->  8 nodes walked   (re-walking the first 6)\n  merge result & 4     ->  10 nodes walked  (re-walking the first 8)\n                           ----\n                           24 node visits, versus 20 — and the gap\n                           widens as k grows, to O(N*k).\n\nThe accumulator keeps growing, so early nodes are re-walked once per\nremaining list. Pairing keeps the two operands balanced, which is the\nsame reason merge sort beats insertion sort.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Merging sequentially into one accumulator, which is the O(N*k) trap this problem exists to catch.",
+        "Not handling null lists in the input array. An empty or absent list must be skipped, not dereferenced.",
+        "In the heap version, pushing nodes without a tie-breaker in languages that compare objects. Java needs a comparator; Python needs `(val, index, node)` because `ListNode` is not orderable.",
+        "Recursing pairwise with a mid-point split and getting the base cases wrong — a single list must be returned as-is, and an empty range as null."
+      ],
+      "edgeCases": [
+        "empty array of lists -> null",
+        "a single list -> itself",
+        "every list empty -> null",
+        "some lists empty and others not",
+        "one very long list and many very short ones",
+        "k = 2, which reduces to the simpler problem"
+      ],
+      "followUps": [
+        {
+          "q": "Heap or pairwise merge — which would you choose?",
+          "a": "Pairwise, if all lists are in memory: same complexity, O(1) extra space, and it reuses a function you have already written. The heap wins when the inputs are streams, when k is huge relative to N, or when you must emit results incrementally rather than after all input is consumed."
+        },
+        {
+          "q": "What if the lists are on different machines?",
+          "a": "This becomes a distributed merge, and the heap version is the right shape — each machine streams its sorted output and a coordinator holds a k-entry heap. That is how external sort and most map-reduce shuffles finish."
+        },
+        {
+          "q": "Why is sequential merging O(N*k) and not O(N log k)?",
+          "a": "After i merges the accumulator holds roughly N*i/k nodes, and the next merge walks all of them. Summing over i gives O(N*k). Pairwise merging keeps the two operands balanced, so no node is ever walked more than log k times — the same reason merge sort beats insertion sort."
+        },
+        {
+          "q": "Merge k sorted arrays instead of lists.",
+          "a": "Identical structure. With arrays you can also write the output into one preallocated buffer, and the heap version becomes the standard k-way merge used by external sorting."
+        }
+      ],
+      "related": [
+        "merge-two-sorted-lists",
+        "find-median-from-data-stream",
+        "kth-largest-element-in-an-array"
+      ],
+      "core": true
     },
     {
       "id": "25",
@@ -414,10 +1004,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=1UOPsfP85V4"
       },
       "pattern": "Iterative Reverse",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A known technique must be applied to **fixed-size chunks**, with the remainder handled differently.",
+        "Each chunk's result must be stitched to its neighbours, so you need the node before the group and the node after it.",
+        "The words *in groups of k*, *every k nodes*, *per block*."
+      ],
       "keyInsight": "For each group of k nodes: (1) Check if k nodes remain, (2) Reverse k nodes, (3) Connect reversed group to previous group's tail and next group's head.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Copy the values into an array, reverse each block of k in place, and rebuild the list.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It moves values rather than nodes, which the problem usually forbids, and costs O(N) space. The real work is bookkeeping — remembering the previous group's tail so the reversed group can be reattached."
+      },
+      "approach": [
+        "Use a dummy node before the head, since the first group's reversal changes the head.",
+        "Keep `groupPrev` pointing at the node before the current group, starting at the dummy.",
+        "Walk k nodes ahead from `groupPrev`. If fewer than k remain, stop — the tail is left as it is.",
+        "Remember `groupNext`, the node after the group's last node.",
+        "Reverse the k nodes, initialising `prev` to `groupNext` so the group's new tail already points at the rest of the list.",
+        "The group's original first node is now its last. Set `groupPrev.next` to the group's new first node, then move `groupPrev` to that original first node, which is the new tail.",
+        "Repeat, and return `dummy.next`."
+      ],
       "code": {
         "python": "def reverseKGroup(head, k):\n    dummy = ListNode(0, head)\n    group_prev = dummy\n\n    while True:\n        kth = group_prev\n        for _ in range(k):  # find kth node\n            kth = kth.next\n            if not kth:\n                return dummy.next\n        group_next = kth.next\n        # Reverse group\n        prev, curr = kth.next, group_prev.next\n        for _ in range(k):\n            nxt = curr.next\n            curr.next = prev\n            prev = curr\n            curr = nxt\n        tmp = group_prev.next  # first node (now last)\n        group_prev.next = kth  # connect to reversed head\n        group_prev = tmp       # move to end of reversed group",
         "cpp": "class Solution {\npublic:\n    ListNode* reverseKGroup(ListNode* head, int k) {\n        ListNode* cur = head;\n        int count = 0;\n        while (cur && count < k) { cur = cur->next; count++; }\n        if (count < k) return head;\n        ListNode* prev = reverseKGroup(cur, k);\n        while (count-- > 0) {\n            ListNode* next = head->next;\n            head->next = prev;\n            prev = head;\n            head = next;\n        }\n        return prev;\n    }\n};",
@@ -426,15 +1033,49 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Each node is visited twice at most — once when counting ahead to check that k nodes remain, once when reversed — so the total is linear regardless of k. No allocation beyond the dummy."
       },
-      "dryRun": null,
+      "dryRun": "list: 1 -> 2 -> 3 -> 4 -> 5 -> null,  k = 3\n\nRound 1\n  groupPrev = dummy\n  Count k nodes ahead: 1, 2, 3 all exist, so kth = 3.\n  groupNext = 4 (the node after the group).\n\n  Reverse the three nodes, seeding prev with groupNext rather than\n  null, so the group's new tail already points at 4:\n\n      before:  dummy -> 1 -> 2 -> 3 -> 4 -> 5\n      after:   dummy -> 1 -> 4 -> 5          (1 is now the tail)\n                        3 -> 2 -> 1\n\n  Reattach: groupPrev.next = kth = 3.\n  Advance:  groupPrev = the group's ORIGINAL first node, 1, which is\n            now its tail.\n\n      list is now:  3 -> 2 -> 1 -> 4 -> 5 -> null\n\nRound 2\n  groupPrev = 1. Count 3 nodes ahead: 4, 5, then null — fewer than k\n  remain, so stop and leave the tail untouched.\n\n  result: 3 -> 2 -> 1 -> 4 -> 5 -> null\n\nThe count-ahead must happen BEFORE any rewiring. Reverse first and\nthen discover the group was short, and there is nothing left to undo\nit with.\n\nSeeding prev with groupNext instead of null is the other key detail.\nWith null, node 1 would end up pointing at null and the tail 4 -> 5\nwould be severed from the list entirely.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Reversing a final group of fewer than k nodes. The count-ahead check must happen *before* any rewiring, or you cannot undo it.",
+        "Initialising `prev` to null when reversing the group, which severs the group from the remainder. Seed it with `groupNext` instead.",
+        "Losing track of the group's original first node, which becomes its tail and is what `groupPrev` must advance to.",
+        "Forgetting the dummy, then needing a special case for the very first group — which is where most attempts break.",
+        "Advancing `groupPrev` to the wrong node, producing a list that is correct for one group and scrambled after."
+      ],
+      "edgeCases": [
+        "k = 1 -> the list is unchanged",
+        "k equal to the list length -> a full reversal",
+        "k larger than the length -> unchanged",
+        "length not a multiple of k, leaving a short tail untouched",
+        "empty list, or a single node"
+      ],
+      "followUps": [
+        {
+          "q": "What if the final partial group should also be reversed?",
+          "a": "Drop the count-ahead check and reverse whatever remains. Simpler, and worth confirming which behaviour is wanted before coding — the two differ by one condition and interviewers do vary the requirement."
+        },
+        {
+          "q": "Write it recursively.",
+          "a": "Reverse the first k nodes, then recurse on the rest and attach the result to the new tail. Much shorter and easier to get right, at O(N/k) stack depth. Say that the iterative version exists for O(1) space."
+        },
+        {
+          "q": "Swap nodes pairwise instead.",
+          "a": "That is k = 2, and the same code handles it. Writing the general version and noting that it specialises is better than writing a bespoke pairwise swap."
+        },
+        {
+          "q": "Reverse alternate groups only.",
+          "a": "Keep a toggle: reverse one group, then skip k nodes, advancing `groupPrev` to the skipped group's last node. The skeleton is unchanged, which is the sign the bookkeeping was factored well."
+        }
+      ],
+      "related": [
+        "reverse-linked-list",
+        "reorder-list",
+        "merge-two-sorted-lists"
+      ],
+      "core": true
     }
   ]
 }
