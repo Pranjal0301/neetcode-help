@@ -3,9 +3,32 @@
   "title": "Math & Geometry",
   "icon": "📐",
   "order": 17,
-  "concept": null,
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "concept": {
+    "heading": "Core Concepts",
+    "body": "This category has no single unifying technique — it is matrix manipulation, number theory and arithmetic simulation sharing a shelf. So the value is in a handful of specific tricks worth having ready, because each one converts a problem that looks fiddly into a few lines.\n\n**Decompose matrix transformations.** A 90-degree clockwise rotation is *transpose, then reverse each row*. Every rotation and reflection factors into two easy in-place passes like this, which is far easier to get right than reasoning about a four-way cyclic swap.\n\n**Layer-by-layer traversal** is boundary bookkeeping. A spiral is four pointers closing inward, and the only subtlety is guarding the two \"return\" passes so a single remaining row or column is not traversed twice.\n\n**Encode state in the input.** When a matrix problem demands O(1) extra space, the answer is almost always to use part of the matrix as its own marker array — with care for the cell where the markers overlap.\n\n**Halve the exponent.** `x^n = (x^(n/2))^2`, so a power needs log n multiplications rather than n.\n\n**Simulate arithmetic digit by digit.** Carry propagation is the same loop whether you are adding one, adding two numbers or multiplying — and it sidesteps overflow entirely, which is how real big-integer libraries work.",
+    "bullets": [
+      "**Rotation = transpose + reverse.** Clockwise is transpose then reverse each row; anticlockwise is transpose then reverse each column. Two simple passes beat one clever one.",
+      "**Spiral = four shrinking boundaries.** After the top row and right column, guard with `if top <= bottom` and `if left <= right` before the bottom row and left column, or a single leftover line gets walked twice.",
+      "**O(1) space in a matrix** means storing flags inside the matrix. The overlap cell — usually [0][0] — needs a separate variable.",
+      "**Fast power:** square and halve. Watch the negative exponent, and watch `n = INT_MIN`, where negating it overflows.",
+      "**Carry loops** are one pattern: Plus One, Multiply Strings and Add Two Numbers all walk the digits with a carry and must keep going while the carry is non-zero.",
+      "**Check overflow before it happens,** not after. `if x > INT_MAX / 10` before multiplying, rather than inspecting a value that has already wrapped."
+    ],
+    "legacySvg": null
+  },
+  "patternTemplate": {
+    "python": "# --- Rotate a square matrix 90 degrees clockwise, in place ---\n# Step 1: transpose (reflect across the main diagonal)\nfor i in range(n):\n    for j in range(i + 1, n):          # j starts at i+1, or you undo it\n        m[i][j], m[j][i] = m[j][i], m[i][j]\n# Step 2: reverse each row\nfor row in m:\n    row.reverse()\n\n# --- Spiral traversal: four shrinking boundaries ---\ntop, bottom, left, right = 0, len(m) - 1, 0, len(m[0]) - 1\nout = []\nwhile top <= bottom and left <= right:\n    for j in range(left, right + 1):        # top row, left to right\n        out.append(m[top][j])\n    top += 1\n    for i in range(top, bottom + 1):        # right column, top to bottom\n        out.append(m[i][right])\n    right -= 1\n    if top <= bottom:                       # GUARD: one row may be left\n        for j in range(right, left - 1, -1):\n            out.append(m[bottom][j])\n        bottom -= 1\n    if left <= right:                       # GUARD: one column may be left\n        for i in range(bottom, top - 1, -1):\n            out.append(m[i][left])\n        left += 1\n\n# --- Fast exponentiation: square and halve ---\ndef power(x, n):\n    if n < 0:\n        x, n = 1 / x, -n            # careful: -INT_MIN overflows in C/Java\n    result = 1\n    while n:\n        if n & 1:                   # odd exponent: peel one factor off\n            result *= x\n        x *= x                      # square the base\n        n >>= 1                     # halve the exponent\n    return result\n\n# --- Carry propagation: the shape behind Plus One and Multiply Strings ---\ncarry = 0\nfor i in range(len(digits) - 1, -1, -1):\n    total = digits[i] + carry\n    digits[i] = total % 10\n    carry = total // 10\nif carry:                           # the carry can survive past the end\n    digits.insert(0, carry)         # 999 + 1 needs a new leading digit",
+    "cpp": "// --- Rotate 90 degrees clockwise, in place ---\nfor (int i = 0; i < n; i++)\n    for (int j = i + 1; j < n; j++)        // j from i+1, or you undo it\n        swap(m[i][j], m[j][i]);            // transpose\nfor (auto& row : m)\n    reverse(row.begin(), row.end());       // reverse each row\n\n// --- Spiral traversal ---\nint top = 0, bottom = m.size() - 1, left = 0, right = m[0].size() - 1;\nvector<int> out;\nwhile (top <= bottom && left <= right) {\n    for (int j = left; j <= right; j++) out.push_back(m[top][j]);\n    top++;\n    for (int i = top; i <= bottom; i++) out.push_back(m[i][right]);\n    right--;\n    if (top <= bottom) {                   // GUARD\n        for (int j = right; j >= left; j--) out.push_back(m[bottom][j]);\n        bottom--;\n    }\n    if (left <= right) {                   // GUARD\n        for (int i = bottom; i >= top; i--) out.push_back(m[i][left]);\n        left++;\n    }\n}\n\n// --- Fast exponentiation ---\ndouble power(double x, int n) {\n    long long N = n;                       // widen FIRST: -INT_MIN overflows\n    if (N < 0) { x = 1 / x; N = -N; }\n    double result = 1;\n    while (N) {\n        if (N & 1) result *= x;\n        x *= x;\n        N >>= 1;\n    }\n    return result;\n}\n\n// --- Carry propagation ---\nint carry = 0;\nfor (int i = digits.size() - 1; i >= 0; i--) {\n    int total = digits[i] + carry;\n    digits[i] = total % 10;\n    carry = total / 10;\n}\nif (carry) digits.insert(digits.begin(), carry);",
+    "java": "// --- Rotate 90 degrees clockwise, in place ---\nfor (int i = 0; i < n; i++)\n    for (int j = i + 1; j < n; j++) {      // j from i+1, or you undo it\n        int t = m[i][j]; m[i][j] = m[j][i]; m[j][i] = t;\n    }\nfor (int[] row : m) {                      // reverse each row\n    for (int l = 0, r = row.length - 1; l < r; l++, r--) {\n        int t = row[l]; row[l] = row[r]; row[r] = t;\n    }\n}\n\n// --- Spiral traversal ---\nint top = 0, bottom = m.length - 1, left = 0, right = m[0].length - 1;\nList<Integer> out = new ArrayList<>();\nwhile (top <= bottom && left <= right) {\n    for (int j = left; j <= right; j++) out.add(m[top][j]);\n    top++;\n    for (int i = top; i <= bottom; i++) out.add(m[i][right]);\n    right--;\n    if (top <= bottom) {                   // GUARD\n        for (int j = right; j >= left; j--) out.add(m[bottom][j]);\n        bottom--;\n    }\n    if (left <= right) {                   // GUARD\n        for (int i = bottom; i >= top; i--) out.add(m[i][left]);\n        left++;\n    }\n}\n\n// --- Fast exponentiation ---\ndouble power(double x, int n) {\n    long N = n;                            // widen FIRST: -Integer.MIN_VALUE\n    if (N < 0) { x = 1 / x; N = -N; }      // overflows as an int\n    double result = 1;\n    while (N != 0) {\n        if ((N & 1) == 1) result *= x;\n        x *= x;\n        N >>= 1;\n    }\n    return result;\n}",
+    "js": "// --- Rotate 90 degrees clockwise, in place ---\nfor (let i = 0; i < n; i++)\n  for (let j = i + 1; j < n; j++)          // j from i+1, or you undo it\n    [m[i][j], m[j][i]] = [m[j][i], m[i][j]];   // transpose\nfor (const row of m) row.reverse();           // reverse each row\n\n// --- Spiral traversal ---\nlet top = 0, bottom = m.length - 1, left = 0, right = m[0].length - 1;\nconst out = [];\nwhile (top <= bottom && left <= right) {\n  for (let j = left; j <= right; j++) out.push(m[top][j]);\n  top++;\n  for (let i = top; i <= bottom; i++) out.push(m[i][right]);\n  right--;\n  if (top <= bottom) {                     // GUARD: one row may be left\n    for (let j = right; j >= left; j--) out.push(m[bottom][j]);\n    bottom--;\n  }\n  if (left <= right) {                     // GUARD: one column may be left\n    for (let i = bottom; i >= top; i--) out.push(m[i][left]);\n    left++;\n  }\n}\n\n// --- Fast exponentiation ---\nconst power = (x, n) => {\n  if (n < 0) { x = 1 / x; n = -n; }        // JS numbers are doubles, so\n  let result = 1;                           // -INT_MIN is not a problem here\n  while (n) {\n    if (n & 1) result *= x;                // n & 1 coerces to 32-bit —\n    x *= x;                                 // use n % 2 for huge exponents\n    n = Math.floor(n / 2);\n  }\n  return result;\n};\n\n// --- Carry propagation ---\nlet carry = 0;\nfor (let i = digits.length - 1; i >= 0; i--) {\n  const total = digits[i] + carry;\n  digits[i] = total % 10;\n  carry = Math.floor(total / 10);\n}\nif (carry) digits.unshift(carry);          // 999 + 1 needs a new digit"
+  },
+  "recognitionTriggers": [
+    "**Rotate, transpose, spiral, layer** on a matrix. Either decompose into simpler transformations or walk shrinking boundaries.",
+    "*O(1) extra space* on a matrix problem — the signal to encode flags inside the matrix itself.",
+    "`x^n` with a large exponent, or anything that would need n multiplications. **Fast exponentiation** makes it log n.",
+    "Digits given as an **array or string** rather than a number. That is a hint the value does not fit in an integer, so simulate the arithmetic.",
+    "*Does this sequence eventually repeat* — Floyd's cycle detection or a visited set, exactly as in Linked List Cycle."
+  ],
   "problems": [
     {
       "id": "48",
@@ -21,25 +44,124 @@
         "leetcode": "https://leetcode.com/problems/rotate-image/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=fMSJSS7eO1w"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Transformation Decomposition",
+      "patternTriggers": [
+        "A geometric transformation of a matrix — rotate, reflect, transpose.",
+        "In-place is required, so you cannot build a new matrix and copy back.",
+        "The transformation **factors** into two simpler ones, each of which is easy to do in place."
+      ],
       "keyInsight": "Rotate 90 clockwise = Transpose + Reverse each row.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Allocate a second matrix and write each element to its rotated position: `out[j][n-1-i] = m[i][j]`.",
+        "time": "O(N^2)",
+        "space": "O(N^2)",
+        "whyItFails": "Correct and much easier to reason about — and worth writing first if the index formula is the part you want to get right. It only fails the in-place requirement. The alternative to decomposition is a four-way cyclic swap of corresponding cells, which is also O(1) space but has an index expression in each of four positions and is far easier to get wrong."
+      },
+      "approach": [
+        "Observe that a 90-degree clockwise rotation is the composition of two simpler operations: transpose, then reverse each row.",
+        "Transpose by swapping `m[i][j]` with `m[j][i]` for every pair above the main diagonal.",
+        "Start the inner loop at `j = i + 1`, not `j = 0` — otherwise every pair is swapped twice and the matrix is unchanged.",
+        "Then reverse each row in place with two pointers.",
+        "Both passes are in place, so the whole rotation uses O(1) extra space.",
+        "For anticlockwise, transpose then reverse each **column** instead — or equivalently reverse the rows first, then transpose."
+      ],
       "code": {
         "python": "def rotate(matrix):\n    n = len(matrix)\n    for i in range(n):  # transpose\n        for j in range(i+1, n):\n            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]\n    for row in matrix:  # reverse rows\n        row.reverse()",
         "cpp": "class Solution {\npublic:\n    void rotate(vector<vector<int>>& matrix) {\n        int n = matrix.size();\n        for (int i = 0; i < n; i++)\n            for (int j = i + 1; j < n; j++) swap(matrix[i][j], matrix[j][i]);\n        for (auto& row : matrix) reverse(row.begin(), row.end());\n    }\n};",
         "java": "class Solution {\n    public void rotate(int[][] matrix) {\n        int n = matrix.length;\n        for (int i = 0; i < n; i++)\n            for (int j = i + 1; j < n; j++) { int t = matrix[i][j]; matrix[i][j] = matrix[j][i]; matrix[j][i] = t; }\n        for (int[] row : matrix) { int l = 0, r = n-1; while (l < r) { int t = row[l]; row[l++] = row[r]; row[r--] = t; } }\n    }\n}",
         "js": "var rotate = function(matrix) {\n    const n = matrix.length;\n    for (let i = 0; i < n; i++)\n        for (let j = i + 1; j < n; j++) [matrix[i][j], matrix[j][i]] = [matrix[j][i], matrix[i][j]];\n    for (const row of matrix) row.reverse();\n};"
       },
-      "complexity": null,
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "complexity": {
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "note": "Each pass touches each element a constant number of times, and O(N^2) is unavoidable since every element must move. The transpose visits only the upper triangle — about N^2/2 swaps — and the row reversal does another N^2/2, so the constant is small."
+      },
+      "dryRun": "m = [[1,2,3], [4,5,6], [7,8,9]]\n\n  original          1  2  3\n                    4  5  6\n                    7  8  9\n\nStep 1 — transpose: swap m[i][j] with m[j][i] for every j > i.\nThe pairs swapped are (0,1)<->(1,0), (0,2)<->(2,0), (1,2)<->(2,1).\n\n  after transpose   1  4  7\n                    2  5  8\n                    3  6  9\n\nStep 2 — reverse each row.\n\n  after reversing   7  4  1\n                    8  5  2\n                    9  6  3\n\n  which is the input rotated 90 degrees clockwise.\n\nCheck it against the definition: the new top row is 7, 4, 1 — which is\nthe original first COLUMN read bottom to top. That is exactly what a\nclockwise rotation does, and exactly what transpose-then-reverse-rows\nproduces.\n\nThe inner loop must start at `j = i + 1`. Starting at 0 visits every\npair twice — (0,1) and then (1,0) — so each swap is undone and the\nmatrix comes back unchanged. That single bound is the whole correctness\nof step 1.\n\nAnd the order encodes the direction. Reverse the rows FIRST and then\ntranspose, and you get the anticlockwise rotation instead:\n\n  reverse rows      3  2  1          transpose     3  6  9\n                    6  5  4            ->          2  5  8\n                    9  8  7                         1  4  7\n\nwhich is 90 degrees anticlockwise. Same two operations, opposite order,\nopposite direction.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2"
+          ],
+          "cells": [
+            [
+              7,
+              4,
+              1
+            ],
+            [
+              8,
+              5,
+              2
+            ],
+            [
+              9,
+              6,
+              3
+            ]
+          ],
+          "highlight": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ]
+          ]
+        },
+        "caption": "The result of rotating [[1,2,3],[4,5,6],[7,8,9]] clockwise. The highlighted top row 7,4,1 was the first COLUMN read bottom-up — which is exactly what transpose-then-reverse-each-row produces."
+      },
+      "pitfalls": [
+        "Starting the transpose's inner loop at `j = 0`. Every pair is then swapped twice, so the transpose undoes itself and the matrix comes back unchanged.",
+        "Reversing the columns instead of the rows after transposing, which rotates anticlockwise.",
+        "Doing the two steps in the wrong order. Reverse-then-transpose also works but produces the *anticlockwise* rotation, so the order encodes the direction.",
+        "Assuming the matrix is square without checking. A non-square matrix cannot be rotated in place at all, because the dimensions change.",
+        "Writing the direct index formula from memory and getting `out[j][n-1-i]` backwards. If you go that route, verify it on a 2x2 before trusting it."
+      ],
+      "edgeCases": [
+        "a 1x1 matrix -> unchanged",
+        "a 2x2 matrix, the smallest case where the rotation is visible",
+        "a matrix with all identical values -> looks unchanged",
+        "an even versus odd dimension, which differ in whether a centre cell exists",
+        "a 3x3 matrix, where the centre stays put"
+      ],
+      "followUps": [
+        {
+          "q": "How do you rotate anticlockwise?",
+          "a": "Transpose, then reverse each **column**. Or reverse the rows first and then transpose. Being able to derive either from the clockwise version — rather than memorising both — is the point of the decomposition."
+        },
+        {
+          "q": "What about 180 degrees?",
+          "a": "Reverse the row order and reverse each row, which is two reversals and no transpose. Or simply apply the 90-degree rotation twice. The second is less efficient but shows the composition clearly."
+        },
+        {
+          "q": "What if the matrix were not square?",
+          "a": "In-place rotation becomes impossible, because an M x N matrix rotates into an N x M one. You must allocate the output. The transpose step alone is still meaningful, but it cannot be done in place either."
+        },
+        {
+          "q": "What is the four-way swap alternative?",
+          "a": "For each cell in the outer layer, cycle four corresponding cells at once, then move inward. Also O(1) space and one pass, but it needs four index expressions that are easy to get wrong under pressure. The decomposition is the safer answer, and saying why is better than knowing both."
+        }
+      ],
+      "related": [
+        "spiral-matrix",
+        "set-matrix-zeroes",
+        "search-a-2d-matrix"
+      ],
+      "core": true
     },
     {
       "id": "54",
@@ -55,25 +177,81 @@
         "leetcode": "https://leetcode.com/problems/spiral-matrix/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=BJnMZNwUk1M"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Boundary Shrinking",
+      "patternTriggers": [
+        "Traverse a matrix in a **layered** or boundary-following order rather than row by row.",
+        "The order is defined geometrically, so the solution is bookkeeping rather than an algorithm.",
+        "The words *spiral*, *clockwise*, *layer by layer*, *peel the outside*."
+      ],
+      "keyInsight": "Track four boundaries — top, bottom, left, right — and peel one line at a time, moving the boundary inward after each. The part that makes or breaks it is the **two guards**: after the top row and right column are consumed, the matrix may have collapsed to nothing, so you must re-check `top <= bottom` before the bottom row and `left <= right` before the left column. Without them, a single remaining row or column gets traversed twice and duplicate values appear in the output.",
+      "bruteForce": {
+        "idea": "Walk with a direction vector, turning right whenever the next cell is out of bounds or already visited, using a visited matrix to decide.",
+        "time": "O(M*N)",
+        "space": "O(M*N)",
+        "whyItFails": "Correct, and arguably easier to get right — the turning rule needs no guards. It just costs O(M*N) space for the visited grid, where the boundary version uses O(1). Both are reasonable; the boundary version is what the problem is testing."
+      },
+      "approach": [
+        "Initialise four boundaries: `top = 0`, `bottom = rows-1`, `left = 0`, `right = cols-1`.",
+        "Loop while `top <= bottom` and `left <= right`.",
+        "Traverse the top row left to right, then increment `top`.",
+        "Traverse the right column top to bottom, then decrement `right`.",
+        "**Guard**: only if `top <= bottom`, traverse the bottom row right to left and decrement `bottom`.",
+        "**Guard**: only if `left <= right`, traverse the left column bottom to top and increment `left`.",
+        "The two guards handle the case where the remaining region has become a single row or a single column, which would otherwise be walked a second time in reverse."
+      ],
       "code": {
         "python": "def spiralOrder(matrix):\n    result = []\n    top, bottom, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1\n    while top <= bottom and left <= right:\n        for c in range(left, right+1): result.append(matrix[top][c])\n        top += 1\n        for r in range(top, bottom+1): result.append(matrix[r][right])\n        right -= 1\n        if top <= bottom:\n            for c in range(right, left-1, -1): result.append(matrix[bottom][c])\n            bottom -= 1\n        if left <= right:\n            for r in range(bottom, top-1, -1): result.append(matrix[r][left])\n            left += 1\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> spiralOrder(vector<vector<int>>& matrix) {\n        vector<int> result;\n        int top = 0, bottom = matrix.size()-1, left = 0, right = matrix[0].size()-1;\n        while (top <= bottom && left <= right) {\n            for (int j = left; j <= right; j++) result.push_back(matrix[top][j]); top++;\n            for (int i = top; i <= bottom; i++) result.push_back(matrix[i][right]); right--;\n            if (top <= bottom) { for (int j = right; j >= left; j--) result.push_back(matrix[bottom][j]); bottom--; }\n            if (left <= right) { for (int i = bottom; i >= top; i--) result.push_back(matrix[i][left]); left++; }\n        }\n        return result;\n    }\n};",
         "java": "class Solution {\n    public List<Integer> spiralOrder(int[][] matrix) {\n        List<Integer> result = new ArrayList<>();\n        int top = 0, bottom = matrix.length-1, left = 0, right = matrix[0].length-1;\n        while (top <= bottom && left <= right) {\n            for (int j = left; j <= right; j++) result.add(matrix[top][j]); top++;\n            for (int i = top; i <= bottom; i++) result.add(matrix[i][right]); right--;\n            if (top <= bottom) { for (int j = right; j >= left; j--) result.add(matrix[bottom][j]); bottom--; }\n            if (left <= right) { for (int i = bottom; i >= top; i--) result.add(matrix[i][left]); left++; }\n        }\n        return result;\n    }\n}",
         "js": "var spiralOrder = function(matrix) {\n    const result = [];\n    let top = 0, bottom = matrix.length-1, left = 0, right = matrix[0].length-1;\n    while (top <= bottom && left <= right) {\n        for (let j = left; j <= right; j++) result.push(matrix[top][j]); top++;\n        for (let i = top; i <= bottom; i++) result.push(matrix[i][right]); right--;\n        if (top <= bottom) { for (let j = right; j >= left; j--) result.push(matrix[bottom][j]); bottom--; }\n        if (left <= right) { for (let i = bottom; i >= top; i--) result.push(matrix[i][left]); left++; }\n    }\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(1)",
+        "note": "Each cell is appended exactly once, and the four boundaries are the only state — the output itself is not counted as extra space. The guards are what guarantee the \"exactly once\": without them a 1 x N or M x 1 remainder is visited twice."
+      },
+      "dryRun": "A 3x3 matrix:   1  2  3\n                4  5  6\n                7  8  9\n\nFour boundaries close inward. After each line, move its boundary.\n\n    top row    [1, 2, 3]      top    0 -> 1\n    right col  [6, 9]         right  2 -> 1\n    bottom row [8, 7]         bottom 2 -> 1\n    left col   [4]            left   0 -> 1\n    top row    [5]            top    1 -> 2\n    GUARD: top(2) > bottom(1)  ->  skip the bottom row\n    GUARD: left(1) > right(0)  ->  skip the left column\n\n  answer = [1, 2, 3, 6, 9, 8, 7, 4, 5]\n\nBoth guards fire on the final iteration, after the single centre cell\nhas been consumed by the top-row pass. Without them, 5 would be emitted\nup to three times.\n\n\nThe single-row case, which is what the first guard exists for:\n\n  matrix:  1  2  3\n\n    top row    [1, 2, 3]      top 0 -> 1\n    GUARD: top(1) > bottom(0)  ->  skip the bottom row\n    left col   []              left 0 -> 1\n\n  answer = [1, 2, 3]\n\nWithout the guard, the bottom-row pass would run with bottom still 0 and\nemit 3, 2, 1 — giving [1,2,3,3,2,1].\n\n\nThe single-column case, for the second guard:\n\n  matrix:  1\n           2\n           3\n\n    top row    [1]            top 0 -> 1\n    right col  [2, 3]         right 0 -> -1\n    bottom row []             bottom 2 -> 1\n    GUARD: left(0) > right(-1)  ->  skip the left column\n\n  answer = [1, 2, 3]\n\n\nA non-square case, where the collapse happens mid-spiral:\n\n  matrix:  1  2  3  4\n           5  6  7  8\n           9 10 11 12\n\n    top row    [1, 2, 3, 4]\n    right col  [8, 12]\n    bottom row [11, 10, 9]\n    left col   [5]\n    top row    [6, 7]\n    GUARD fires, skipping the bottom row\n\n  answer = [1,2,3,4,8,12,11,10,9,5,6,7]",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting the guards. On a single-row matrix like [[1,2,3]] the top row is read, then `top` exceeds `bottom`, and the bottom-row pass re-reads it reversed — giving 1,2,3,3,2,1.",
+        "Checking the guards before the loop rather than inside it. The collapse happens *during* an iteration, after `top` and `right` have moved.",
+        "Getting the reverse-direction loop bounds wrong. Going right to left needs `range(right, left - 1, -1)`, and the `-1` is easy to drop.",
+        "Updating the boundaries before finishing the traversal that uses them.",
+        "Assuming the matrix is square. Spiral order works for any shape, and non-square inputs are precisely where the guards matter most."
+      ],
+      "edgeCases": [
+        "a 1x1 matrix -> one element",
+        "a single row -> left to right, and the guard prevents a reverse re-read",
+        "a single column -> top to bottom, same reason",
+        "a 2x2 matrix",
+        "a 3x3 matrix, where the centre cell is reached last",
+        "an empty matrix -> empty output",
+        "a wide matrix such as 2x5, where the collapse happens early"
+      ],
+      "followUps": [
+        {
+          "q": "Explain exactly when each guard fires.",
+          "a": "Consider [[1,2,3]], one row. The top pass reads 1,2,3 and sets `top = 1`, which now exceeds `bottom = 0`. The bottom-row pass must be skipped — and the guard is what skips it. Mirror the argument for a single column and the left-column pass. Those are the only two cases, which is why exactly two guards are needed."
+        },
+        {
+          "q": "Generate a spiral matrix rather than read one.",
+          "a": "Same four boundaries, but write an incrementing counter instead of reading values. The guards are still required for the same reason. That is Spiral Matrix II, and it is a good check that the bookkeeping is understood rather than copied."
+        },
+        {
+          "q": "Would you prefer the direction-vector version?",
+          "a": "It is a legitimate alternative: keep a direction index and turn right when the next cell is out of bounds or visited. No guards to forget, at the cost of O(M*N) space for the visited grid — or O(1) if you may overwrite the matrix with a sentinel. Naming the trade is better than insisting on one."
+        },
+        {
+          "q": "What about spiralling inward from an arbitrary starting cell?",
+          "a": "The boundary approach breaks, since the layers are no longer aligned with the matrix edges. The direction-vector approach handles it naturally with a step-length schedule of 1, 1, 2, 2, 3, 3 — which is how spiral-order grid walks are usually written."
+        }
+      ],
+      "related": [
+        "rotate-image",
+        "set-matrix-zeroes",
+        "number-of-islands"
+      ],
+      "core": true
     },
     {
       "id": "73",
@@ -89,25 +267,81 @@
         "leetcode": "https://leetcode.com/problems/set-matrix-zeroes/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=T41rL0L3Pnw"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Encode State in the Input",
+      "patternTriggers": [
+        "O(1) extra space demanded on a matrix problem, which usually means storing flags **inside** the matrix.",
+        "You need to record something per row and per column, and the matrix happens to have a spare row and column to hold exactly that.",
+        "The naive approach would mutate cells that later iterations still need to read correctly."
+      ],
       "keyInsight": "Use first row and first column as markers. O(1) extra space.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Record which rows and columns contain a zero in two separate arrays, then zero them out in a second pass.",
+        "time": "O(M*N)",
+        "space": "O(M + N)",
+        "whyItFails": "Correct, and the right solution to present first — it is clear and the complexity is good. It only fails the O(1) space requirement. The naive in-place attempt, zeroing a row and column the moment you find a zero, is genuinely *wrong*: those new zeros are then read as original ones and cascade until the whole matrix is zero."
+      },
+      "approach": [
+        "Use the first row to mark which columns need zeroing, and the first column to mark which rows do.",
+        "The cell [0][0] belongs to both, so record whether the first **column** needs zeroing in a separate variable first.",
+        "First pass: for every cell outside the first row and column, if it is zero, set `m[i][0] = 0` and `m[0][j] = 0`.",
+        "Second pass: for every cell outside the first row and column, zero it if its row marker or column marker is zero.",
+        "Then handle the first row, using `m[0][0]` as its marker.",
+        "Finally handle the first column, using the separate variable saved at the start.",
+        "The order matters: the interior must be resolved before the markers themselves are overwritten."
+      ],
       "code": {
         "python": "def setZeroes(matrix):\n    m, n = len(matrix), len(matrix[0])\n    first_row_zero = any(matrix[0][j]==0 for j in range(n))\n    first_col_zero = any(matrix[i][0]==0 for i in range(m))\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][j] == 0:\n                matrix[i][0] = matrix[0][j] = 0\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][0]==0 or matrix[0][j]==0:\n                matrix[i][j] = 0\n    if first_row_zero:\n        for j in range(n): matrix[0][j] = 0\n    if first_col_zero:\n        for i in range(m): matrix[i][0] = 0",
         "cpp": "class Solution {\npublic:\n    void setZeroes(vector<vector<int>>& matrix) {\n        int m = matrix.size(), n = matrix[0].size();\n        bool firstRow = false, firstCol = false;\n        for (int j = 0; j < n; j++) if (matrix[0][j] == 0) firstRow = true;\n        for (int i = 0; i < m; i++) if (matrix[i][0] == 0) firstCol = true;\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][j] == 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;\n        if (firstRow) for (int j = 0; j < n; j++) matrix[0][j] = 0;\n        if (firstCol) for (int i = 0; i < m; i++) matrix[i][0] = 0;\n    }\n};",
         "java": "class Solution {\n    public void setZeroes(int[][] matrix) {\n        int m = matrix.length, n = matrix[0].length;\n        boolean firstRow = false, firstCol = false;\n        for (int j = 0; j < n; j++) if (matrix[0][j] == 0) firstRow = true;\n        for (int i = 0; i < m; i++) if (matrix[i][0] == 0) firstCol = true;\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][j] == 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;\n        if (firstRow) for (int j = 0; j < n; j++) matrix[0][j] = 0;\n        if (firstCol) for (int i = 0; i < m; i++) matrix[i][0] = 0;\n    }\n}",
         "js": "var setZeroes = function(matrix) {\n    const m = matrix.length, n = matrix[0].length;\n    let firstRow = false, firstCol = false;\n    for (let j = 0; j < n; j++) if (matrix[0][j] === 0) firstRow = true;\n    for (let i = 0; i < m; i++) if (matrix[i][0] === 0) firstCol = true;\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++)\n            if (matrix[i][j] === 0) { matrix[i][0] = 0; matrix[0][j] = 0; }\n    for (let i = 1; i < m; i++)\n        for (let j = 1; j < n; j++)\n            if (matrix[i][0] === 0 || matrix[0][j] === 0) matrix[i][j] = 0;\n    if (firstRow) for (let j = 0; j < n; j++) matrix[0][j] = 0;\n    if (firstCol) for (let i = 0; i < m; i++) matrix[i][0] = 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(1)",
+        "note": "Two passes over the matrix with one extra boolean. The markers live in space the matrix already owns, which is the whole trick — it works only because the first row and column together hold exactly the M + N flags needed, and because [0][0] is handled separately."
+      },
+      "dryRun": "matrix = [[1,1,1], [1,0,1], [1,1,1]]     one zero, at the centre\n\n--- First, why the naive in-place version is WRONG ---\n\nZeroing a row and column the moment a zero is found:\n\n  result   1  0  0\n           0  0  0\n           0  0  0\n\nAlmost everything became zero. Zeroing row 1 and column 1 created a\nzero at [0][1]; the scan then read that as an original zero and used it\nto zero row 0 and column 1 again, and the damage cascaded. The problem\nis that a written zero is indistinguishable from an input zero.\n\n--- The marker version ---\n\nFirst save whether the first column needs zeroing: no zero in column 0,\nso `firstCol = false`.\n\nPass 1 — scan the interior and mark. The only zero is at [1][1], so set\nm[1][0] = 0 (row flag) and m[0][1] = 0 (column flag):\n\n  after marking   1  0  1\n                  0  0  1\n                  1  1  1\n\n  Column 0 now holds the row flags; row 0 holds the column flags.\n\nPass 2 — walk the interior backwards, zeroing any cell whose row flag or\ncolumn flag is zero. Then handle the first column using the saved\nboolean, which is false, so column 0 is left alone except where a row\nflag demanded it.\n\n  final    1  0  1\n           0  0  0\n           1  0  1\n\n  Row 1 and column 1 are zeroed; everything else survives. Correct.\n\nTwo details carry the whole solution. The interior must be resolved\nBEFORE the first row and column are overwritten, since they are still\nserving as the markers. And [0][0] would be the flag for both the first\nrow and the first column, so one of them needs a separate variable —\nhere the first column, saved at the very start.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Zeroing a row and column immediately on finding a zero. Those new zeros are indistinguishable from original ones and cascade — the defining bug, and it turns most inputs entirely to zero.",
+        "Forgetting that [0][0] serves as a marker for both the first row and the first column. One of them needs a separate variable.",
+        "Processing the first row and column before the interior, which destroys the markers while they are still needed.",
+        "Reading the markers while writing them in the same pass.",
+        "Using the *last* row and column instead, which works but makes the index arithmetic harder for no benefit."
+      ],
+      "edgeCases": [
+        "no zeros at all -> matrix unchanged",
+        "a zero at [0][0] -> both the first row and first column are zeroed",
+        "a single row, where the row itself is the marker array",
+        "a single column",
+        "a 1x1 matrix",
+        "all zeros -> unchanged, trivially",
+        "a zero only in the first row, which must not zero the first column"
+      ],
+      "followUps": [
+        {
+          "q": "Why does the naive in-place version fail?",
+          "a": "Because it cannot distinguish an original zero from one it just wrote. On [[1,1,1],[1,0,1],[1,1,1]], zeroing row 1 and column 1 immediately creates a zero at [0][1], which the scan then reads as original and uses to zero row 0 — and so on until everything is zero. Separating *detection* from *application* into two passes is what fixes it, and the marker trick is how to do that with no extra space."
+        },
+        {
+          "q": "Would you present the O(M+N) version?",
+          "a": "Yes, first — it is clear, obviously correct, and O(M+N) is negligible against the O(M*N) input. Then offer the marker version as the O(1) refinement. Leading with the trick and fumbling the [0][0] overlap is a worse outcome."
+        },
+        {
+          "q": "Could you use a single sentinel value instead?",
+          "a": "Only if some value is guaranteed absent from the matrix, which the problem does not promise. Picking an arbitrary sentinel is a real-world bug waiting to happen, and saying so is better than using one."
+        },
+        {
+          "q": "What if you also had to report how many cells changed?",
+          "a": "Count during the second pass, before each write, checking whether the cell was already zero. Free, but it must happen inside the application pass — counting during detection would miss cells zeroed by other rows or columns."
+        }
+      ],
+      "related": [
+        "rotate-image",
+        "spiral-matrix",
+        "product-of-array-except-self"
+      ],
+      "core": true
     },
     {
       "id": "202",
@@ -124,24 +358,79 @@
         "leetcode": "https://leetcode.com/problems/happy-number/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=ljz85bxOYJ0"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Cycle Detection on a Sequence",
+      "patternTriggers": [
+        "A sequence defined by **repeatedly applying a function** to its own output.",
+        "The value space is finite, so the sequence must repeat — and the question is which cycle it lands in.",
+        "The words *does it eventually reach*, *repeat forever*, *happy number*, *will this terminate*."
+      ],
+      "keyInsight": "Repeatedly summing the squares of the digits defines a function from a finite set to itself, so iterating it **must eventually cycle** — the pigeonhole principle guarantees it. The number is happy if that cycle is the fixed point 1, and unhappy otherwise. So this is Linked List Cycle with `next = sumOfSquaredDigits(x)` instead of a pointer, and either a visited set or Floyd's two pointers detects the loop.",
+      "bruteForce": {
+        "idea": "Iterate a fixed large number of times and assume it is unhappy if 1 has not appeared.",
+        "time": "O(k) for whatever k you pick",
+        "space": "O(1)",
+        "whyItFails": "It has no correctness argument — you are guessing a bound. In practice unhappy numbers fall into a known 8-element cycle quickly, so a large k happens to work, but \"it probably terminates by then\" is not an answer. Detecting the cycle properly costs the same and is provably correct."
+      },
+      "approach": [
+        "Write a helper that sums the squares of a number's digits.",
+        "Note that repeatedly applying it keeps the value bounded — for any number below 1000, the sum of squared digits is at most 3 * 81 = 243 — so the sequence is confined to a small finite set.",
+        "A finite set plus a deterministic step means the sequence must eventually revisit a value.",
+        "Either keep a set of seen values and stop when one repeats, or use Floyd's slow and fast pointers to detect the loop in O(1) space.",
+        "With Floyd's: advance slow one step and fast two until they meet.",
+        "The number is happy exactly when the meeting value is 1 — equivalently, when fast reaches 1.",
+        "Return that comparison."
+      ],
       "code": {
         "python": "def isHappy(n):\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sum(int(d)**2 for d in str(n))\n    return n == 1",
         "cpp": "class Solution {\npublic:\n    bool isHappy(int n) {\n        int slow = n, fast = n;\n        do {\n            slow = next(slow);\n            fast = next(next(fast));\n        } while (slow != fast);\n        return slow == 1;\n    }\n    int next(int n) {\n        int sum = 0;\n        while (n) { sum += (n % 10) * (n % 10); n /= 10; }\n        return sum;\n    }\n};",
         "java": "class Solution {\n    public boolean isHappy(int n) {\n        int slow = n, fast = n;\n        do { slow = next(slow); fast = next(next(fast)); } while (slow != fast);\n        return slow == 1;\n    }\n    int next(int n) { int sum = 0; while (n > 0) { sum += (n%10)*(n%10); n /= 10; } return sum; }\n}",
         "js": "var isHappy = function(n) {\n    const next = (n) => { let sum = 0; while (n) { sum += (n%10)**2; n = Math.floor(n/10); } return sum; };\n    let slow = n, fast = n;\n    do { slow = next(slow); fast = next(next(fast)); } while (slow !== fast);\n    return slow === 1;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(log n)",
+        "space": "O(1) with Floyd's, O(log n) with a visited set",
+        "note": "The first step is O(log n) in the number of digits; after that the value is bounded by a small constant (243 for inputs under 1000), so only a constant number of further steps can occur before repeating. Floyd's keeps the space at O(1), which is the only reason to prefer it over the far simpler visited set."
+      },
+      "dryRun": "n = 19\n\n     19  ->  1^2 + 9^2 = 82\n     82  ->  8^2 + 2^2 = 68\n     68  ->  6^2 + 8^2 = 100\n    100  ->  1^2 + 0^2 + 0^2 = 1\n\n  reached 1  ->  HAPPY\n\n\nn = 2 — the unhappy cycle:\n\n      2  ->  4\n      4  ->  16\n     16  ->  1 + 36 = 37\n     37  ->  9 + 49 = 58\n     58  ->  25 + 64 = 89\n     89  ->  64 + 81 = 145\n    145  ->  1 + 16 + 25 = 42\n     42  ->  16 + 4 = 20\n     20  ->  4 + 0 = 4      <- 4 was already seen\n\n  revisited 4  ->  a cycle, and it does not contain 1  ->  UNHAPPY\n\nThat is the famous 8-element cycle: 4, 16, 37, 58, 89, 145, 42, 20. Every\nunhappy number eventually falls into it — but the algorithm does not need\nto know that, and hard-coding the set would be a fact about this\nparticular function rather than a technique.\n\n\nn = 7:\n\n      7  ->  49  ->  97  ->  130  ->  10  ->  1      HAPPY\n\n\nWhy the sequence must terminate or cycle: once the value drops below\n1000 its digit-square sum is at most 3 x 81 = 243, so from then on the\nvalue is confined to 1..243. A deterministic step on a finite set must\nrevisit a value — pigeonhole — so the walk either reaches 1 or loops.\nThere is no third possibility, which is what makes cycle detection the\ncorrect tool rather than a guessed iteration limit.\n\nFloyd's two pointers give the same answer in O(1) space: advance slow\none step and fast two until they meet, then check whether the meeting\nvalue is 1.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Iterating a fixed number of times instead of detecting the cycle. It works on the test cases and has no justification.",
+        "Checking only whether the value becomes 1, with no termination condition for unhappy numbers — that loops forever.",
+        "Summing the digits rather than their squares.",
+        "In Floyd's, comparing slow and fast before advancing them, so they trivially match at the start.",
+        "Assuming the unhappy cycle is always the same. It is — 4, 16, 37, 58, 89, 145, 42, 20 — but hard-coding that set is a fact about the specific function, not an algorithm."
+      ],
+      "edgeCases": [
+        "n = 1 -> true, already at the fixed point",
+        "n = 7 -> true, 7 -> 49 -> 97 -> 130 -> 10 -> 1",
+        "n = 2 -> false, it enters the 8-element unhappy cycle",
+        "a single-digit input",
+        "a large input, where the first step shrinks it dramatically",
+        "n = 10 -> true"
+      ],
+      "followUps": [
+        {
+          "q": "Why must the sequence cycle at all?",
+          "a": "The step function maps a finite set into itself — once the value drops below 1000 it can never exceed 243 again — and it is deterministic. A deterministic walk on a finite set must revisit a node, by the pigeonhole principle. That argument is what makes cycle detection the right tool rather than a guessed iteration count."
+        },
+        {
+          "q": "Would you use the visited set or Floyd's?",
+          "a": "The set, unless O(1) space is demanded — it is three lines and obviously correct. Floyd's is the same complexity in time with constant space, and worth offering as the refinement. Name both and say which you would ship."
+        },
+        {
+          "q": "Where else does this shape appear?",
+          "a": "Find the Duplicate Number turns an array into exactly such a function and uses Floyd's to locate the cycle entry. Pollard's rho factorisation algorithm does the same for a different function. The common signature is iterating a function on a finite domain."
+        },
+        {
+          "q": "What if you squared cubes instead of squares?",
+          "a": "The argument is unchanged — the values stay bounded and the sequence must cycle — but the fixed points and cycles differ. Nothing about the algorithm depends on the specific function, which is the useful generalisation."
+        }
+      ],
+      "related": [
+        "linked-list-cycle",
+        "find-the-duplicate-number",
+        "plus-one"
+      ],
       "core": false
     },
     {
@@ -159,24 +448,80 @@
         "leetcode": "https://leetcode.com/problems/plus-one/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=jIaA8LBUNJE"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Carry Propagation",
+      "patternTriggers": [
+        "Digits are given as an **array or string** rather than a number — a strong hint the value may not fit in an integer.",
+        "Arithmetic must be simulated position by position with a carry.",
+        "The words *plus one*, *increment*, *add to the digit array*."
+      ],
+      "keyInsight": "Walk the digits from the **least significant end** — the back of the array — adding the carry as you go. The only case worth real attention is a carry that survives past the first digit: 999 + 1 needs a fourth digit, so the result array is longer than the input. Everything else is a short loop that can exit early, because the moment a digit is not 9 there is nothing left to carry.",
+      "bruteForce": {
+        "idea": "Convert the digit array to an integer, add one, and split the result back into digits.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It **overflows**. The problem hands you digits precisely because the number can be hundreds of digits long, far beyond any fixed-width integer. Reaching for a big-integer type just relocates the digit-by-digit addition somewhere else."
+      },
+      "approach": [
+        "Walk the array from the last index backwards.",
+        "If the current digit is less than 9, increment it and return immediately — no carry can propagate past it.",
+        "If it is 9, set it to 0 and continue to the next digit left, carrying the 1.",
+        "The early return is what makes the common case O(1): most inputs do not end in a 9.",
+        "If the loop finishes, every digit was a 9 and they are now all 0.",
+        "That means the carry survived, so prepend a 1 — the result is one digit longer.",
+        "Return the array."
+      ],
       "code": {
         "python": "def plusOne(digits):\n    for i in range(len(digits) - 1, -1, -1):\n        if digits[i] < 9:\n            digits[i] += 1\n            return digits\n        digits[i] = 0\n    return [1] + digits",
         "cpp": "class Solution {\npublic:\n    vector<int> plusOne(vector<int>& digits) {\n        for (int i = digits.size() - 1; i >= 0; i--) {\n            if (digits[i] < 9) { digits[i]++; return digits; }\n            digits[i] = 0;\n        }\n        digits.insert(digits.begin(), 1);\n        return digits;\n    }\n};",
         "java": "class Solution {\n    public int[] plusOne(int[] digits) {\n        for (int i = digits.length - 1; i >= 0; i--) {\n            if (digits[i] < 9) { digits[i]++; return digits; }\n            digits[i] = 0;\n        }\n        int[] result = new int[digits.length + 1];\n        result[0] = 1;\n        return result;\n    }\n}",
         "js": "var plusOne = function(digits) {\n    for (let i = digits.length - 1; i >= 0; i--) {\n        if (digits[i] < 9) { digits[i]++; return digits; }\n        digits[i] = 0;\n    }\n    return [1, ...digits];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1), or O(N) when a new leading digit is needed",
+        "note": "Worst case is all nines, which touches every digit. The common case exits after one step. Space is O(1) when the array is modified in place, and O(N) only for the all-nines case where a longer array must be allocated."
+      },
+      "dryRun": "Walk from the least significant digit — the END of the array.\n\n  [1, 2, 3]\n    digit 2 is 3, less than 9  ->  increment to 4, return immediately\n  answer = [1, 2, 4]\n\n  One step. The early exit is why the common case is O(1).\n\n\n  [1, 2, 9]\n    digit 2 is 9  ->  set to 0, carry left\n    digit 1 is 2, less than 9  ->  increment to 3, done\n  answer = [1, 3, 0]\n\n\n  [9, 9, 9]     the case that defines the problem\n    digit 2 is 9  ->  set to 0, carry\n    digit 1 is 9  ->  set to 0, carry\n    digit 0 is 9  ->  set to 0, carry\n    the loop ended with the carry still live  ->  prepend a 1\n  answer = [1, 0, 0, 0]\n\n  The result is one digit LONGER than the input. Miss this and 999 + 1\n  answers 000.\n\n\n  [9]\n    digit 0 is 9  ->  set to 0, carry\n    loop ended  ->  prepend 1\n  answer = [1, 0]\n\nThe loop condition is the whole algorithm: a digit below 9 absorbs the\ncarry and nothing further can change, so you return at once. Only a run\nof 9s propagates, and only an array of ALL 9s propagates past the front.\n\nThe new digit is prepended, not appended — it is the most significant\none. And the array is given as digits precisely because the number may\nbe hundreds of digits long, so converting to an integer first would\noverflow.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Not handling the all-nines case, which is the entire difficulty. [9,9,9] must become [1,0,0,0], not [0,0,0].",
+        "Walking the array forwards. The carry flows from the least significant digit, which is at the end.",
+        "Building the new array by appending a 1 rather than prepending it. The new digit is the most significant one.",
+        "Converting to an integer first, which overflows on long inputs.",
+        "Forgetting the early return and always walking the whole array — correct, but it misses the point that the loop can usually stop at the first digit."
+      ],
+      "edgeCases": [
+        "[1,2,3] -> [1,2,4], exits after one step",
+        "[1,2,9] -> [1,3,0]",
+        "[9] -> [1,0]",
+        "[9,9,9] -> [1,0,0,0], the length grows",
+        "[0] -> [1]",
+        "a single digit",
+        "a very long array of nines"
+      ],
+      "followUps": [
+        {
+          "q": "What if you had to add an arbitrary number rather than one?",
+          "a": "The same loop, but the carry can now exceed 1 and may need several new leading digits. Keep `carry = total // 10` and `digit = total % 10`, and loop *while the carry is non-zero* after the digits run out. That generalisation is Add Two Numbers."
+        },
+        {
+          "q": "What if the digits were stored most-significant-last?",
+          "a": "Then the carry flows from the front, so you walk forwards instead. Nothing else changes — which is a useful check that you understand *why* the direction is what it is rather than having memorised it."
+        },
+        {
+          "q": "How do big-integer libraries do this?",
+          "a": "Exactly this, but in base 2^32 or 2^64 rather than base 10, so each \"digit\" is a machine word and the carry is detected from a hardware flag. The algorithm is identical; only the base changes."
+        },
+        {
+          "q": "What about subtracting one?",
+          "a": "The mirror image, with a borrow instead of a carry — and an extra case, since the result may need a *shorter* array when a leading 1 becomes 0. That asymmetry is why decrement is slightly fiddlier than increment."
+        }
+      ],
+      "related": [
+        "add-two-numbers",
+        "multiply-strings",
+        "happy-number"
+      ],
       "core": false
     },
     {
@@ -194,25 +539,81 @@
         "leetcode": "https://leetcode.com/problems/powx-n/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=g9YQyYi4IQQ"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Fast Exponentiation",
+      "patternTriggers": [
+        "A power with a large exponent, or any repeated application where the operation is **associative**.",
+        "A required complexity below O(n) for something that naively needs n steps.",
+        "The words *pow*, *x to the n*, *modular exponentiation*, *matrix power*."
+      ],
+      "keyInsight": "Squaring halves the exponent: `x^n = (x^(n/2))^2` for even n, and `x * x^(n-1)` for odd n. So instead of n multiplications you need about log n — computing x^64 takes six squarings rather than sixty-four multiplications. The implementation detail that bites in C++ and Java is the negative exponent: negating `INT_MIN` overflows, so widen to a 64-bit type **before** taking the absolute value.",
+      "bruteForce": {
+        "idea": "Multiply x by itself n times in a loop.",
+        "time": "O(N)",
+        "space": "O(1)",
+        "whyItFails": "With n up to 2^31 that is two billion multiplications. The structural waste: computing x^64 by multiplying one at a time recomputes x^32 implicitly, when squaring x^32 once would do. Exponentiation by squaring exploits the binary representation of the exponent to reuse that work."
+      },
+      "approach": [
+        "Handle a negative exponent by replacing x with 1/x and n with its absolute value.",
+        "Widen n to a 64-bit type **before** negating it, because negating the minimum 32-bit integer overflows.",
+        "Initialise the result to 1.",
+        "While n is non-zero: if n is odd, multiply the result by the current x — this peels off one factor.",
+        "Then square x and halve n with a right shift.",
+        "This walks the binary representation of n, multiplying in x^(2^k) for every set bit k.",
+        "Return the result."
+      ],
       "code": {
         "python": "def myPow(x, n):\n    if n < 0: x, n = 1/x, -n\n    result = 1\n    while n:\n        if n % 2: result *= x\n        x *= x\n        n //= 2\n    return result",
         "cpp": "class Solution {\npublic:\n    double myPow(double x, int n) {\n        long p = abs((long)n);\n        double result = 1;\n        while (p) {\n            if (p & 1) result *= x;\n            x *= x;\n            p >>= 1;\n        }\n        return n < 0 ? 1.0 / result : result;\n    }\n};",
         "java": "class Solution {\n    public double myPow(double x, int n) {\n        long p = Math.abs((long)n);\n        double result = 1;\n        while (p > 0) {\n            if ((p & 1) == 1) result *= x;\n            x *= x;\n            p >>= 1;\n        }\n        return n < 0 ? 1.0 / result : result;\n    }\n}",
         "js": "var myPow = function(x, n) {\n    let p = Math.abs(n), result = 1;\n    while (p > 0) {\n        if (p & 1) result *= x;\n        x *= x;\n        p >>= 1;\n    }\n    return n < 0 ? 1 / result : result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(log N)",
+        "space": "O(1)",
+        "note": "The exponent halves each iteration, so there are log2(n) iterations with constant work each — about 31 for a 32-bit exponent. The iterative form uses O(1) space; the recursive form is equally fast but costs O(log N) stack. Floating-point multiplication accumulates rounding error, so the result is approximate for non-integer bases regardless of the algorithm."
+      },
+      "dryRun": "x = 2, n = 10.   Square the base, halve the exponent, and multiply the\nresult in whenever the exponent is odd.\n\n       n   n odd?   result after   x after squaring\n      10     no          1               4\n       5     yes         4              16\n       2     no          4             256\n       1     yes      1024           65536\n\n  answer = 1024\n\nFour iterations instead of ten multiplications. Read the \"yes\" rows:\nthe exponent 10 is 1010 in binary, with bits set at positions 1 and 3,\nso the result is x^2 * x^8 = 4 * 256 = 1024. The loop is walking the\nbinary representation of the exponent, multiplying in x^(2^k) for each\nset bit.\n\n\nThe negative exponent:  x = 2, n = -2\n\n    normalise first: x becomes 1/2 = 0.5, n becomes 2\n\n       n   n odd?   result\n       2     no        1\n       1     yes      0.25\n\n  answer = 0.25,  which is 2^-2\n\n\nOne more:  x = 3, n = 5  (binary 101)\n\n       n   n odd?   result     x\n       5     yes       3        9\n       2     no        3       81\n       1     yes     243     6561\n\n  answer = 243, which is 3^1 * 3^4 — bits 0 and 2 of 101.\n\nThe trap is not in the loop but in the normalisation. In C++ and Java,\n`n = -n` on `INT_MIN` overflows straight back to `INT_MIN`, so the loop\nmisbehaves. Widen to a 64-bit type BEFORE negating. JavaScript numbers\nare doubles so it does not arise, and Python's integers are unbounded —\nwhich is worth knowing because the bug is invisible in two of the four\nlanguages.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Negating n without widening it first. In C++ and Java, `-INT_MIN` overflows back to `INT_MIN`, so the loop never terminates correctly. Convert to `long` before taking the absolute value.",
+        "Forgetting the negative-exponent case entirely, or applying `1/x` after the loop rather than before.",
+        "Using `n / 2` with integer division on a negative n before normalising the sign, which rounds the wrong way.",
+        "Returning an integer type when the result is fractional for negative exponents.",
+        "Assuming `x^0 = 1` needs a special case — the loop handles it naturally, since it never executes and the result stays 1."
+      ],
+      "edgeCases": [
+        "n = 0 -> 1, for any x including 0 by the usual convention",
+        "n = 1 -> x",
+        "a negative n, e.g. 2^-2 = 0.25",
+        "n = INT_MIN, the overflow trap",
+        "x = 0 with a positive n -> 0",
+        "x = 1 or -1 with a huge n, where the answer is 1 or alternates",
+        "a fractional x, where floating-point error accumulates"
+      ],
+      "followUps": [
+        {
+          "q": "Why does walking the binary representation work?",
+          "a": "Write n in binary. Then x^n is the product of x^(2^k) over every set bit k. The loop maintains x as x^(2^k) by squaring, and multiplies it into the result exactly when bit k is set. So the number of multiplications is the number of bits, which is log n."
+        },
+        {
+          "q": "How does modular exponentiation differ?",
+          "a": "Take a modulus after every multiplication, which keeps the values bounded and makes the result exact rather than approximate. That is the core of RSA and of Fermat primality testing, and it is the version that actually matters in practice."
+        },
+        {
+          "q": "What else can be exponentiated this way?",
+          "a": "Anything associative. Matrix exponentiation gives the nth Fibonacci number in O(log n); exponentiating a transition matrix solves any linear recurrence the same way. The algorithm only needs an associative operation and an identity."
+        },
+        {
+          "q": "Would you write it recursively?",
+          "a": "The recursion reads more like the mathematical identity and is easier to explain, at O(log n) stack. The iterative version is O(1) space and avoids the negative-exponent recursion depth question. Either is fine if you name the trade."
+        }
+      ],
+      "related": [
+        "binary-search",
+        "counting-bits",
+        "multiply-strings"
+      ],
+      "core": true
     },
     {
       "id": "43",
@@ -229,24 +630,80 @@
         "leetcode": "https://leetcode.com/problems/multiply-strings/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=1vJRhu4LJQY"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Long Multiplication Simulation",
+      "patternTriggers": [
+        "Numbers given as **strings** because they are too large for any integer type.",
+        "Arithmetic must be simulated, and the positional structure of the result is the key insight.",
+        "The words *multiply strings*, *big integer*, *without converting to a number*."
+      ],
+      "keyInsight": "The positional fact that makes this clean: the product of digit `i` and digit `j` lands at positions `i + j` and `i + j + 1` of the result. So allocate an array of size `m + n`, accumulate every pairwise product into position `i + j + 1` without worrying about carries, and then do a **single** normalisation pass at the end propagating all the carries at once. Separating accumulation from carrying is what keeps the index arithmetic manageable.",
+      "bruteForce": {
+        "idea": "Convert both strings to integers, multiply, and convert back.",
+        "time": "O(M + N)",
+        "space": "O(M + N)",
+        "whyItFails": "It overflows. The inputs can be hundreds of digits, which is exactly why they are strings. Using a built-in big-integer type works in Python but sidesteps the question entirely — the problem is asking you to implement the multiplication."
+      },
+      "approach": [
+        "Return \"0\" immediately if either input is \"0\", which also avoids a leading-zero result later.",
+        "Allocate a result array of size `m + n` filled with zeros — that is the maximum number of digits a product can have.",
+        "Loop i over the first number's digits from right to left, and j over the second's.",
+        "Add `digit_i * digit_j` to `result[i + j + 1]`, accumulating without normalising.",
+        "Also add whatever is already at that position, then split: keep the units digit there and carry the tens into `result[i + j]`.",
+        "After all the products, strip any leading zeros from the result array.",
+        "Join the remaining digits into a string and return it."
+      ],
       "code": {
         "python": "def multiply(num1, num2):\n    if num1==\"0\" or num2==\"0\": return \"0\"\n    res = [0] * (len(num1) + len(num2))\n    for i in range(len(num1)-1,-1,-1):\n        for j in range(len(num2)-1,-1,-1):\n            mul = int(num1[i]) * int(num2[j])\n            p1, p2 = i+j, i+j+1\n            total = mul + res[p2]\n            res[p2] = total % 10\n            res[p1] += total // 10\n    result = \"\".join(str(d) for d in res)\n    return result.lstrip(\"0\")",
         "cpp": "class Solution {\npublic:\n    string multiply(string num1, string num2) {\n        int m = num1.size(), n = num2.size();\n        vector<int> result(m + n, 0);\n        for (int i = m-1; i >= 0; i--)\n            for (int j = n-1; j >= 0; j--) {\n                int mul = (num1[i]-'0') * (num2[j]-'0');\n                int p1 = i+j, p2 = i+j+1;\n                int sum = mul + result[p2];\n                result[p2] = sum % 10;\n                result[p1] += sum / 10;\n            }\n        string s;\n        for (int d : result) if (!(s.empty() && d == 0)) s += to_string(d);\n        return s.empty() ? \"0\" : s;\n    }\n};",
         "java": "class Solution {\n    public String multiply(String num1, String num2) {\n        int m = num1.length(), n = num2.length();\n        int[] result = new int[m + n];\n        for (int i = m-1; i >= 0; i--)\n            for (int j = n-1; j >= 0; j--) {\n                int mul = (num1.charAt(i)-'0') * (num2.charAt(j)-'0');\n                int sum = mul + result[i+j+1];\n                result[i+j+1] = sum % 10;\n                result[i+j] += sum / 10;\n            }\n        StringBuilder sb = new StringBuilder();\n        for (int d : result) if (!(sb.length() == 0 && d == 0)) sb.append(d);\n        return sb.length() == 0 ? \"0\" : sb.toString();\n    }\n}",
         "js": "var multiply = function(num1, num2) {\n    const m = num1.length, n = num2.length;\n    const result = new Array(m + n).fill(0);\n    for (let i = m-1; i >= 0; i--)\n        for (let j = n-1; j >= 0; j--) {\n            const mul = (num1[i]-'0') * (num2[j]-'0');\n            const sum = mul + result[i+j+1];\n            result[i+j+1] = sum % 10;\n            result[i+j] += Math.floor(sum / 10);\n        }\n    const s = result.join('').replace(/^0+/, '');\n    return s || '0';\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(M * N)",
+        "space": "O(M + N)",
+        "note": "Every pair of digits is multiplied once, which is the schoolbook bound. The result array is at most M + N digits, since the product of an M-digit and an N-digit number has at most M + N digits. Faster algorithms exist — Karatsuba is O(N^1.585) and FFT-based methods are O(N log N) — and are what big-integer libraries use for large inputs."
+      },
+      "dryRun": "\"123\" x \"456\"\n\nAllocate a result array of size 3 + 3 = 6 — the maximum digit count of\nthe product. The product of digits at indices i and j lands at result\npositions i+j (the carry) and i+j+1 (the units).\n\n    a[2]=3 * b[2]=6 = 18  -> pos 5 gets 8, carry 1 to pos 4   [0,0,0,0,1,8]\n    a[2]=3 * b[1]=5 = 15  -> pos 4 gets 6, carry 1 to pos 3   [0,0,0,1,6,8]\n    a[2]=3 * b[0]=4 = 12  -> pos 3 gets 3, carry 1 to pos 2   [0,0,1,3,6,8]\n    a[1]=2 * b[2]=6 = 12  -> pos 4 gets 8, carry 1 to pos 3   [0,0,1,4,8,8]\n    a[1]=2 * b[1]=5 = 10  -> pos 3 gets 4, carry 1 to pos 2   [0,0,2,4,8,8]\n    a[1]=2 * b[0]=4 =  8  -> pos 2 gets 0, carry 1 to pos 1   [0,1,0,4,8,8]\n    a[0]=1 * b[2]=6 =  6  -> pos 3 gets 0, carry 1 to pos 2   [0,1,1,0,8,8]\n    a[0]=1 * b[1]=5 =  5  -> pos 2 gets 6, carry 0 to pos 1   [0,1,6,0,8,8]\n    a[0]=1 * b[0]=4 =  4  -> pos 1 gets 5, carry 0 to pos 0   [0,5,6,0,8,8]\n\n  strip the leading zero  ->  \"56088\"\n\n  check: 123 x 456 = 56088\n\nNotice that pos 4 is written twice — first 6 from 3x5, then 8 after\n2x6 adds to it. Each position accumulates contributions from several\ndigit pairs, which is why the value at a position must be read and\nadded to rather than simply assigned.\n\n\nThe leading-zero case:\n\n  \"2\" x \"3\"   result array size 2\n    a[0]=2 * b[0]=3 = 6  -> pos 1 gets 6, carry 0   [0, 6]\n    strip the leading zero  ->  \"6\"\n\n  Without stripping, this returns \"06\".\n\n\nAnd a case where the leading digit survives:\n\n  \"9\" x \"9\"   result array size 2\n    a[0]=9 * b[0]=9 = 81 -> pos 1 gets 1, carry 8 to pos 0   [8, 1]\n    nothing to strip  ->  \"81\"\n\nTwo single digits producing two result digits is why the array must be\nsized m + n rather than max(m, n).",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Getting the position wrong. The product of digits at indices i and j from the right contributes at result positions `i + j` and `i + j + 1`; indexing from the left instead is the usual source of confusion, so pick one convention and stay with it.",
+        "Carrying during accumulation rather than in a separate pass, which multiplies the places where an off-by-one can hide.",
+        "Forgetting to strip leading zeros, so \"2\" x \"3\" returns \"06\".",
+        "Not special-casing a zero input, which otherwise produces a string of zeros.",
+        "Converting intermediate values to integers for convenience, which reintroduces the overflow the problem is designed to avoid."
+      ],
+      "edgeCases": [
+        "either input \"0\" -> \"0\"",
+        "\"2\" x \"3\" -> \"6\", where leading-zero stripping matters",
+        "\"9\" x \"9\" -> \"81\", a two-digit result from single digits",
+        "\"123\" x \"456\" -> \"56088\"",
+        "numbers of very different lengths",
+        "a result exactly M + N digits long, such as \"99\" x \"99\" = \"9801\"",
+        "single-digit inputs"
+      ],
+      "followUps": [
+        {
+          "q": "Why is the result at most M + N digits?",
+          "a": "An M-digit number is below 10^M and an N-digit one below 10^N, so the product is below 10^(M+N) — which has M + N digits. It is also at least 10^(M+N-2), so the result is M+N or M+N-1 digits, which is why exactly one leading zero may need stripping."
+        },
+        {
+          "q": "Can multiplication be done faster than O(M*N)?",
+          "a": "Yes. Karatsuba splits each number in half and uses three multiplications instead of four, giving O(N^1.585). FFT-based convolution reaches O(N log N) and is what libraries use for very large numbers. Schoolbook stays fastest for small inputs because of its low constants."
+        },
+        {
+          "q": "Why accumulate first and carry afterwards?",
+          "a": "Because carrying during accumulation means each position may be revisited and re-normalised as later products land on it, multiplying the opportunities for an index error. Deferring all the carries to one clean right-to-left pass separates two independent concerns."
+        },
+        {
+          "q": "How would you implement addition and subtraction of strings?",
+          "a": "Addition is the same carry loop with one pass. Subtraction needs a borrow and a prior comparison to determine the sign. Together with this, that is the core of a small big-integer library — and division is the genuinely hard one."
+        }
+      ],
+      "related": [
+        "plus-one",
+        "add-two-numbers",
+        "pow-x-n"
+      ],
       "core": false
     },
     {
@@ -264,24 +721,80 @@
         "leetcode": "https://leetcode.com/problems/detect-squares/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=bahebearrDc"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Counting by Diagonal",
+      "patternTriggers": [
+        "A design problem where points accumulate and a geometric count is queried repeatedly.",
+        "A shape is **determined** by a subset of its vertices, so enumerating that subset is enough.",
+        "The words *detect squares*, *count the squares*, *axis-aligned*."
+      ],
+      "keyInsight": "Rather than searching for squares, iterate over candidate **diagonal partners**. For the query point, any other point sharing neither its x nor its y could be the opposite corner of an axis-aligned square — but only if the x and y differences are equal in magnitude. Given such a diagonal, the other two corners are completely determined, so you just multiply their counts. That turns an O(n^3) search into one pass over the stored points with O(1) work each.",
+      "bruteForce": {
+        "idea": "For each query, try every pair or triple of stored points and check whether they form a square with it.",
+        "time": "O(N^2) or O(N^3) per query",
+        "space": "O(N)",
+        "whyItFails": "It searches combinations that the geometry already pins down. An axis-aligned square is fully determined by one diagonal, so iterating over candidate diagonal partners — a single loop — and then looking up the two forced corners is all that is needed."
+      },
+      "approach": [
+        "Store a count per point in a map keyed by the coordinate pair, since duplicate points are allowed and multiply the square count.",
+        "Also keep the list of distinct points, so the count query can iterate them.",
+        "For `add`, increment the point's count.",
+        "For `count(px, py)`, iterate over the stored points looking for a valid diagonal partner `(x, y)`.",
+        "A partner is valid only if `abs(x - px) == abs(y - py)` — equal side lengths — and that distance is non-zero, which rules out the same point and the degenerate case.",
+        "Given such a diagonal, the other two corners are forced: `(px, y)` and `(x, py)`.",
+        "Multiply the counts of the partner and both forced corners, and add that product to the total."
+      ],
       "code": {
         "python": "class DetectSquares:\n    def __init__(self):\n        self.pts = defaultdict(int)\n    def add(self, point):\n        self.pts[tuple(point)] += 1\n    def count(self, point):\n        px, py = point\n        res = 0\n        for (x, y), cnt in self.pts.items():\n            if abs(x-px) != abs(y-py) or x==px or y==py: continue\n            res += cnt * self.pts.get((x,py),0) * self.pts.get((px,y),0)\n        return res",
         "cpp": "class DetectSquares {\n    unordered_map<long long, int> count;\n    vector<pair<int,int>> points;\npublic:\n    void add(vector<int> point) {\n        count[(long long)point[0] << 32 | point[1]]++;\n        points.push_back({point[0], point[1]});\n    }\n    int count_fn(vector<int> point) {\n        int px = point[0], py = point[1], result = 0;\n        for (auto& [x, y] : points) {\n            if (abs(px-x) != abs(py-y) || px == x || py == y) continue;\n            long long k1 = (long long)x << 32 | py;\n            long long k2 = (long long)px << 32 | y;\n            result += (count.count(k1) ? count[k1] : 0) * (count.count(k2) ? count[k2] : 0);\n        }\n        return result;\n    }\n};",
         "java": "class DetectSquares {\n    Map<Long, Integer> count = new HashMap<>();\n    List<int[]> points = new ArrayList<>();\n    public void add(int[] point) {\n        long key = (long)point[0] << 32 | (point[1] & 0xFFFFFFFFL);\n        count.merge(key, 1, Integer::sum);\n        points.add(point);\n    }\n    public int count(int[] point) {\n        int px = point[0], py = point[1], result = 0;\n        for (int[] p : points) {\n            int x = p[0], y = p[1];\n            if (Math.abs(px-x) != Math.abs(py-y) || px == x || py == y) continue;\n            long k1 = (long)x << 32 | (py & 0xFFFFFFFFL);\n            long k2 = (long)px << 32 | (y & 0xFFFFFFFFL);\n            result += count.getOrDefault(k1, 0) * count.getOrDefault(k2, 0);\n        }\n        return result;\n    }\n}",
         "js": "var DetectSquares = function() { this.count = new Map(); this.points = []; };\nDetectSquares.prototype.add = function(point) {\n    const key = point[0] + ',' + point[1];\n    this.count.set(key, (this.count.get(key) || 0) + 1);\n    this.points.push(point);\n};\nDetectSquares.prototype.count = function(point) {\n    const [px, py] = point;\n    let result = 0;\n    for (const [x, y] of this.points) {\n        if (Math.abs(px-x) !== Math.abs(py-y) || px === x || py === y) continue;\n        result += (this.count.get(x+','+py) || 0) * (this.count.get(px+','+y) || 0);\n    }\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(1) for add, O(N) for count",
+        "space": "O(N)",
+        "note": "N is the number of distinct points stored. The count query does one pass with three hash lookups per candidate, so it is linear rather than quadratic. Multiplying the three counts handles duplicate points correctly — k copies of a corner contribute k times as many squares."
+      },
+      "dryRun": "  add([3, 10])\n  add([11, 2])\n  add([3, 2])\n     counts = {(3,10): 1, (11,2): 1, (3,2): 1}\n\n  count(11, 10):\n     iterate the stored points looking for a diagonal partner.\n\n     (3,10): shares y = 10 with the query  ->  not a diagonal\n     (11,2): shares x = 11 with the query  ->  not a diagonal\n     (3,2):  |3 - 11| = 8 and |2 - 10| = 8, equal and non-zero  ->  VALID\n             the other two corners are forced: (11, 2) and (3, 10)\n             count = 1 * 1 * 1 = 1\n\n  answer = 1    the square with corners (3,2) (11,2) (11,10) (3,10)\n\n  count(14, 8):\n     no stored point is at equal horizontal and vertical distance from\n     (14, 8)\n  answer = 0\n\n  add([11, 2])  again\n     counts = {(3,10): 1, (11,2): 2, (3,2): 1}\n\n  count(11, 10):\n     (3,2) is still the only valid diagonal partner, but now\n     count = 1 * 2 * 1 = 2\n\n  answer = 2\n\nThe duplicate is the case that forces counts rather than a set. There\nare genuinely two squares, because the corner at (11,2) exists twice and\neach copy forms a distinct square with the other three corners. A set\nwould report 1.\n\nWhy iterating diagonals is enough: an axis-aligned square is completely\ndetermined by one diagonal, so fixing the query point as one end means\neach valid partner gives exactly one square with its other two corners\nforced. The squares through the query point are therefore in one-to-one\ncorrespondence with valid partners — a single loop enumerates them all,\nwith no repetition and nothing missed.\n\nThe two rejection conditions both matter: equal absolute differences\n(so it really is a square's diagonal) and non-zero (so the query point\ndoes not pair with itself or with something sharing a coordinate, which\nwould give a degenerate zero-area \"square\").",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Forgetting that duplicate points are allowed, and storing a set instead of a count map. Then squares formed with repeated corners are undercounted.",
+        "Omitting the non-zero distance check, which lets the query point pair with itself or with a point sharing a coordinate, producing degenerate zero-area \"squares\".",
+        "Checking only `x != px` rather than requiring equal absolute differences. The diagonal of an axis-aligned square has equal horizontal and vertical extents.",
+        "Iterating over point *occurrences* rather than distinct points, which double-counts when duplicates exist — the counts already handle multiplicity.",
+        "Adding rather than multiplying the three corner counts."
+      ],
+      "edgeCases": [
+        "fewer than three stored points -> 0",
+        "duplicate points, which multiply the count",
+        "points sharing an x or y with the query, which cannot be diagonal partners",
+        "the query point itself already stored",
+        "several squares sharing the query point",
+        "negative coordinates",
+        "a point at the same location as the query"
+      ],
+      "followUps": [
+        {
+          "q": "Why is iterating over diagonals enough?",
+          "a": "An axis-aligned square has two diagonals, and either one determines all four corners. Fixing the query point as one end, each candidate partner at equal horizontal and vertical distance gives exactly one square, whose other two corners are forced. So the squares through the query point are in one-to-one correspondence with valid partners — a single loop enumerates them all without repetition."
+        },
+        {
+          "q": "What if the squares could be rotated?",
+          "a": "Much harder. The other corners are no longer forced by a diagonal alone in a way that lands on integer coordinates, so you would enumerate pairs as candidate *sides* and compute the two perpendicular corners — O(N^2) per query, with floating-point or rational care."
+        },
+        {
+          "q": "How would you make the count faster than O(N)?",
+          "a": "Index the points by x and by y, so for a query you only consider points in the same columns and rows as the forced corners. That helps a great deal on sparse data and nothing in the worst case — the usual trade for an index."
+        },
+        {
+          "q": "What if points could be removed?",
+          "a": "Decrement the count and delete the key when it hits zero, keeping the distinct-point list in sync. The count query is unaffected, which is the advantage of storing counts rather than a set."
+        }
+      ],
+      "related": [
+        "two-sum",
+        "group-anagrams",
+        "lru-cache"
+      ],
       "core": false
     }
   ]

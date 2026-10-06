@@ -4,13 +4,31 @@
   "icon": "💻",
   "order": 18,
   "concept": {
-    "heading": "Key Operations",
-    "body": "",
-    "bullets": [],
+    "heading": "Core Concepts",
+    "body": "Bit tricks are worth knowing for two reasons: they turn O(n) loops into single operations, and interviewers ask about them. The set that actually recurs is small.\n\n**XOR is its own inverse.** `a ^ a = 0` and `a ^ 0 = a`, and it is commutative and associative — so XORing a whole list cancels every value that appears twice, in any order, leaving whatever appeared once. XOR is also *addition without carry*, which is what makes it the basis of adding numbers without `+`.\n\n**`n & (n - 1)` clears the lowest set bit.** Subtracting 1 flips that bit to 0 and every zero below it to 1, so the AND keeps only the bits above. Looping on it counts set bits in as many steps as there are set bits, rather than 32.\n\n**`n & -n` isolates the lowest set bit**, because two's-complement negation is \"invert and add one\", which leaves exactly that bit matching.\n\n**Shifts replace multiplication and division by powers of two**, and `n >> 1` with `n & 1` is the standard way to walk a number's binary representation — which makes `countBits(n) = countBits(n >> 1) + (n & 1)` a one-line DP.\n\nThe trap that matters most is **language semantics**. Python integers are arbitrary precision and never overflow, so any problem that says \"32-bit integer\" needs explicit masking with `0xFFFFFFFF` and a manual conversion back to a signed value. JavaScript's bitwise operators coerce to 32-bit *signed* integers, so `>>>` is needed for logical right shifts. Neither language does what C or Java does by default.",
+    "bullets": [
+      "**XOR:** `a ^ a = 0`, `a ^ 0 = a`, commutative and associative — so pairs cancel regardless of order. Also addition without carry.",
+      "**`n & (n - 1)`** clears the lowest set bit; **`n & -n`** isolates it. The first counts set bits in O(popcount); the second is how you iterate over subsets.",
+      "**`n >> 1` and `n & 1`** walk the binary representation. `f(n) = f(n >> 1) + (n & 1)` is the recurrence behind Counting Bits.",
+      "**Python has no fixed width.** Mask with `& 0xFFFFFFFF` to simulate 32 bits, then convert back: if the result exceeds `0x7FFFFFFF`, subtract `0x100000000`.",
+      "**JavaScript bitwise ops are 32-bit signed.** Use `>>>` for an unsigned right shift, and remember `|0` truncates to 32 bits.",
+      "**Check overflow before it happens.** Compare against `INT_MAX / 10` before multiplying, rather than inspecting a value that has already wrapped — wrapped signed overflow is undefined behaviour in C++ anyway."
+    ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# --- XOR: pairs cancel, the loner survives ---\nresult = 0\nfor x in nums:\n    result ^= x          # a^a=0, a^0=a, order irrelevant\nreturn result\n\n# --- Count set bits: clear the lowest one each step ---\ncount = 0\nwhile n:\n    n &= n - 1           # clears the LOWEST set bit\n    count += 1           # loops once per SET bit, not 32 times\nreturn count\n\n# --- Walk the binary representation ---\nwhile n:\n    bit = n & 1          # the lowest bit\n    n >>= 1              # shift it off\n\n# --- Counting Bits as a one-line DP ---\ndp = [0] * (n + 1)\nfor i in range(1, n + 1):\n    dp[i] = dp[i >> 1] + (i & 1)   # i's bits = (i//2)'s bits, plus its last\n\n# --- Add without + : XOR is the sum, AND<<1 is the carry ---\nMASK = 0xFFFFFFFF\nMAX_INT = 0x7FFFFFFF\nwhile b:\n    carry = (a & b) << 1       # positions where both are 1\n    a = (a ^ b) & MASK         # sum without carry; mask to 32 bits\n    b = carry & MASK\n# Python ints are unbounded, so convert back to a SIGNED 32-bit value:\nreturn a if a <= MAX_INT else ~(a ^ MASK)\n\n# --- Isolate the lowest set bit ---\nlowest = n & -n        # two's complement: invert and add one",
+    "cpp": "// --- XOR: pairs cancel ---\nint result = 0;\nfor (int x : nums) result ^= x;\nreturn result;\n\n// --- Count set bits ---\nint count = 0;\nwhile (n) { n &= n - 1; count++; }   // clears the lowest set bit\nreturn count;\n// or just __builtin_popcount(n), which compiles to one instruction\n\n// --- Counting Bits as a DP ---\nvector<int> dp(n + 1, 0);\nfor (int i = 1; i <= n; i++)\n    dp[i] = dp[i >> 1] + (i & 1);\n\n// --- Add without + ---\n// Use UNSIGNED for the shift: signed overflow is undefined behaviour.\nint add(int a, int b) {\n    while (b != 0) {\n        unsigned carry = (unsigned)(a & b) << 1;\n        a = a ^ b;\n        b = (int)carry;\n    }\n    return a;\n}\n\n// --- Reverse 32 bits ---\nuint32_t reverseBits(uint32_t n) {\n    uint32_t out = 0;\n    for (int i = 0; i < 32; i++) {\n        out = (out << 1) | (n & 1);   // shift the answer, append n's last bit\n        n >>= 1;\n    }\n    return out;\n}\n\n// --- Isolate the lowest set bit ---\nint lowest = n & -n;",
+    "java": "// --- XOR: pairs cancel ---\nint result = 0;\nfor (int x : nums) result ^= x;\nreturn result;\n\n// --- Count set bits ---\nint count = 0;\nwhile (n != 0) { n &= n - 1; count++; }   // clears the lowest set bit\nreturn count;\n// or Integer.bitCount(n)\n\n// --- Counting Bits as a DP ---\nint[] dp = new int[n + 1];\nfor (int i = 1; i <= n; i++)\n    dp[i] = dp[i >> 1] + (i & 1);\n\n// --- Add without + ---\nint add(int a, int b) {\n    while (b != 0) {\n        int carry = (a & b) << 1;\n        a = a ^ b;\n        b = carry;\n    }\n    return a;          // Java ints wrap on overflow, which is what we want\n}\n\n// --- Reverse 32 bits ---\nint reverseBits(int n) {\n    int out = 0;\n    for (int i = 0; i < 32; i++) {\n        out = (out << 1) | (n & 1);\n        n >>>= 1;      // UNSIGNED shift: >> would sign-extend forever\n    }\n    return out;\n}\n\n// --- Isolate the lowest set bit ---\nint lowest = n & -n;",
+    "js": "// --- XOR: pairs cancel ---\nlet result = 0;\nfor (const x of nums) result ^= x;\nreturn result;\n\n// --- Count set bits ---\nlet count = 0;\nwhile (n) { n &= n - 1; count++; }   // clears the lowest set bit\nreturn count;\n\n// --- Counting Bits as a DP ---\nconst dp = new Array(n + 1).fill(0);\nfor (let i = 1; i <= n; i++)\n  dp[i] = dp[i >> 1] + (i & 1);\n\n// --- Add without + ---\n// JS bitwise ops already coerce to 32-bit SIGNED, so this wraps like Java.\nconst add = (a, b) => {\n  while (b !== 0) {\n    const carry = (a & b) << 1;\n    a = a ^ b;\n    b = carry;\n  }\n  return a;\n};\n\n// --- Reverse 32 bits ---\nconst reverseBits = (n) => {\n  let out = 0;\n  for (let i = 0; i < 32; i++) {\n    out = (out << 1) | (n & 1);\n    n >>>= 1;          // UNSIGNED shift — >> sign-extends and loops forever\n  }\n  return out >>> 0;    // coerce the result back to unsigned for display\n};\n\n// --- Isolate the lowest set bit ---\nconst lowest = n & -n;"
+  },
+  "recognitionTriggers": [
+    "*Every element appears twice except one* — **XOR** the lot. The generalisation to \"appears three times\" needs bit-by-bit counting instead.",
+    "**Count, reverse, or set bits**, or anything phrased in terms of a binary representation.",
+    "*Without using the + or - operator* — simulate addition with XOR for the sum and AND-then-shift for the carry.",
+    "A **missing or duplicated number in 0..n** — XOR against the full range, or use the sum formula. Both are O(1) space where a hash set is O(n).",
+    "*Constant extra space* on a numeric problem, where the usual answer would be a set or a map."
+  ],
   "problems": [
     {
       "id": "136",
@@ -27,25 +45,78 @@
         "leetcode": "https://leetcode.com/problems/single-number/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=qMPX1AOa83k"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "XOR Cancellation",
+      "patternTriggers": [
+        "Every element appears an even number of times **except one**.",
+        "O(1) extra space is required, which rules out a hash set or a counter.",
+        "The combining operation needs to be its own inverse so that pairs annihilate — which is exactly XOR."
+      ],
       "keyInsight": "XOR all numbers. Pairs cancel out (a^a=0), leaving the single number.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Count occurrences with a hash map and return the value whose count is 1. Or sort and scan for the element without a neighbouring twin.",
+        "time": "O(N) with a map, O(N log N) sorting",
+        "space": "O(N) with a map, O(1) sorting but it mutates the input",
+        "whyItFails": "Both are correct and fine in practice. They fail only the O(1) space requirement — and they do more work than asked, because you never need the counts, only which value survives. XOR gives that in one pass with a single integer."
+      },
+      "approach": [
+        "Initialise an accumulator to 0, which is XOR's identity.",
+        "XOR every element of the array into it.",
+        "Because `a ^ a = 0`, every value appearing twice contributes nothing.",
+        "Because `a ^ 0 = a`, the value appearing once survives.",
+        "XOR is commutative and associative, so the order of the array is irrelevant and no sorting or grouping is needed.",
+        "Return the accumulator."
+      ],
       "code": {
         "python": "def singleNumber(nums):\n    result = 0\n    for n in nums:\n        result ^= n\n    return result",
         "cpp": "class Solution {\npublic:\n    int singleNumber(vector<int>& nums) {\n        int result = 0;\n        for (int n : nums) result ^= n;\n        return result;\n    }\n};",
         "java": "class Solution {\n    public int singleNumber(int[] nums) {\n        int result = 0;\n        for (int n : nums) result ^= n;\n        return result;\n    }\n}",
         "js": "var singleNumber = function(nums) {\n    return nums.reduce((a, b) => a ^ b, 0);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass, one integer. The correctness rests entirely on XOR's algebra: it is associative and commutative, every element is its own inverse, and 0 is the identity — formally, the integers under XOR form an abelian group where every element has order 2."
+      },
+      "dryRun": "nums = [4, 1, 2, 1, 2].   XOR everything into one accumulator.\n\n    acc    x    result      in binary\n      0  ^ 4  =   4         0000 ^ 0100 = 0100\n      4  ^ 1  =   5         0100 ^ 0001 = 0101\n      5  ^ 2  =   7         0101 ^ 0010 = 0111\n      7  ^ 1  =   6         0111 ^ 0001 = 0110\n      6  ^ 2  =   4         0110 ^ 0010 = 0100\n\n  answer = 4\n\nWatch the bits rather than the decimals. Bit 0 is set by the first 1 and\ncleared by the second; bit 1 is set by the first 2 and cleared by the\nsecond. Only bit 2 — the 4 — is touched once, so it is the only bit\nstill standing at the end.\n\n\nThe smaller case:  nums = [2, 2, 1]\n\n      0  ^ 2  =   2         0000 ^ 0010 = 0010\n      2  ^ 2  =   0         0010 ^ 0010 = 0000   the pair annihilates\n      0  ^ 1  =   1         0000 ^ 0001 = 0001\n\n  answer = 1\n\nNote the accumulator passes through 0 in the middle and that is fine —\n0 is XOR's identity, so it carries no information and nothing is lost.\n\nThe array order is irrelevant. XOR is commutative and associative, so\n[2,2,1], [1,2,2] and [2,1,2] all give 1. That is why no sorting or\ngrouping is needed, and it is the property worth naming when asked why\nthis works.\n\nAddition would not work: 2 + 2 = 4 rather than 0, so pairs accumulate\ninstead of cancelling. The property you need is self-inverseness,\n`a ^ a = 0`, which XOR has and addition does not.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Initialising the accumulator to the first element and then XORing the whole array including it, which cancels it out.",
+        "Using addition or subtraction instead of XOR. Addition has no self-inverse, so pairs do not cancel.",
+        "Assuming the array must be sorted. XOR's commutativity means order never matters, which is worth stating since it is why no preprocessing is needed.",
+        "Reaching for XOR when elements appear **three** times. Pairs cancel; triples do not, and that variant needs per-bit counting modulo 3."
+      ],
+      "edgeCases": [
+        "a single element -> itself",
+        "[2,2,1] -> 1",
+        "[4,1,2,1,2] -> 4, with the loner first",
+        "negative numbers, which XOR handles via their two's-complement bits",
+        "a zero among the duplicates",
+        "the loner being 0, where the accumulator ends at 0 and that is correct"
+      ],
+      "followUps": [
+        {
+          "q": "What if every element appears three times except one?",
+          "a": "XOR no longer works, since triples do not cancel. Count each bit position modulo 3: for every bit, sum it across all numbers, take the remainder mod 3, and that remainder is the loner's bit. O(32N) time, O(1) space. There is also a two-accumulator trick that simulates mod-3 counting with bitwise ops."
+        },
+        {
+          "q": "What if there were two loners rather than one?",
+          "a": "XOR the whole array to get `a ^ b`. Any set bit in that result distinguishes them, so take the lowest one with `x & -x` and partition the array by whether each element has that bit. XOR each group separately to recover a and b. Still O(N) time and O(1) space — a genuinely elegant extension."
+        },
+        {
+          "q": "Why does XOR work where addition does not?",
+          "a": "Because XOR is its own inverse: `a ^ a = 0`. Addition's inverse is negation, so `a + a = 2a`, and pairs accumulate rather than cancel. The property you need is self-inverseness, which is what makes XOR the natural operation for \"things that come in pairs\"."
+        },
+        {
+          "q": "Where else does XOR cancellation show up?",
+          "a": "Missing Number over 0..n, finding a single missing element in a stream, simple checksums and parity bits, and RAID error recovery — where XORing the surviving disks reconstructs the lost one. The pattern is always \"everything appears an even number of times except what you want\"."
+        }
+      ],
+      "related": [
+        "missing-number",
+        "counting-bits",
+        "sum-of-two-integers"
+      ],
+      "core": true
     },
     {
       "id": "191",
@@ -61,25 +132,79 @@
         "leetcode": "https://leetcode.com/problems/number-of-1-bits/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=5Km3utixwZs"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Clear the Lowest Set Bit",
+      "patternTriggers": [
+        "Count, locate or clear individual bits of a number.",
+        "The naive approach checks all 32 positions; the trick makes the cost proportional to the number of set bits.",
+        "The words *Hamming weight*, *number of 1 bits*, *popcount*."
+      ],
+      "keyInsight": "`n & (n - 1)` clears the lowest set bit. Subtracting 1 flips that bit from 1 to 0 and turns every zero below it into a 1, so ANDing with the original keeps only the bits strictly above it. Looping on that runs **once per set bit** rather than once per bit position — so a number with three set bits takes three iterations regardless of its width, instead of 32.",
+      "bruteForce": {
+        "idea": "Check each of the 32 bit positions with a mask or by shifting, counting the ones.",
+        "time": "O(32), effectively O(1)",
+        "space": "O(1)",
+        "whyItFails": "It does not fail — it is O(1) for a fixed width and perfectly acceptable. The `n & (n - 1)` version is faster in proportion to how sparse the number is, and more importantly it is the trick the question is asking about. In production you would call the built-in: `__builtin_popcount`, `Integer.bitCount`, or `int.bit_count()`."
+      },
+      "approach": [
+        "Initialise a counter to 0.",
+        "While n is non-zero, apply `n = n & (n - 1)`, which clears exactly one set bit.",
+        "Increment the counter each time.",
+        "When n reaches 0 every set bit has been cleared, so the counter is the answer.",
+        "In Java, be careful with the sign: use `>>>` if you shift instead, since `>>` sign-extends.",
+        "In Python the integer is unbounded but non-negative inputs behave as expected; a negative input would loop on an infinite sign extension."
+      ],
       "code": {
         "python": "def hammingWeight(n):\n    count = 0\n    while n:\n        count += n & 1\n        n >>= 1\n    return count\n# Or: n & (n-1) drops lowest set bit",
         "cpp": "class Solution {\npublic:\n    int hammingWeight(uint32_t n) {\n        int count = 0;\n        while (n) { count++; n &= n - 1; }\n        return count;\n    }\n};",
         "java": "class Solution {\n    public int hammingWeight(int n) {\n        int count = 0;\n        while (n != 0) { count++; n &= n - 1; }\n        return count;\n    }\n}",
         "js": "var hammingWeight = function(n) {\n    let count = 0;\n    while (n) { count++; n &= n - 1; }\n    return count;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(number of set bits)",
+        "space": "O(1)",
+        "note": "At most 32 iterations for a 32-bit integer, and often far fewer — one per set bit. The shift-and-mask alternative is always exactly 32. Both are O(1) for a fixed width; the difference is the constant, and on sparse numbers it is substantial."
+      },
+      "dryRun": "n = 11 = 00001011.   Each step clears the LOWEST set bit.\n\n       n                 n - 1              n & (n-1)         count\n      11 (00001011)  &  10 (00001010)  =   10 (00001010)        1\n      10 (00001010)  &   9 (00001001)  =    8 (00001000)        2\n       8 (00001000)  &   7 (00000111)  =    0 (00000000)        3\n\n  answer = 3,  in three iterations rather than 32\n\nSee the mechanism in the first row. 11 is ...1011, so its lowest set bit\nis bit 0. Subtracting 1 gives ...1010 — that bit flipped to 0 and\nnothing below it to flip. The AND keeps only the bits above, removing\nexactly one.\n\nThe third row shows the borrow propagating: 8 is 1000, and 7 is 0111 —\nthe set bit became 0 and all three zeros below became 1. ANDing leaves\nnothing, which is correct since 8 had only one set bit.\n\n\nA sparse number:  n = 128 = 10000000\n\n     128 (10000000)  & 127 (01111111)  =    0 (00000000)        1\n\n  answer = 1, in a single iteration. The shift-and-mask approach would\n  still take all 32.\n\n\nThe dense worst case:  n = 255 = 11111111\n\n  Eight iterations, clearing one bit each time:\n     255 -> 254 -> 252 -> 248 -> 240 -> 224 -> 192 -> 128 -> 0\n\n  answer = 8\n\nSo the cost is exactly the number of set bits. For a fixed 32-bit width\nboth approaches are O(1), but the constant differs by up to 32x — which\nis the point of the trick.\n\nThe language traps: in Java use `n != 0` rather than `n > 0`, since a\nnegative int has its sign bit set and would skip the loop entirely. In\nPython, mask a negative input with `& 0xFFFFFFFF` first, because\nPython's integers sign-extend forever and the loop would not terminate.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "In Java, using `n > 0` as the loop condition. A negative int has its sign bit set, so the loop never runs — use `n != 0`.",
+        "In Java, shifting with `>>` instead of `>>>` in the shift-based version. The sign bit is replicated, so the loop never terminates.",
+        "In Python, passing a negative number. Python's integers are arbitrary precision with infinite sign extension, so the loop does not terminate — mask with `& 0xFFFFFFFF` first.",
+        "Writing `n & (n - 1)` but forgetting to assign it back to n.",
+        "Counting down from 32 with a mask and then claiming the trick's complexity. The two approaches have genuinely different costs."
+      ],
+      "edgeCases": [
+        "n = 0 -> 0",
+        "n = 1 -> 1",
+        "a power of two -> 1, exactly one set bit",
+        "all bits set, 0xFFFFFFFF -> 32",
+        "a negative number interpreted as unsigned, where the sign bit counts",
+        "n = 2^31, where the only set bit is the sign bit"
+      ],
+      "followUps": [
+        {
+          "q": "Why exactly does `n & (n - 1)` clear the lowest set bit?",
+          "a": "Write n as `...X100...0` with the lowest set bit shown. Subtracting 1 borrows through the trailing zeros: that bit becomes 0 and all the zeros below become 1, giving `...X011...1`. The high part `...X` is untouched, so ANDing keeps `...X000...0` — the original with that one bit gone."
+        },
+        {
+          "q": "How do you check whether a number is a power of two?",
+          "a": "`n > 0 && (n & (n - 1)) == 0`. A power of two has exactly one set bit, so clearing it leaves zero. The `n > 0` guard matters because 0 would otherwise pass."
+        },
+        {
+          "q": "How is popcount implemented in hardware?",
+          "a": "Modern CPUs have a single `POPCNT` instruction. Before that, the standard software method was a divide-and-conquer bit trick that sums adjacent pairs, then nibbles, then bytes, in about five masked shift-and-add steps with no loop at all."
+        },
+        {
+          "q": "What is `n & -n` used for?",
+          "a": "It isolates the lowest set bit rather than clearing it, because two's-complement negation is \"invert and add one\", which leaves exactly that bit matching. It is the basis of iterating over all subsets of a bitmask and of the Fenwick tree's index arithmetic."
+        }
+      ],
+      "related": [
+        "counting-bits",
+        "reverse-bits",
+        "single-number"
+      ],
+      "core": true
     },
     {
       "id": "338",
@@ -96,25 +221,79 @@
         "leetcode": "https://leetcode.com/problems/counting-bits/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=RyBM56RIWrM"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Bit DP",
+      "patternTriggers": [
+        "Compute something for **every** value in a range, not just one — which makes a per-value O(32) loop wasteful.",
+        "A value's answer relates to a strictly smaller value's by a shift, giving a DP recurrence.",
+        "The words *for every i from 0 to n*, *return an array*, *counting bits*."
+      ],
+      "keyInsight": "Dropping the last bit of `i` gives `i >> 1`, so `i` has all the set bits of `i >> 1` plus possibly its own last bit: `countBits(i) = countBits(i >> 1) + (i & 1)`. Since `i >> 1` is strictly smaller than `i`, that is a complete DP recurrence filled in one forward pass — each answer is O(1) rather than O(32). It is the cleanest example in this category of a bit identity turning into a dynamic program.",
+      "bruteForce": {
+        "idea": "For each i from 0 to n, count its set bits independently with the `n & (n - 1)` loop.",
+        "time": "O(N * 32), or O(N * popcount) with the clearing trick",
+        "space": "O(N) for the output",
+        "whyItFails": "Perfectly acceptable, and genuinely fast. But it recomputes work: `countBits(10)` re-derives the bits of 5, which the array already holds. Reusing the earlier answer makes each entry O(1) and the whole thing a single clean pass."
+      },
+      "approach": [
+        "Allocate an array of size n+1 and set `dp[0] = 0`.",
+        "For each i from 1 to n, compute `dp[i] = dp[i >> 1] + (i & 1)`.",
+        "`i >> 1` is i with its last bit removed, and it is strictly less than i, so its answer is already filled.",
+        "`i & 1` adds back the bit that was shifted off.",
+        "Return the array.",
+        "An alternative recurrence is `dp[i] = dp[i & (i - 1)] + 1`, which uses the lowest-set-bit trick instead — equally valid and worth knowing as a variation."
+      ],
       "code": {
         "python": "def countBits(n):\n    dp = [0] * (n + 1)\n    for i in range(1, n + 1):\n        dp[i] = dp[i >> 1] + (i & 1)\n    return dp",
         "cpp": "class Solution {\npublic:\n    vector<int> countBits(int n) {\n        vector<int> dp(n + 1, 0);\n        for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n        return dp;\n    }\n};",
         "java": "class Solution {\n    public int[] countBits(int n) {\n        int[] dp = new int[n + 1];\n        for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n        return dp;\n    }\n}",
         "js": "var countBits = function(n) {\n    const dp = new Array(n + 1).fill(0);\n    for (let i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n    return dp;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(N)",
+        "note": "One pass with constant work per entry, which is optimal since the output itself is O(N). The space is the output array; no extra structures are needed. The naive per-value counting is O(32N) — the same order for a fixed width, but with a factor of 32 that the recurrence removes."
+      },
+      "dryRun": "n = 8.   dp[i] = dp[i >> 1] + (i & 1)\n\n      i   binary   i>>1   dp[i>>1]   i&1   dp[i]\n      1        1      0          0     1       1\n      2       10      1          1     0       1\n      3       11      1          1     1       2\n      4      100      2          1     0       1\n      5      101      2          1     1       2\n      6      110      3          2     0       2\n      7      111      3          2     1       3\n      8     1000      4          1     0       1\n\n  answer = [0, 1, 1, 2, 1, 2, 2, 3, 1]\n\nFollow one row. For i = 6 (binary 110), `i >> 1` is 3 (binary 11), which\nhas 2 set bits. Shifting 6 right drops its last bit, which was 0, so\nnothing is added back: dp[6] = 2 + 0 = 2. Correct — 110 has two ones.\n\nFor i = 7 (111), `i >> 1` is 3 again, and the dropped bit was 1, so\ndp[7] = 2 + 1 = 3.\n\nThe recurrence is valid because `i >> 1` is strictly less than i for\nevery i >= 1, so a forward loop always has it already computed. That\nstrict decrease is what makes it a DP rather than a circular definition.\n\nNotice the self-similar structure in the output. The block for 4..7 is\n[1, 2, 2, 3], which is the block for 0..3 — [0, 1, 1, 2] — with 1 added\nto every entry. That is because 4..7 are 0..3 with a leading 1 bit. Each\npower-of-two boundary restarts the pattern one higher, which is exactly\nwhat the recurrence encodes.\n\nComputing each value independently with popcount would be O(32N); this\nis O(N) with one addition per entry.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Allocating n entries instead of n+1. The range is inclusive of n.",
+        "Writing `dp[i >> 1] + 1` without the `& 1`, which adds a bit even for even numbers.",
+        "Using `i / 2` in a language where that is floating-point division, so the index is not an integer.",
+        "Forgetting `dp[0] = 0` as the base case — though a zero-filled array gives it for free, it is worth stating.",
+        "Recomputing from scratch per value and then claiming O(N). That version is O(32N)."
+      ],
+      "edgeCases": [
+        "n = 0 -> [0]",
+        "n = 1 -> [0, 1]",
+        "n = 2 -> [0, 1, 1]",
+        "n = 5 -> [0, 1, 1, 2, 1, 2]",
+        "n at a power of two, where the count resets to 1",
+        "a large n, where the output array dominates the memory"
+      ],
+      "followUps": [
+        {
+          "q": "What does the alternative recurrence `dp[i & (i-1)] + 1` mean?",
+          "a": "`i & (i - 1)` is i with its lowest set bit cleared, so it has exactly one fewer set bit — hence `+ 1`. Both recurrences are correct; the shift version walks the binary representation, this one peels set bits. Knowing two derivations is a good sign you understand the identity rather than the formula."
+        },
+        {
+          "q": "Why is the shifted index guaranteed to be already computed?",
+          "a": "Because `i >> 1` is `floor(i / 2)`, which for `i >= 1` is strictly less than i. A forward loop therefore always has it filled. That strict decrease is what makes this a valid DP rather than a circular definition."
+        },
+        {
+          "q": "Could you compute this without a DP array?",
+          "a": "For a single value yes, with popcount. For the whole range the output is already O(N), so there is nothing to save on space — the array is the answer, not overhead. Recognising when space optimisation is pointless is worth saying."
+        },
+        {
+          "q": "What is the pattern in the sequence?",
+          "a": "Each block from 2^k to 2^(k+1) - 1 is the previous block with 1 added to every entry, because it is the same numbers with a leading 1. That self-similar doubling is exactly what the recurrence encodes, and it gives another way to build the array block by block."
+        }
+      ],
+      "related": [
+        "number-of-1-bits",
+        "single-number",
+        "climbing-stairs"
+      ],
+      "core": true
     },
     {
       "id": "190",
@@ -130,24 +309,79 @@
         "leetcode": "https://leetcode.com/problems/reverse-bits/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=UcoN6UjAI64"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Bit-by-Bit Construction",
+      "patternTriggers": [
+        "Rearrange or reverse the bits of a fixed-width value.",
+        "The output is built incrementally from the input's bits, which is a shift-and-append loop.",
+        "The words *reverse bits*, *bit order*, *endianness*."
+      ],
+      "keyInsight": "Build the answer one bit at a time: shift the result **left** to make room, then append the input's lowest bit, then shift the input **right**. After 32 iterations the bits have come out in reverse order, because the first bit extracted — the input's least significant — has been shifted left 31 times and is now the most significant. The language detail that matters is using an **unsigned** right shift on the input: a signed `>>` replicates the sign bit and the loop never terminates.",
+      "bruteForce": {
+        "idea": "Convert the number to a 32-character binary string, reverse the string, and parse it back.",
+        "time": "O(32)",
+        "space": "O(32)",
+        "whyItFails": "It works and is easy to reason about. It just allocates a string for what two shifts and an OR do in place, and string parsing brings its own padding pitfalls — a number with leading zeros must still be padded to exactly 32 characters, which is easy to forget."
+      },
+      "approach": [
+        "Initialise the result to 0.",
+        "Repeat exactly 32 times, regardless of how many significant bits the input has — the leading zeros must be reversed too.",
+        "Shift the result left by one to open a slot at the bottom.",
+        "OR in the input's lowest bit with `n & 1`.",
+        "Shift the input right by one, using an **unsigned** shift so the sign bit does not propagate.",
+        "After 32 iterations the result holds the bits in reverse order.",
+        "Return it, coercing to unsigned if the language's display would otherwise show a negative value."
+      ],
       "code": {
         "python": "def reverseBits(n):\n    result = 0\n    for _ in range(32):\n        result = (result << 1) | (n & 1)\n        n >>= 1\n    return result",
         "cpp": "class Solution {\npublic:\n    uint32_t reverseBits(uint32_t n) {\n        uint32_t result = 0;\n        for (int i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>= 1; }\n        return result;\n    }\n};",
         "java": "class Solution {\n    public int reverseBits(int n) {\n        int result = 0;\n        for (int i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>>= 1; }\n        return result;\n    }\n}",
         "js": "var reverseBits = function(n) {\n    let result = 0;\n    for (let i = 0; i < 32; i++) { result = (result << 1) | (n & 1); n >>>= 1; }\n    return result >>> 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "note": "Exactly 32 iterations for a 32-bit input, which is constant. The loop count must be the full width rather than until n becomes 0 — stopping early would leave the high bits of the result unshifted and silently wrong for inputs with leading zeros."
+      },
+      "dryRun": "n = 1 = 00000000000000000000000000000001\n\nEach iteration: shift the result LEFT to open a slot, OR in the input's\nlowest bit, then shift the input RIGHT.\n\n    iter  0: took bit 1, out = 00000000000000000000000000000001\n    iter  1: took bit 0, out = 00000000000000000000000000000010\n    iter  2: took bit 0, out = 00000000000000000000000000000100\n    iter  3: took bit 0, out = 00000000000000000000000000001000\n    ...\n    iter 30: took bit 0, out = 01000000000000000000000000000000\n    iter 31: took bit 0, out = 10000000000000000000000000000000\n\n  answer = 2147483648\n\nThe single 1 bit started at position 0 and ended at position 31, having\nbeen shifted left 31 more times after it was placed. That is the whole\nmechanism: the first bit extracted travels the furthest.\n\nAnd it is why the loop must run exactly 32 times. Stopping when n\nbecomes 0 would exit after iteration 0, leaving the answer as 1 instead\nof 2^31 — the 31 leading zeros of the input are significant, because\nthey become trailing zeros of the output.\n\n\nA real case:  n = 43261596\n\n    input:  00000010100101000001111010011100\n    output: 00111001011110000010100101000000  =  964176192\n\n  Verified by independently reversing the 32-character binary string and\n  parsing it back: also 964176192.\n\nRead the two patterns against each other — the output is the input's\nbit string written backwards, leading zeros and all.\n\nThe language detail that breaks implementations: the input shift must be\nUNSIGNED. In Java `n >>= 1` sign-extends, so a negative input keeps its\nsign bit forever and the loop never clears it — use `>>>`. In JavaScript\nthe same applies, and the final result needs `>>> 0` to display as\nunsigned rather than negative.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Looping until n becomes 0 rather than exactly 32 times. For an input like 1, the answer needs 31 more left shifts that never happen.",
+        "In Java, using `>>` instead of `>>>` on the input. The sign bit is replicated, so a negative input loops forever.",
+        "In JavaScript, forgetting the final `>>> 0`. Bitwise ops yield a signed 32-bit value, so a result with the top bit set displays as negative.",
+        "In Python, where integers are unbounded, forgetting to mask to 32 bits — the result will be mathematically right but not confined to the expected width.",
+        "Shifting the result right instead of left, which builds the answer in the wrong direction."
+      ],
+      "edgeCases": [
+        "n = 0 -> 0",
+        "n = 1 -> 2^31, the bit travels from the bottom to the top",
+        "n = 2^31 -> 1, the reverse",
+        "all bits set -> unchanged",
+        "a palindromic bit pattern -> unchanged",
+        "an input with leading zeros, which is the case that forces the full 32 iterations"
+      ],
+      "followUps": [
+        {
+          "q": "How would you reverse bits faster than 32 steps?",
+          "a": "Divide and conquer with masked swaps: exchange adjacent bits, then pairs, then nibbles, then bytes, then halves — five masked shift-and-OR steps, no loop. Each step doubles the size of the reversed blocks, giving O(log W) instead of O(W)."
+        },
+        {
+          "q": "What if this function were called millions of times?",
+          "a": "Precompute a 256-entry table of reversed bytes, then reverse a 32-bit value with four table lookups and three shifts. The classic space-for-time trade, and it is how real bit-manipulation libraries do it."
+        },
+        {
+          "q": "Why must the loop run exactly 32 times?",
+          "a": "Because reversal is defined over the full fixed width, so the leading zeros are significant — they become trailing zeros in the result. Stopping when n hits 0 omits the remaining left shifts, so the answer comes out shifted right by however many leading zeros the input had."
+        },
+        {
+          "q": "How does this relate to endianness?",
+          "a": "Endianness is about *byte* order, not bit order within a byte — a different problem usually solved with byte-swap instructions such as `bswap`. Conflating the two is a common confusion worth being precise about."
+        }
+      ],
+      "related": [
+        "number-of-1-bits",
+        "counting-bits",
+        "single-number"
+      ],
       "core": false
     },
     {
@@ -165,25 +399,81 @@
         "leetcode": "https://leetcode.com/problems/missing-number/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=WnPLSRLSANE"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "XOR or Sum Formula",
+      "patternTriggers": [
+        "Exactly one element is missing from a known **complete range** such as 0..n.",
+        "O(1) extra space is required, ruling out a hash set or a boolean array.",
+        "The values and their expected positions can be paired up, so something cancels."
+      ],
+      "keyInsight": "Two independent O(1)-space solutions, both worth knowing. **XOR**: XOR together every index from 0 to n and every array value — each present number appears exactly twice and cancels, leaving the missing one. **Sum formula**: the expected total is `n(n+1)/2`, so subtract the actual sum. XOR is immune to overflow, which is its advantage; the sum formula is more obvious to a reader but can overflow for large n in a fixed-width type.",
+      "bruteForce": {
+        "idea": "Put every value in a hash set and scan 0..n for the one that is absent. Or sort and look for the gap.",
+        "time": "O(N) with a set, O(N log N) sorting",
+        "space": "O(N) with a set, O(1) sorting but it mutates the input",
+        "whyItFails": "Both are correct and clear. They fail only the O(1) space requirement — and they ignore that the input is a *complete range minus one element*, which means a cancelling or summing argument identifies the gap with a single accumulator."
+      },
+      "approach": [
+        "The XOR approach: initialise an accumulator to n, since the index loop will only reach n-1.",
+        "For each index i, XOR in both i and `nums[i]`.",
+        "Every number actually present is XORed twice — once as a value and once as an index somewhere — so it cancels.",
+        "The missing number is XORed only once, as an index, so it survives.",
+        "The sum approach: compute `n * (n + 1) / 2` and subtract the array's actual sum.",
+        "Use a wide enough type for the sum, since `n(n+1)/2` can exceed 32 bits for large n.",
+        "Return the result."
+      ],
       "code": {
         "python": "def missingNumber(nums):\n    return len(nums) * (len(nums)+1) // 2 - sum(nums)\n# Or XOR: xor 0..n with all nums, result is missing",
         "cpp": "class Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        int n = nums.size(), result = n;\n        for (int i = 0; i < n; i++) result ^= i ^ nums[i];\n        return result;\n    }\n};",
         "java": "class Solution {\n    public int missingNumber(int[] nums) {\n        int n = nums.length, result = n;\n        for (int i = 0; i < n; i++) result ^= i ^ nums[i];\n        return result;\n    }\n}",
         "js": "var missingNumber = function(nums) {\n    let result = nums.length;\n    for (let i = 0; i < nums.length; i++) result ^= i ^ nums[i];\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "One pass, one accumulator, for either method. XOR never overflows because it is bitwise, which makes it the safer choice when n is large. The sum formula uses `n(n+1)/2`, which for n near 2^16 already exceeds a 32-bit signed int — a real consideration rather than a theoretical one."
+      },
+      "dryRun": "nums = [3, 0, 1], so n = 3 and the range is 0..3.\n\nXOR approach. Seed the accumulator with n, because the index loop only\nreaches n-1 and n itself must be included.\n\n    seed with n = 3        acc = 3\n    i=0, v=3  ->  3 ^ 0 ^ 3 = 0\n    i=1, v=0  ->  0 ^ 1 ^ 0 = 1\n    i=2, v=1  ->  1 ^ 2 ^ 1 = 2\n\n  answer = 2\n\nEvery number actually present gets XORed twice — once as a value and\nonce as an index somewhere in the range — so it cancels. The missing\nnumber appears only as an index, so it survives. Here 0, 1 and 3 each\nappear twice across the indices and values; 2 appears only as an index.\n\nSum approach on the same input: expected 3*4/2 = 6, actual sum 4, so the\nmissing number is 6 - 4 = 2. Same answer, different argument.\n\n\nA boundary case:  nums = [0, 1], n = 2 — the missing number is n itself\n\n    seed with n = 2        acc = 2\n    i=0, v=0  ->  2\n    i=1, v=1  ->  2\n\n  answer = 2\n\nThis is the case the seed exists for. Without seeding the accumulator\nwith n, the index loop only covers 0 and 1 and the answer would be 0.\n\n  Sum check: 2*3/2 = 3, actual sum 1, missing = 2. Agrees.\n\n\nA larger case:  nums = [9,6,4,2,3,5,7,0,1], n = 9\n\n  XOR answer = 8\n  Sum: 9*10/2 = 45, actual 37, missing 8. Agrees.\n\nWhich to prefer: the sum formula reads more obviously, but `n(n+1)/2`\noverflows a 32-bit signed int once n passes about 65,535. XOR is\nbitwise, so it cannot overflow at any n. Neither needs the array\nsorted, which is worth stating since the sortedness is the first thing\npeople look for.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "In the XOR version, initialising the accumulator to 0 and only looping over indices 0..n-1, which never includes n itself. Seed it with n, or loop the range to n explicitly.",
+        "In the sum version, computing the expected total in a 32-bit type and overflowing for large n.",
+        "Writing `n * (n + 1) / 2` with the division before the multiplication, which truncates.",
+        "Assuming the array is sorted. Neither method needs it, and saying so is worth a sentence.",
+        "Confusing this with Find the Duplicate Number, which has the opposite shape — an extra element rather than a missing one — and needs a different technique."
+      ],
+      "edgeCases": [
+        "[0] -> 1, the missing number is n itself",
+        "[1] -> 0, the missing number is 0",
+        "[3,0,1] -> 2",
+        "[0,1] -> 2, missing at the end of the range",
+        "n = 1 with an empty array -> 0",
+        "a large n, where the sum formula overflows a 32-bit type",
+        "the missing number being 0 or n, the two boundary cases"
+      ],
+      "followUps": [
+        {
+          "q": "Which solution would you give, and why?",
+          "a": "Mention both. The sum formula is the most immediately readable; XOR is overflow-proof and generalises to \"find the one unpaired element\". If n might be large, XOR is the safer default — and noticing the overflow risk in the sum version is the part an interviewer is listening for."
+        },
+        {
+          "q": "What if two numbers were missing?",
+          "a": "XOR everything to get `a ^ b`. Isolate any set bit of that with `x & -x`, partition both the indices and the values by that bit, and XOR each group separately to recover a and b. Still O(N) time and O(1) space — the same trick as the two-loners variant of Single Number."
+        },
+        {
+          "q": "How is this different from Find the Duplicate Number?",
+          "a": "There the array has n+1 values in 1..n, so something is *repeated* rather than missing, and the constraints forbid both mutation and extra space — which pushes you to Floyd's cycle detection. Same family of \"range with one anomaly\" problems, different anomaly and a different technique."
+        },
+        {
+          "q": "Could you do it with cyclic sort?",
+          "a": "Yes — place each value at its own index by swapping, then scan for the position whose value does not match. O(N) time and O(1) extra space, but it mutates the input. A good third option to name, and the right one when you also need the array sorted afterwards."
+        }
+      ],
+      "related": [
+        "single-number",
+        "find-the-duplicate-number",
+        "contains-duplicate"
+      ],
+      "core": true
     },
     {
       "id": "371",
@@ -199,24 +489,79 @@
         "leetcode": "https://leetcode.com/problems/sum-of-two-integers/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=gVUrDV4tZfY"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Simulate Addition with XOR and AND",
+      "patternTriggers": [
+        "Arithmetic must be performed **without the arithmetic operators** — a deliberately artificial constraint that tests whether you know what addition is made of.",
+        "The operation decomposes into a bitwise part and a carry part.",
+        "The words *without using + or -*, *implement addition*, *bitwise sum*."
+      ],
       "keyInsight": "XOR = sum without carry. AND << 1 = carry. Repeat until no carry.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Increment one value and decrement the other in a loop until the second reaches zero.",
+        "time": "O(|b|)",
+        "space": "O(1)",
+        "whyItFails": "It uses `++` and `--`, which are the banned operators in disguise, and it is O(b) — hopeless for b near two billion. More importantly it misses the point: addition *is* XOR plus a shifted carry, and expressing that is what the question is about."
+      },
+      "approach": [
+        "Observe that XOR is addition without carry: it gets every bit right except where both inputs have a 1.",
+        "Observe that `(a & b) << 1` is exactly the carry: a carry is generated where both bits are 1, and it applies one position to the left.",
+        "So the sum is `(a ^ b)` plus the carry — which is the same addition problem again, now with different operands.",
+        "Loop: while the carry is non-zero, set `a = a ^ b` and `b = carry`, recomputing the carry each round.",
+        "The loop terminates because the carry shifts left every iteration, so after at most 32 rounds it falls off the end.",
+        "Return a.",
+        "In Python, mask to 32 bits each round and convert the result back to a signed value, since Python integers never overflow and the loop would otherwise run forever on negative inputs."
+      ],
       "code": {
         "python": "def getSum(a, b):\n    mask = 0xFFFFFFFF\n    while b & mask:\n        carry = (a & b) << 1\n        a = a ^ b\n        b = carry\n    return a & mask if b > mask else a",
         "cpp": "class Solution {\npublic:\n    int getSum(int a, int b) {\n        while (b != 0) {\n            int carry = a & b;\n            a = a ^ b;\n            b = carry << 1;\n        }\n        return a;\n    }\n};",
         "java": "class Solution {\n    public int getSum(int a, int b) {\n        while (b != 0) { int carry = a & b; a = a ^ b; b = carry << 1; }\n        return a;\n    }\n}",
         "js": "var getSum = function(a, b) {\n    while (b !== 0) { const carry = a & b; a = a ^ b; b = carry << 1; }\n    return a;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "note": "At most 32 iterations, since the carry moves one position left each round and cannot survive past the width. This is precisely how a hardware ripple-carry adder works, one bit position at a time — the loop is simulating the carry chain."
+      },
+      "dryRun": "XOR is the sum without carry; (a & b) << 1 is the carry. Repeat until\nthe carry is gone.\n\n  2 + 3\n\n           a          b     a^b (sum)    (a&b)<<1 (carry)\n           2          3            1                   4\n           1          4            5                   0\n\n    carry reached 0 after 2 rounds  ->  answer 5\n\n  Read round one in binary: 2 is 010 and 3 is 011. XOR gives 001, which\n  is correct for every position except bit 1, where both inputs were 1.\n  AND gives 010, shifted left to 100 — the carry out of bit 1 into\n  bit 2. Round two then adds 001 and 100 with no overlap, so the XOR\n  finishes the job and the carry is 0.\n\n\n  1 + -1,  with -1 as 0xFFFFFFFF\n\n           a                b         a^b          carry\n           1       4294967295  4294967294              2\n  4294967294                2  4294967292              4\n  4294967292                4  4294967288              8\n   ... the carry marches one bit left each round ...\n\n    after 32 rounds both a and the carry are 0  ->  answer 0\n\n\n  -2 + 3  is the extreme case\n\n    The carry starts at 4 and doubles every round — 8, 16, 32, ... up to\n    2147483648 — taking 31 rounds before it shifts off the end of the\n    32-bit word.\n\n           a                b           carry\n  4294967294                3               4\n  4294967293                4               8\n   ...\n  2147483649       2147483648               0\n\n    answer = 1,  which is correct for -2 + 3\n\nThat 31-round trace is the termination argument made visible: the carry\nmoves exactly one position left each iteration, so it cannot survive\npast the word width. The loop is bounded by 32 regardless of the inputs.\n\nIt also shows why Python needs masking. Python integers never overflow,\nso without `& 0xFFFFFFFF` the carry keeps shifting into ever-higher bits\nand the loop runs forever. And the final value must be converted back to\na signed interpretation — if it exceeds 0x7FFFFFFF it represents a\nnegative number, recovered with `~(a ^ 0xFFFFFFFF)`.\n\nNote that negative numbers needed no special handling beyond the mask.\nTwo's complement is designed precisely so that one addition circuit\nhandles both signs, which is why the same bit operations just work.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "In Python, not masking with `0xFFFFFFFF`. Integers are arbitrary precision, so a negative operand produces an infinitely long carry chain and the loop never ends.",
+        "In Python, returning the masked value directly. If it exceeds `0x7FFFFFFF` it represents a negative number and must be converted back — `~(a ^ MASK)` is the usual idiom.",
+        "In C++, shifting a signed value that overflows. Signed overflow is undefined behaviour, so cast to `unsigned` for the carry computation.",
+        "Updating a before computing the carry, so the carry is derived from the already-modified value. Compute the carry first, or use simultaneous assignment.",
+        "Assuming it only works for positive numbers. Two's complement means the same bit operations handle negatives correctly — which is the elegant part."
+      ],
+      "edgeCases": [
+        "a = 0 or b = 0 -> the other value, with the loop never running",
+        "both zero -> 0",
+        "one positive and one negative, e.g. 1 + -1 = 0",
+        "both negative",
+        "a carry that propagates through every bit, e.g. 0x7FFFFFFF + 1",
+        "operands at the 32-bit extremes"
+      ],
+      "followUps": [
+        {
+          "q": "How do you subtract without the minus operator?",
+          "a": "`a - b` is `a + (-b)`, and `-b` in two's complement is `~b + 1`. But that needs addition, so compute it with this same routine: negate by inverting and adding one, then add. The dependency is circular-looking but not actually circular."
+        },
+        {
+          "q": "Why does this work for negative numbers at all?",
+          "a": "Because two's complement is designed so that one addition circuit handles both signs. The bit pattern for -1 is all ones, and adding it behaves exactly like subtracting 1 — no special casing anywhere. That property is the reason two's complement won over sign-magnitude representations."
+        },
+        {
+          "q": "How would you multiply without the multiply operator?",
+          "a": "Shift and add: for each set bit k of b, add `a << k` to the result. That is O(32) additions, each done with the routine above — and it is exactly how a hardware shift-and-add multiplier works."
+        },
+        {
+          "q": "Why is Python the awkward language here?",
+          "a": "Because its integers have no fixed width, so there is no natural overflow to stop the carry chain. Every other mainstream language wraps at 32 or 64 bits and terminates on its own. Python's model is better for correctness in general and worse for simulating fixed-width hardware."
+        }
+      ],
+      "related": [
+        "single-number",
+        "number-of-1-bits",
+        "reverse-integer"
+      ],
       "core": false
     },
     {
@@ -233,24 +578,81 @@
         "leetcode": "https://leetcode.com/problems/reverse-integer/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=HAgLH58IgJQ"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Digit Reversal with Overflow Guard",
+      "patternTriggers": [
+        "Build a number digit by digit while staying inside a **fixed-width** range.",
+        "The result can overflow even though both the input and the correct output fit, so the check must be predictive.",
+        "The words *reverse integer*, *return 0 on overflow*, *32-bit signed range*."
+      ],
+      "keyInsight": "Pull digits off the end with `% 10` and build the answer with `result * 10 + digit`. The whole difficulty is the overflow guard, and it must be **predictive**: check `result > INT_MAX / 10` *before* multiplying, because afterwards the value has already wrapped and the original is unrecoverable — and in C++ signed overflow is undefined behaviour, so a compiler may legally assume the check never fires. When `result` equals `INT_MAX / 10` exactly, one more digit overflows only if that digit exceeds 7, the last digit of 2147483647.",
+      "bruteForce": {
+        "idea": "Convert to a string, reverse it, parse it back, and check whether it is in range.",
+        "time": "O(log N)",
+        "space": "O(log N)",
+        "whyItFails": "The parse itself can overflow before you get a chance to check, which in some languages throws and in others wraps silently. Reversing arithmetically with a predictive guard never produces an out-of-range value at all, so there is nothing to check after the fact."
+      },
+      "approach": [
+        "Initialise the result to 0 and work with the sign handled separately, or keep it and let the arithmetic carry it.",
+        "Loop while the input is non-zero.",
+        "Extract the last digit with `n % 10` and remove it with `n /= 10`.",
+        "**Before** multiplying the result by 10, check whether doing so would overflow.",
+        "If `result > INT_MAX / 10`, it will overflow — return 0. If it equals `INT_MAX / 10`, it overflows only when the incoming digit exceeds 7, the last digit of INT_MAX.",
+        "Apply the mirrored check against `INT_MIN / 10` and its last digit for negatives.",
+        "Otherwise set `result = result * 10 + digit` and continue, returning the result at the end."
+      ],
       "code": {
         "python": "def reverse(x):\n    sign = 1 if x >= 0 else -1\n    x = abs(x)\n    result = 0\n    while x:\n        result = result * 10 + x % 10\n        x //= 10\n    result *= sign\n    return result if -2**31 <= result <= 2**31-1 else 0",
         "cpp": "class Solution {\npublic:\n    int reverse(int x) {\n        int result = 0;\n        while (x) {\n            if (result > INT_MAX/10 || result < INT_MIN/10) return 0;\n            result = result * 10 + x % 10;\n            x /= 10;\n        }\n        return result;\n    }\n};",
         "java": "class Solution {\n    public int reverse(int x) {\n        int result = 0;\n        while (x != 0) {\n            if (result > Integer.MAX_VALUE/10 || result < Integer.MIN_VALUE/10) return 0;\n            result = result * 10 + x % 10;\n            x /= 10;\n        }\n        return result;\n    }\n}",
         "js": "var reverse = function(x) {\n    const sign = x < 0 ? -1 : 1;\n    let result = 0;\n    x = Math.abs(x);\n    while (x) { result = result * 10 + x % 10; x = Math.floor(x / 10); }\n    result *= sign;\n    return result >= -(2**31) && result <= 2**31 - 1 ? result : 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(log N)",
+        "space": "O(1)",
+        "note": "One iteration per digit, so about 10 for a 32-bit integer. The space is a single accumulator. The whole difficulty is the overflow guard, which must be predictive — in C++ signed overflow is undefined behaviour, so checking *after* the fact is not merely unreliable but formally meaningless."
+      },
+      "dryRun": "n = 123\n\n    took digit 3:  res = 3\n    took digit 2:  res = 32\n    took digit 1:  res = 321\n\n  answer = 321\n\n\nn = -123     — the sign is carried separately\n\n    the digits reverse to 321, then the sign is applied\n\n  answer = -321\n\n\nn = 120      — trailing zeros simply vanish\n\n    took digit 0:  res = 0        leading zeros do not survive arithmetic\n    took digit 2:  res = 2\n    took digit 1:  res = 21\n\n  answer = 21\n\n  No special case was needed: multiplying 0 by 10 is still 0.\n\n\nn = 1534236469    — the overflow case, and the reason this problem exists\n\n    took digit 9:  res = 9\n    took digit 6:  res = 96\n    took digit 4:  res = 964\n    took digit 6:  res = 9646\n    took digit 3:  res = 96463\n    took digit 2:  res = 964632\n    took digit 4:  res = 9646324\n    took digit 3:  res = 96463243\n    took digit 5:  res = 964632435\n    next digit is 1, but res = 964632435 already exceeds\n    INT_MAX / 10 = 214748364, so res * 10 would overflow\n                                              ->  return 0\n\n  answer = 0\n\nThe guard fires on the final digit, after nine successful steps. The\ntrue reversal would be 9646324351, which is well past INT_MAX of\n2147483647 — but the code never computes it, which is the point. Testing\nafter the multiplication would mean inspecting a value that has already\nwrapped, and in C++ that is not merely unreliable but formally\nmeaningless.\n\nThe digit-level half of the condition — `res == INT_MAX / 10 && d > 7` —\nhandles the boundary where the multiplication is exactly on the edge.\n2147483647 ends in 7, so a result of 214748364 can absorb a digit up to\n7 and no further.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Checking for overflow after the multiplication. The value has already wrapped — and in C++ that is undefined behaviour, so the compiler may assume it never happened.",
+        "Forgetting the digit-level boundary. `result == INT_MAX / 10` is fine unless the incoming digit exceeds 7, since INT_MAX is 2147483647.",
+        "Handling the sign by negating the input first. `-INT_MIN` overflows, so either widen the type or let the modulo carry the sign.",
+        "In Python, assuming no overflow is possible and skipping the range check entirely — the problem still requires returning 0 outside the 32-bit range, even though Python itself would not complain.",
+        "Mishandling trailing zeros. Reversing 1200 gives 21, and the leading zeros simply vanish from the arithmetic — no special case needed, but worth confirming."
+      ],
+      "edgeCases": [
+        "0 -> 0",
+        "a single digit -> itself",
+        "123 -> 321",
+        "-123 -> -321",
+        "120 -> 21, trailing zeros disappear",
+        "1534236469 -> 0, because the reversal overflows",
+        "INT_MIN, where negating the input is itself an overflow",
+        "a number whose reversal is exactly INT_MAX"
+      ],
+      "followUps": [
+        {
+          "q": "Why must the overflow check come before the multiplication?",
+          "a": "Because after the multiplication the value has already wrapped, and the original is unrecoverable. In C++ signed overflow is undefined behaviour, so a compiler is entitled to optimise away any check that assumes it occurred. Predicting with a division against INT_MAX / 10 is the only sound approach."
+        },
+        {
+          "q": "Why is the digit-level check against 7 and 8?",
+          "a": "INT_MAX is 2147483647 and INT_MIN is -2147483648. So when the accumulated result equals INT_MAX / 10 = 214748364, one more digit overflows only if that digit exceeds 7. The negative side uses 8. In practice the input is itself a 32-bit int, so its reversal cannot reach those boundaries with a digit that large — but the check is what makes the code correct rather than incidentally safe."
+        },
+        {
+          "q": "How would you do it with a wider type?",
+          "a": "Accumulate into a 64-bit integer and compare against the 32-bit bounds at the end. Much simpler and entirely correct — and the right answer when the language offers it. The predictive check is what you need when no wider type is available, which is the situation the problem is simulating."
+        },
+        {
+          "q": "What about reversing a 64-bit integer?",
+          "a": "The same algorithm with the bounds changed, but now there is no wider standard type to fall back on, so the predictive check becomes mandatory rather than optional. That is exactly why learning the pattern is worth more than the 64-bit shortcut."
+        }
+      ],
+      "related": [
+        "plus-one",
+        "pow-x-n",
+        "sum-of-two-integers"
+      ],
       "core": false
     }
   ]

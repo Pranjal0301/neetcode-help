@@ -355,8 +355,8 @@
       ],
       "related": [
         "binary-search",
-        "median-of-two-sorted-arrays",
-        "koko-eating-bananas"
+        "swim-in-rising-water",
+        "search-in-rotated-sorted-array"
       ],
       "core": true
     },
