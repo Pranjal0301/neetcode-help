@@ -4,17 +4,29 @@
   "icon": "🌳",
   "order": 7,
   "concept": {
-    "heading": "Core Patterns",
-    "body": "",
+    "heading": "Core Concepts",
+    "body": "Almost every tree problem reduces to one question: **what does each node need from its children, and what does it need from its ancestors?**\n\nInformation flowing *up* is a return value. Information flowing *down* is a parameter. Decide which you need and the recursion writes itself — height flows up, a valid range flows down, and problems like Diameter and Max Path Sum need both at once (return one thing upward while updating a global with another).\n\nThe second decision is DFS or BFS. Reach for **BFS** only when the problem mentions levels, distance from the root, or 'closest' — otherwise DFS is shorter and uses O(H) space instead of O(width). For a **BST**, remember that an inorder traversal emits values in sorted order, and that the ordering property turns a search from O(N) into O(H).",
     "bullets": [
-      "**DFS (recursive):** Most tree problems. Return values up, pass info down.",
-      "**BFS (queue):** Level-order traversal, right side view.",
-      "**BST property:** left < root < right. Inorder = sorted."
+      "**DFS (recursive):** the default. Return values up, pass context down.",
+      "**BFS (queue):** level-order, right-side view, minimum depth — anything about levels or distance from the root.",
+      "**BST property:** left < node < right, so inorder gives sorted output and search is O(H).",
+      "**Two things at once:** when a node must return one value upward but the answer is something else (Diameter, Max Path Sum), return the former and track the latter in a global.",
+      "**O(H) not O(log N):** recursion space is the tree's height, which is log N only if it is balanced and N if it is a straight line."
     ],
-    "legacySvg": "<svg width=\"400\" height=\"130\" viewBox=\"0 0 400 130\">\n                    <style>text{font-family:'Inter',sans-serif;fill:#e2e8f0}circle{fill:#1e293b;stroke:#6366f1;stroke-width:2}</style>\n                    <circle cx=\"100\" cy=\"30\" r=\"18\"/><text x=\"100\" y=\"35\" text-anchor=\"middle\" font-size=\"12\">4</text>\n                    <line x1=\"86\" y1=\"44\" x2=\"60\" y2=\"66\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <line x1=\"114\" y1=\"44\" x2=\"140\" y2=\"66\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <circle cx=\"60\" cy=\"80\" r=\"18\"/><text x=\"60\" y=\"85\" text-anchor=\"middle\" font-size=\"12\">2</text>\n                    <circle cx=\"140\" cy=\"80\" r=\"18\"/><text x=\"140\" y=\"85\" text-anchor=\"middle\" font-size=\"12\">7</text>\n                    <line x1=\"47\" y1=\"94\" x2=\"30\" y2=\"110\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <line x1=\"73\" y1=\"94\" x2=\"90\" y2=\"110\" stroke=\"#6366f1\" stroke-width=\"1.5\"/>\n                    <circle cx=\"30\" cy=\"120\" r=\"14\" stroke-width=\"1.5\"/><text x=\"30\" y=\"125\" text-anchor=\"middle\" font-size=\"10\">1</text>\n                    <circle cx=\"90\" cy=\"120\" r=\"14\" stroke-width=\"1.5\"/><text x=\"90\" y=\"125\" text-anchor=\"middle\" font-size=\"10\">3</text>\n                    <!-- Legend -->\n                    <text x=\"220\" y=\"30\" font-size=\"11\" fill=\"#22c55e\" font-weight=\"600\">DFS Traversals:</text>\n                    <text x=\"220\" y=\"50\" font-size=\"11\" fill=\"#a5b4fc\">Inorder  (L,Root,R): 1,2,3,4,7</text>\n                    <text x=\"220\" y=\"66\" font-size=\"11\" fill=\"#c084fc\">Preorder (Root,L,R): 4,2,1,3,7</text>\n                    <text x=\"220\" y=\"82\" font-size=\"11\" fill=\"#fca5a5\">Postorder(L,R,Root): 1,3,2,7,4</text>\n                    <text x=\"220\" y=\"106\" font-size=\"11\" fill=\"#eab308\" font-weight=\"600\">BFS (Level Order):</text>\n                    <text x=\"220\" y=\"122\" font-size=\"11\" fill=\"#fde68a\">[4], [2,7], [1,3]</text>\n                </svg>"
+    "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# DFS returning information UP (height, sum, count).\ndef dfs(node):\n    if not node:\n        return 0                      # the identity for whatever you combine\n    left = dfs(node.left)\n    right = dfs(node.right)\n    return 1 + max(left, right)       # combine and hand upward\n\n# DFS passing context DOWN (valid range, max so far, path).\ndef dfs(node, lo, hi):\n    if not node:\n        return True\n    if not (lo < node.val < hi):\n        return False\n    return dfs(node.left, lo, node.val) and dfs(node.right, node.val, hi)\n\n# Both at once: return one thing upward, track the answer in a global.\nbest = float('-inf')\ndef dfs(node):\n    nonlocal best\n    if not node:\n        return 0\n    left = max(dfs(node.left), 0)     # clamp: a negative branch is skipped\n    right = max(dfs(node.right), 0)\n    best = max(best, node.val + left + right)   # path THROUGH this node\n    return node.val + max(left, right)          # path CONTINUING upward\n\n# BFS, one level per outer iteration.\nfrom collections import deque\nq = deque([root]) if root else deque()\nwhile q:\n    level = []\n    for _ in range(len(q)):           # snapshot the size FIRST\n        node = q.popleft()\n        level.append(node.val)\n        if node.left:  q.append(node.left)\n        if node.right: q.append(node.right)\n    result.append(level)",
+    "cpp": "// DFS returning information UP (height, sum, count).\nint dfs(TreeNode* node) {\n    if (!node) return 0;              // identity for whatever you combine\n    int left = dfs(node->left), right = dfs(node->right);\n    return 1 + max(left, right);      // combine and hand upward\n}\n\n// DFS passing context DOWN (valid range, max so far, path).\nbool dfs(TreeNode* node, long lo, long hi) {\n    if (!node) return true;\n    if (node->val <= lo || node->val >= hi) return false;\n    return dfs(node->left, lo, node->val) && dfs(node->right, node->val, hi);\n}\n\n// Both at once: return one thing upward, track the answer in a member.\nint best = INT_MIN;\nint dfs(TreeNode* node) {\n    if (!node) return 0;\n    int left  = max(dfs(node->left), 0);    // clamp: skip a negative branch\n    int right = max(dfs(node->right), 0);\n    best = max(best, node->val + left + right);   // path THROUGH node\n    return node->val + max(left, right);          // path CONTINUING up\n}\n\n// BFS, one level per outer iteration.\nqueue<TreeNode*> q;\nif (root) q.push(root);\nwhile (!q.empty()) {\n    int n = q.size();                 // snapshot the size FIRST\n    vector<int> level;\n    for (int i = 0; i < n; i++) {\n        TreeNode* node = q.front(); q.pop();\n        level.push_back(node->val);\n        if (node->left)  q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n    result.push_back(level);\n}",
+    "java": "// DFS returning information UP (height, sum, count).\nint dfs(TreeNode node) {\n    if (node == null) return 0;       // identity for whatever you combine\n    int left = dfs(node.left), right = dfs(node.right);\n    return 1 + Math.max(left, right); // combine and hand upward\n}\n\n// DFS passing context DOWN (valid range, max so far, path).\nboolean dfs(TreeNode node, long lo, long hi) {\n    if (node == null) return true;\n    if (node.val <= lo || node.val >= hi) return false;\n    return dfs(node.left, lo, node.val) && dfs(node.right, node.val, hi);\n}\n\n// Both at once: return one thing upward, track the answer in a field.\nint best = Integer.MIN_VALUE;\nint dfs(TreeNode node) {\n    if (node == null) return 0;\n    int left  = Math.max(dfs(node.left), 0);   // clamp: skip negative branch\n    int right = Math.max(dfs(node.right), 0);\n    best = Math.max(best, node.val + left + right);   // path THROUGH node\n    return node.val + Math.max(left, right);          // path CONTINUING up\n}\n\n// BFS, one level per outer iteration.\nDeque<TreeNode> q = new ArrayDeque<>();\nif (root != null) q.add(root);\nwhile (!q.isEmpty()) {\n    int n = q.size();                 // snapshot the size FIRST\n    List<Integer> level = new ArrayList<>();\n    for (int i = 0; i < n; i++) {\n        TreeNode node = q.poll();\n        level.add(node.val);\n        if (node.left != null)  q.add(node.left);\n        if (node.right != null) q.add(node.right);\n    }\n    result.add(level);\n}",
+    "js": "// DFS returning information UP (height, sum, count).\nconst dfs = (node) => {\n  if (!node) return 0;                // identity for whatever you combine\n  return 1 + Math.max(dfs(node.left), dfs(node.right));\n};\n\n// DFS passing context DOWN (valid range, max so far, path).\nconst valid = (node, lo, hi) => {\n  if (!node) return true;\n  if (node.val <= lo || node.val >= hi) return false;\n  return valid(node.left, lo, node.val) && valid(node.right, node.val, hi);\n};\n\n// Both at once: return one thing upward, track the answer outside.\nlet best = -Infinity;\nconst gain = (node) => {\n  if (!node) return 0;\n  const left = Math.max(gain(node.left), 0);   // clamp: skip negative branch\n  const right = Math.max(gain(node.right), 0);\n  best = Math.max(best, node.val + left + right);   // path THROUGH node\n  return node.val + Math.max(left, right);          // path CONTINUING up\n};\n\n// BFS, one level per outer iteration.\nconst q = root ? [root] : [];\nwhile (q.length) {\n  const n = q.length;                 // snapshot the size FIRST\n  const level = [];\n  for (let i = 0; i < n; i++) {\n    const node = q.shift();           // O(N) on arrays; use an index cursor\n    level.push(node.val);             // for large trees\n    if (node.left) q.push(node.left);\n    if (node.right) q.push(node.right);\n  }\n  result.push(level);\n}"
+  },
+  "recognitionTriggers": [
+    "The data is **recursively defined** — a tree is a node plus two smaller trees — so the solution almost always is too.",
+    "The words *depth*, *height*, *path*, *subtree*, *ancestor*: information moving up or down a single root-to-leaf line. That is DFS.",
+    "The words *level*, *closest to the root*, *right side*, *minimum depth*: BFS with a queue, processing a whole level per iteration.",
+    "A **binary search tree** is mentioned. Then the ordering is extra information you are expected to exploit — inorder for sorted output, comparisons to prune half the tree."
+  ],
   "problems": [
     {
       "id": "226",
@@ -32,10 +44,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=OnSn2XEQ4MY"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A structural transformation that is identical at every node — the definition of a recursive problem.",
+        "The operation is self-similar: inverting a tree means swapping the children and inverting each of them.",
+        "There is nothing to combine or compare, so the recursion returns nothing useful; it just acts."
+      ],
       "keyInsight": "Swap left and right children at every node, recursively.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Build a brand new tree by walking the original and attaching children in reverse.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "Not slower, but it allocates a second tree when the swap can be done in place. It also answers a slightly different question — the caller asked for the tree to be inverted, not for a mirrored copy."
+      },
+      "approach": [
+        "If the node is null, return null — there is nothing to invert.",
+        "Swap the node's left and right children.",
+        "Recurse on the (now swapped) left child.",
+        "Recurse on the right child.",
+        "Return the node. Whether you swap before or after recursing makes no difference, since every node is visited exactly once either way."
+      ],
       "code": {
         "python": "def invertTree(root):\n    if not root:\n        return None\n    root.left, root.right = root.right, root.left\n    invertTree(root.left)\n    invertTree(root.right)\n    return root",
         "cpp": "class Solution {\npublic:\n    TreeNode* invertTree(TreeNode* root) {\n        if (!root) return nullptr;\n        swap(root->left, root->right);\n        invertTree(root->left);\n        invertTree(root->right);\n        return root;\n    }\n};",
@@ -44,15 +71,62 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H) recursion stack"
+        "space": "O(H)",
+        "note": "Every node is visited once. The space is the recursion depth, which is the tree's **height** — O(log N) for a balanced tree, O(N) for a degenerate one. Saying 'O(log N)' here is only true if balance is guaranteed."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "tree:          4\n             /   \\\n            2     7\n           / \\   / \\\n          1   3 6   9\n\nlevel order before:  [4] [2, 7] [1, 3, 6, 9]\n\n  at 4: swap children (2, 7)      -> (7, 2)\n    at 7: swap children (6, 9)    -> (9, 6)\n      at 9: no children, nothing to swap\n      at 6: no children, nothing to swap\n    at 2: swap children (1, 3)    -> (3, 1)\n      at 3: no children\n      at 1: no children\n\nlevel order after:   [4] [7, 2] [9, 6, 3, 1]\n\nEvery node is visited once and swaps its own two children. Swapping at\nthe root alone would only exchange the two subtrees wholesale, leaving\n1, 3, 6, 9 in their original relative order.",
+      "diagram": {
+        "kind": "tree",
+        "props": {
+          "levels": [
+            4,
+            2,
+            7,
+            1,
+            3,
+            6,
+            9
+          ]
+        },
+        "caption": "Inverting this swaps children at every level: the root's subtrees exchange places, and within them 1/3 and 6/9 swap too, giving 4, 7, 2, 9, 6, 3, 1."
+      },
+      "pitfalls": [
+        "Swapping only at the root and recursing without swapping deeper — the inversion must happen at every node.",
+        "Recursing into `node.left` after the swap while thinking of it as the original left child. Either recurse on both (order is irrelevant) or be deliberate about which is which.",
+        "Forgetting the null base case and dereferencing null at the leaves.",
+        "Returning the recursive call's value instead of `node`, which discards the subtree you just processed."
+      ],
+      "edgeCases": [
+        "empty tree -> null",
+        "a single node -> unchanged",
+        "a tree with only left children, which becomes only right children",
+        "a perfectly symmetric tree, which looks unchanged but is not the same object layout",
+        "a very deep tree, which risks stack overflow"
+      ],
+      "followUps": [
+        {
+          "q": "Do it iteratively.",
+          "a": "BFS or DFS with an explicit stack: pop a node, swap its children, push both. Same O(N) time, and the space becomes the queue or stack rather than the call stack — which is the point if the tree might be 10^5 deep."
+        },
+        {
+          "q": "Check whether a tree is symmetric instead.",
+          "a": "Compare the tree with itself mirrored: recurse on (left.left, right.right) and (left.right, right.left) simultaneously. Do not invert then compare — that mutates the input, which the caller almost certainly did not ask for."
+        },
+        {
+          "q": "What is the space complexity really?",
+          "a": "O(H). For a balanced tree that is O(log N), but a linked-list-shaped tree gives O(N). Stating O(H) and then saying what H can be is the precise answer, and it is a distinction interviewers listen for."
+        },
+        {
+          "q": "Invert only the bottom k levels.",
+          "a": "Pass the depth down and compare against the tree's height, which needs one pass to measure first. The useful observation is that this turns an 'information up' problem into one needing both directions."
+        }
+      ],
+      "related": [
+        "maximum-depth-of-binary-tree",
+        "same-tree",
+        "binary-tree-level-order-traversal"
+      ],
+      "core": true
     },
     {
       "id": "104",
@@ -70,10 +144,24 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=hTM3phVI6YQ"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "patternTriggers": [
+        "You need an aggregate over the whole tree that is built from children's answers — height, size, sum, count.",
+        "Each node's answer depends only on its subtrees, never on its ancestors.",
+        "The base case is the empty tree, and its value is the identity of whatever you are combining."
+      ],
+      "keyInsight": "The height of a tree is one more than the height of its taller subtree, and the height of nothing is zero. That single sentence is the whole algorithm — it is the template for every 'information flows up' tree problem, and almost every other DFS question in this category is this function with the combining step changed.",
+      "bruteForce": {
+        "idea": "Enumerate every root-to-leaf path and take the length of the longest.",
+        "time": "O(N) if done carefully, O(N * H) if each path is rebuilt",
+        "space": "O(N * H) to store the paths",
+        "whyItFails": "It computes and stores far more than asked. The depth of a subtree is a single number, so there is no reason to materialise the paths that produced it — recursion already combines the information on the way back up."
+      },
+      "approach": [
+        "If the node is null, return 0 — an empty tree has depth zero.",
+        "Recursively compute the depth of the left subtree.",
+        "Recursively compute the depth of the right subtree.",
+        "Return 1 plus the larger of the two: this node contributes one level on top of its deeper side."
+      ],
       "code": {
         "python": "def maxDepth(root):\n    if not root:\n        return 0\n    return 1 + max(maxDepth(root.left), maxDepth(root.right))",
         "cpp": "class Solution {\npublic:\n    int maxDepth(TreeNode* root) {\n        if (!root) return 0;\n        return 1 + max(maxDepth(root->left), maxDepth(root->right));\n    }\n};",
@@ -82,15 +170,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "Every node is visited exactly once, and each does constant work. The recursion stack holds at most H frames, so space is O(log N) when balanced and O(N) in the worst case of a degenerate tree."
       },
-      "dryRun": null,
+      "dryRun": "tree:        3\n           /   \\\n          9     20\n               /  \\\n             15    7\n\nPost-order: the children answer before the parent can.\n\n  null            -> 0\n  null            -> 0\n  node 9          -> 1 + max(0, 0) = 1\n  null, null      -> 0, 0\n  node 15         -> 1 + max(0, 0) = 1\n  null, null      -> 0, 0\n  node 7          -> 1 + max(0, 0) = 1\n  node 20         -> 1 + max(1, 1) = 2\n  node 3 (root)   -> 1 + max(1, 2) = 3\n\nreturn 3\n\nThe base case returning 0 is what makes the arithmetic work: a leaf\nbecomes 1 + max(0, 0) = 1 with no special case for leaves at all.\nReturn 1 for null instead and every answer is one too large.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Returning 1 for the null case, which counts a phantom level and gives every answer plus one.",
+        "Using `min` instead of `max`, which answers a different and genuinely different problem — Minimum Depth also has to avoid treating a missing child as a zero-depth leaf.",
+        "Claiming O(log N) space without noting that it requires balance.",
+        "Recursing on a null child instead of letting the base case handle it, which works but duplicates the check at every call site."
+      ],
+      "edgeCases": [
+        "empty tree -> 0",
+        "a single node -> 1",
+        "a completely one-sided tree, where the depth equals the node count",
+        "a perfectly balanced tree",
+        "a tree deep enough to overflow the recursion stack"
+      ],
+      "followUps": [
+        {
+          "q": "Find the minimum depth instead.",
+          "a": "Trickier than it looks: a node with one missing child is *not* a leaf, so `1 + min(left, right)` wrongly returns 1 for a chain. You must handle the single-child case by taking the existing side only. BFS is often cleaner here, since the first leaf reached is the answer."
+        },
+        {
+          "q": "Do it iteratively.",
+          "a": "BFS counting levels is the natural fit — the number of outer iterations is the depth. DFS with an explicit stack also works if you push (node, depth) pairs."
+        },
+        {
+          "q": "How does this generalise?",
+          "a": "Replace the combining step and you get most of this category: `left + right` for size, `node.val + left + right` for sum, `abs(left - right) <= 1` for balance. Recognising that they are one function with different arithmetic is what makes trees fast to work through."
+        },
+        {
+          "q": "What if the tree has arbitrary numbers of children?",
+          "a": "Take the max over all children instead of just two: `1 + max(depth(c) for c in children)`, with 1 for a node with no children. The two-child case was never special."
+        }
+      ],
+      "related": [
+        "balanced-binary-tree",
+        "diameter-of-binary-tree",
+        "invert-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "543",
@@ -108,10 +229,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=bkxqA8Rfv04"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "The answer is a path that may **not pass through the root** — so it cannot be a simple return value from the top.",
+        "Each node must return one quantity upward (its height) while the answer is a different quantity (the path through it).",
+        "The words *diameter*, *longest path*, *any two nodes*."
+      ],
       "keyInsight": "Diameter through a node = left_height + right_height. Track global max while computing heights.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every node, compute the height of both its subtrees and take the best left-plus-right sum.",
+        "time": "O(N^2)",
+        "space": "O(H)",
+        "whyItFails": "Each height computation walks a whole subtree, and every node triggers two of them, so work is repeated down every level. Computing the height once per node and updating the answer during that same pass costs nothing extra."
+      },
+      "approach": [
+        "Write a recursion that returns the **height** of a subtree, not the diameter.",
+        "Keep the best diameter seen in a variable outside the recursion.",
+        "At each node, get the left and right heights from the recursive calls.",
+        "The longest path *through* this node has `left + right` edges — update the global best with it.",
+        "Return `1 + max(left, right)` as this subtree's height, which is what the parent needs.",
+        "Return the global best after the traversal."
+      ],
       "code": {
         "python": "def diameterOfBinaryTree(root):\n    result = [0]\n    def dfs(node):\n        if not node:\n            return 0\n        left = dfs(node.left)\n        right = dfs(node.right)\n        result[0] = max(result[0], left + right)\n        return 1 + max(left, right)\n    dfs(root)\n    return result[0]",
         "cpp": "class Solution {\n    int result = 0;\n    int dfs(TreeNode* node) {\n        if (!node) return 0;\n        int l = dfs(node->left), r = dfs(node->right);\n        result = max(result, l + r);\n        return 1 + max(l, r);\n    }\npublic:\n    int diameterOfBinaryTree(TreeNode* root) { dfs(root); return result; }\n};",
@@ -120,15 +257,66 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "One pass. The trick that removes the quadratic factor is returning the height while recording the diameter — the two quantities are different, and trying to return the diameter directly is what forces the recomputation."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "tree:       1\n          /   \\\n         2     3\n        / \\\n       4   5\n\nThe recursion returns HEIGHT; the diameter is recorded in a global.\n\n  node   leftH  rightH   through = L+R   best   returns height\n   4       0      0           0           0          1\n   5       0      0           0           0          1\n   2       1      1           2           2          2\n   3       0      0           0           2          1\n   1       2      1           3           3          3\n\nreturn 3 edges  —  the path 4 - 2 - 1 - 3\n\nTwo things to notice.\n\n  1. At node 2 the through-path is 2 (the path 4 - 2 - 5), which is\n     recorded even though node 2 returns 2 as its height. The two\n     numbers are different quantities, which is why one is returned\n     and the other is tracked globally.\n\n  2. Here the best path happens to cross the root. Hang a deep narrow\n     subtree off a shallow root and it would not — which is exactly\n     why the answer cannot simply be the root's leftH + rightH.",
+      "diagram": {
+        "kind": "tree",
+        "props": {
+          "levels": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "highlight": [
+            3,
+            1,
+            0,
+            2
+          ]
+        },
+        "caption": "The diameter is the path 4 - 2 - 1 - 3: three edges. It passes through the root here, but on a lopsided tree the best path can sit entirely inside one subtree — which is why the answer is tracked globally rather than returned."
+      },
+      "pitfalls": [
+        "Returning the diameter from the recursion instead of the height. The parent cannot use a diameter, and you end up recomputing heights.",
+        "Confusing edges with nodes. The diameter is usually counted in **edges**, so a path of three nodes has length 2 — check which the problem wants.",
+        "Initialising the best to 0 and forgetting that a single node has diameter 0, which happens to be fine here but breaks on the analogous Max Path Sum where values can be negative.",
+        "Updating the global with `1 + left + right`, adding a node that is not on the path."
+      ],
+      "edgeCases": [
+        "empty tree -> 0",
+        "a single node -> 0 edges",
+        "two nodes -> 1",
+        "a straight line, where the diameter is the node count minus one",
+        "a tree where the longest path avoids the root entirely — the case that justifies the global"
+      ],
+      "followUps": [
+        {
+          "q": "Return the actual path, not its length.",
+          "a": "Have the recursion return (height, deepest node) and record the two endpoints when the best is updated, then walk up from each to their meeting point. More bookkeeping, same complexity — and worth asking whether it is needed before building it."
+        },
+        {
+          "q": "How is this different from Binary Tree Maximum Path Sum?",
+          "a": "Identical structure. Here you return a height and record left + right; there you return a gain and record node.val + left + right, clamping negative branches to zero. Max Path Sum is the harder one only because negative values make the clamp necessary."
+        },
+        {
+          "q": "What about a general graph rather than a tree?",
+          "a": "The diameter of a tree can be found with two BFS runs: from any node find the farthest node, then from there find the farthest again. For a general graph you need all-pairs shortest paths, which is much more expensive — the trick depends on there being exactly one path between any two nodes."
+        },
+        {
+          "q": "Why can the answer avoid the root?",
+          "a": "Because the path only needs two endpoints and their meeting point, and that meeting point can be any node. A deep, narrow left subtree hanging off a shallow root is the standard counterexample to returning the root's left + right."
+        }
+      ],
+      "related": [
+        "binary-tree-maximum-path-sum",
+        "maximum-depth-of-binary-tree",
+        "balanced-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "110",
@@ -146,10 +334,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=QfJsau0ItOY"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A property must hold at **every** node, and checking it needs an aggregate from below (the height).",
+        "The naive reading — check balance at each node — recomputes heights, which is the signal to fuse the two computations.",
+        "An early exit is possible: once any subtree is unbalanced, the answer is settled."
+      ],
       "keyInsight": "Return -1 if subtree is unbalanced. Otherwise return height. Unbalanced = height difference > 1.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each node compute both subtree heights and compare; recurse to check every node.",
+        "time": "O(N^2)",
+        "space": "O(H)",
+        "whyItFails": "Height is computed once per node per ancestor, so a degenerate tree does O(N) work at each of N nodes. Returning the height and the balance verdict together makes one pass sufficient."
+      },
+      "approach": [
+        "Write one recursion that returns the subtree's height, or a sentinel meaning 'unbalanced'.",
+        "Use -1 as that sentinel, since a real height is never negative.",
+        "For a null node return 0.",
+        "Compute both children's results; if either is -1, propagate -1 immediately without further work.",
+        "If the heights differ by more than 1, return -1.",
+        "Otherwise return `1 + max(left, right)`. The tree is balanced if the root's result is not -1."
+      ],
       "code": {
         "python": "def isBalanced(root):\n    def dfs(node):\n        if not node:\n            return 0\n        left, right = dfs(node.left), dfs(node.right)\n        if left == -1 or right == -1 or abs(left - right) > 1:\n            return -1\n        return 1 + max(left, right)\n    return dfs(root) != -1",
         "cpp": "class Solution {\npublic:\n    bool isBalanced(TreeNode* root) {\n        return height(root) != -1;\n    }\n    int height(TreeNode* node) {\n        if (!node) return 0;\n        int l = height(node->left), r = height(node->right);\n        if (l == -1 || r == -1 || abs(l - r) > 1) return -1;\n        return 1 + max(l, r);\n    }\n};",
@@ -158,15 +362,49 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "Each node is visited once because the height and the verdict travel together in a single return value. The -1 short-circuit also means an unbalanced tree is often detected before the whole tree is walked, though the worst case is still O(N)."
       },
-      "dryRun": null,
+      "dryRun": "The recursion returns the height, or -1 meaning \"already unbalanced\".\n\nBalanced case:   3\n               /   \\\n              9     20\n                   /  \\\n                 15    7\n\n  node 9    heights 0, 0   diff 0  ok  -> height 1\n  node 15   heights 0, 0   diff 0  ok  -> height 1\n  node 7    heights 0, 0   diff 0  ok  -> height 1\n  node 20   heights 1, 1   diff 0  ok  -> height 2\n  node 3    heights 1, 2   diff 1  ok  -> height 3\n\n  root returned 3, not -1  -> balanced\n\n\nUnbalanced case:      1\n                    /   \\\n                   2     2\n                  / \\\n                 3   3\n                / \\\n               4   4\n\n  node 4, node 4   -> height 1 each\n  node 3 (left)    heights 1, 1   ok  -> height 2\n  node 3 (right)   heights 0, 0   ok  -> height 1\n  node 2 (left)    heights 2, 1   diff 1  ok  -> height 3\n  node 2 (right)   heights 0, 0   ok  -> height 1\n  node 1           heights 3, 1   diff 2  > 1  -> return -1\n\n  root returned -1  -> NOT balanced\n\nNote that every subtree here is individually balanced; only the root\nfails. That is why the check must run at every node, and why the -1\nmust propagate — a deep imbalance would otherwise be hidden behind a\nbalanced-looking parent.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Writing a separate `height` function and calling it from a `isBalanced` recursion — that is exactly the O(N^2) version.",
+        "Returning a boolean only, which loses the height the parent needs.",
+        "Checking the height difference but forgetting to propagate a child's -1, so a deep imbalance is masked by a balanced-looking parent.",
+        "Using 0 as the sentinel, which collides with the legitimate height of an empty tree."
+      ],
+      "edgeCases": [
+        "empty tree -> balanced",
+        "a single node -> balanced",
+        "a tree off by exactly 1, which is still balanced",
+        "a tree off by exactly 2 at a deep node, which is not",
+        "a straight line of three or more nodes -> unbalanced",
+        "a tree that is balanced at the root but not deeper — the case the propagation exists for"
+      ],
+      "followUps": [
+        {
+          "q": "Why is the sentinel trick worth it?",
+          "a": "It fuses two traversals into one by widening the return type: instead of 'height' or 'is balanced', return 'height, or a marker that the question is already settled'. The same idea appears whenever a recursion needs to both compute and veto — returning a sum plus a validity flag, for instance."
+        },
+        {
+          "q": "How do self-balancing trees maintain this?",
+          "a": "AVL trees store the height difference at each node and rotate when it exceeds 1, which keeps it O(log N) deep. Red-black trees enforce a weaker colour invariant that guarantees height within a factor of two — cheaper to maintain, slightly less balanced."
+        },
+        {
+          "q": "Check balance with a different threshold, say k.",
+          "a": "Only the comparison changes, from `> 1` to `> k`. Worth noticing because it shows the structure is independent of the specific property being checked."
+        },
+        {
+          "q": "Can you do it without recursion?",
+          "a": "Post-order traversal with an explicit stack, computing heights bottom-up. More code, but it avoids a stack overflow on a deep tree — which is the real reason to want it."
+        }
+      ],
+      "related": [
+        "maximum-depth-of-binary-tree",
+        "diameter-of-binary-tree",
+        "validate-binary-search-tree"
+      ],
+      "core": true
     },
     {
       "id": "100",
@@ -183,11 +421,26 @@
         "leetcode": "https://leetcode.com/problems/same-tree/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=vRbbcPXRSqY"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Parallel DFS",
+      "patternTriggers": [
+        "Two structures must be compared, and the comparison is defined recursively.",
+        "A single traversal of either tree is not enough — you need them in lockstep, so the recursion takes two arguments.",
+        "The words *same*, *identical*, *equal*, *mirror*."
+      ],
+      "keyInsight": "Walk **both trees at once** rather than one and then the other. Two trees are identical when their roots match and their left subtrees are identical and their right subtrees are identical — the definition is recursive in exactly the same shape as the data, so the code mirrors it line for line. The base cases are the whole difficulty: both null means equal, one null means unequal, and only then is it safe to compare values.",
+      "bruteForce": {
+        "idea": "Serialise both trees to strings and compare the strings.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It works, provided the serialisation includes null markers — without them \"1,2\" is ambiguous between a left child and a right child. But it builds two full strings and cannot stop early, whereas the parallel walk returns false on the first difference."
+      },
+      "approach": [
+        "If both nodes are null, the subtrees are equal — return true.",
+        "If exactly one is null, they differ in structure — return false.",
+        "If the values differ, return false.",
+        "Otherwise return the conjunction of comparing the two left children and the two right children.",
+        "The short-circuiting `and` gives the early exit for free."
+      ],
       "code": {
         "python": "def isSameTree(p, q):\n    if not p and not q: return True\n    if not p or not q or p.val != q.val: return False\n    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)",
         "cpp": "class Solution {\npublic:\n    bool isSameTree(TreeNode* p, TreeNode* q) {\n        if (!p && !q) return true;\n        if (!p || !q || p->val != q->val) return false;\n        return isSameTree(p->left, q->left) && isSameTree(p->right, q->right);\n    }\n};",
@@ -196,15 +449,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "N is the size of the smaller tree, since the walk stops at the first structural mismatch. Space is the recursion depth. In practice it often returns far sooner than O(N) — but the worst case, two identical trees, visits everything."
       },
-      "dryRun": null,
+      "dryRun": "Identical trees — p = [1,2,3], q = [1,2,3]\n\n  1 == 1, recurse into both left children and both right children\n    2 == 2, recurse\n      both null -> true\n      both null -> true\n    3 == 3, recurse\n      both null -> true\n      both null -> true\n\n  result: true\n\n\nSame values, different shape — p = [1,2], q = [1,null,2]\n\n  1 == 1, recurse\n    left pair:  p has node 2, q has null  -> one null -> FALSE\n\n  result: false, and the right subtrees are never examined thanks to\n  short-circuiting `and`.\n\n  This is the pair that shows structure matters. Both trees contain\n  the values 1 and 2; only the shape differs.\n\n\nSame shape, different values — p = [1,2,1], q = [1,1,2]\n\n  1 == 1, recurse\n    2 != 1  -> FALSE\n\n  result: false\n\nThe base-case order is load-bearing: check both-null, then one-null,\nthen compare values. Compare values first and you dereference null.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Comparing values before checking for null, which dereferences a null node.",
+        "Treating 'both null' as false. Two empty trees are equal, and this base case is what terminates the recursion at every leaf.",
+        "Checking only values and not structure. Trees of different shapes can hold the same values in the same traversal order unless nulls are accounted for.",
+        "Using `==` on the node objects in languages where that is reference equality — you want value and structure equality, not identity."
+      ],
+      "edgeCases": [
+        "both trees empty -> true",
+        "one empty, one not -> false",
+        "same values, different shapes -> false",
+        "single nodes with equal or unequal values",
+        "a tree compared with itself -> true"
+      ],
+      "followUps": [
+        {
+          "q": "Check whether one tree is a subtree of another.",
+          "a": "For every node of the big tree, run this comparison against the small tree's root. O(M * N) naively — see Subtree of Another Tree for the serialisation trick that gets it to O(M + N)."
+        },
+        {
+          "q": "Check whether two trees are mirror images.",
+          "a": "Same recursion with the pairings crossed: compare a.left with b.right and a.right with b.left. That is also how you test a single tree for symmetry, by comparing it against itself."
+        },
+        {
+          "q": "Why does serialisation need null markers?",
+          "a": "Without them, a root with only a left child and a root with only a right child both serialise to the same two values. Null markers make the serialisation injective, which is exactly what you need for 'equal strings implies equal trees'."
+        },
+        {
+          "q": "What if nodes may have different numbers of children?",
+          "a": "Compare the child lists pairwise after checking they are the same length. The shape of the recursion is unchanged; only the fixed left/right pair becomes a loop."
+        }
+      ],
+      "related": [
+        "subtree-of-another-tree",
+        "invert-binary-tree",
+        "serialize-and-deserialize-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "572",
@@ -221,11 +507,27 @@
         "leetcode": "https://leetcode.com/problems/subtree-of-another-tree/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=E36O5SWp-LE"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Parallel DFS + Serialisation",
+      "patternTriggers": [
+        "A whole-structure match must be found *somewhere* inside a larger structure.",
+        "You already have an equality test and now need to apply it at every position.",
+        "The word *subtree*, which means the node **and all of its descendants** — not any connected fragment."
+      ],
+      "keyInsight": "This is Same Tree run at every possible starting point: for each node of the big tree, ask whether the subtree rooted there is identical to the small tree. The sharper solution changes the question — **serialise both trees with null markers** and ask whether one string contains the other. A subtree is a contiguous block of a preorder traversal, so substring search answers it in linear time.",
+      "bruteForce": {
+        "idea": "At every node of the big tree, run a full Same Tree comparison against the small tree's root.",
+        "time": "O(M * N)",
+        "space": "O(H)",
+        "whyItFails": "It is the expected answer and usually accepted. The waste is that each comparison restarts from scratch, and a tree of M nodes with N-node comparisons gives M*N in the worst case — a long chain of identical values is the adversarial input."
+      },
+      "approach": [
+        "Serialise each tree with a preorder traversal, emitting a marker for every null child.",
+        "Prefix every value with a delimiter so that 1 and 12 cannot be confused — `#1` versus `#12`.",
+        "The small tree is a subtree of the big one exactly when its serialisation is a substring of the big tree's.",
+        "Build both strings in O(M) and O(N).",
+        "Run a substring search; with KMP that is O(M + N) overall.",
+        "Alternatively, keep the straightforward version: recurse over the big tree calling Same Tree at each node."
+      ],
       "code": {
         "python": "def isSubtree(root, subRoot):\n    if not root: return False\n    if isSameTree(root, subRoot): return True\n    return isSubtree(root.left, subRoot) or isSubtree(root.right, subRoot)",
         "cpp": "class Solution {\npublic:\n    bool isSubtree(TreeNode* root, TreeNode* subRoot) {\n        if (!root) return false;\n        if (isSame(root, subRoot)) return true;\n        return isSubtree(root->left, subRoot) || isSubtree(root->right, subRoot);\n    }\n    bool isSame(TreeNode* a, TreeNode* b) {\n        if (!a && !b) return true;\n        if (!a || !b || a->val != b->val) return false;\n        return isSame(a->left, b->left) && isSame(a->right, b->right);\n    }\n};",
@@ -233,15 +535,50 @@
         "js": "var isSubtree = function(root, subRoot) {\n    if (!root) return false;\n    const isSame = (a, b) => {\n        if (!a && !b) return true;\n        if (!a || !b || a.val !== b.val) return false;\n        return isSame(a.left, b.left) && isSame(a.right, b.right);\n    };\n    if (isSame(root, subRoot)) return true;\n    return isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot);\n};"
       },
       "complexity": {
-        "time": "O(M * N)",
-        "space": "O(M + N)"
+        "time": "O(M + N) with serialisation and KMP, O(M * N) with the direct comparison",
+        "space": "O(M + N)",
+        "note": "The direct version uses only O(H) space and is what most interviewers expect. The serialisation version trades space for a guaranteed linear time — worth mentioning as an optimisation rather than leading with it, since a naive `contains` call may itself be quadratic."
       },
-      "dryRun": null,
+      "dryRun": "root = [3,4,5,1,2]        sub = [4,1,2]\n\n        3                      4\n      /   \\                  /   \\\n     4     5                1     2\n    / \\\n   1   2\n\nPreorder with null markers:\n\n  root:  3, 4, 1, N, N, 2, N, N, 5, N, N\n  sub:      4, 1, N, N, 2, N, N\n               ^^^^^^^^^^^^^^^^^^\n               a contiguous block of the root's traversal\n\nDelimit each token so 1 cannot match inside 12:\n\n  root:  #3,#4,#1,#N,#N,#2,#N,#N,#5,#N,#N\n  sub:      #4,#1,#N,#N,#2,#N,#N\n\n  sub is a substring of root  ->  true\n\n\nWhy the null markers are mandatory:\n\n  tree [1, 2]        preorder without markers:  1, 2\n  tree [1, null, 2]  preorder without markers:  1, 2\n\n  Identical strings, different trees. With markers they become\n  1,2,N,N,N and 1,N,2,N,N — distinct, as they must be.\n\nA subtree is a node AND all of its descendants, which is exactly what\n\"contiguous block of a preorder traversal with null markers\" means.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Omitting null markers from the serialisation. Then a tree with a single left child and one with a single right child serialise identically and the match is wrong.",
+        "Omitting the value delimiter, so the string for 12 matches inside the string for 1 and 2.",
+        "Using a built-in substring search and claiming O(M + N). Many standard implementations are O(M * N) in the worst case — you need KMP or a rolling hash for the guarantee.",
+        "Matching a *fragment* rather than a full subtree. The small tree must match a node and everything beneath it, which is precisely what the null markers enforce.",
+        "Treating an empty small tree as no match — conventionally it is a subtree of anything."
+      ],
+      "edgeCases": [
+        "small tree empty -> true by convention, but confirm with the interviewer",
+        "big tree empty and small tree not -> false",
+        "both trees identical -> true",
+        "the small tree's values present but its shape different -> false",
+        "repeated identical values, which is the adversarial case for the naive version",
+        "the small tree matching at a leaf"
+      ],
+      "followUps": [
+        {
+          "q": "Why does the substring trick work at all?",
+          "a": "A preorder traversal with null markers writes each subtree as one contiguous run, and the markers make the encoding unambiguous. So 'is a subtree' becomes 'is a contiguous block', which is exactly substring containment."
+        },
+        {
+          "q": "What is the difference between a subtree and a subgraph here?",
+          "a": "A subtree must include *all* descendants of its root. A matching fragment that stops early is not a subtree, which is why the null markers matter — they encode where each subtree ends."
+        },
+        {
+          "q": "Which version would you write?",
+          "a": "The O(M * N) one, and say why: it is short, uses O(H) space, and the worst case needs contrived input. Then offer the serialisation version if the interviewer asks for a guaranteed bound — that ordering shows judgement rather than just recall."
+        },
+        {
+          "q": "Could you use hashing instead?",
+          "a": "Yes — Merkle-style, hashing each subtree from its children's hashes in one pass, then checking whether the small tree's hash appears. O(M + N) expected, with a collision risk. This is how version control systems compare trees cheaply."
+        }
+      ],
+      "related": [
+        "same-tree",
+        "serialize-and-deserialize-binary-tree",
+        "implement-trie-prefix-tree"
+      ],
       "core": false
     },
     {
@@ -260,10 +597,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=gs2LMfuOR9k"
       },
       "pattern": "BST Property",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A **BST** is specified, so the ordering tells you which way to walk without searching.",
+        "You need the deepest node that has both targets below it — the point where their paths from the root diverge.",
+        "O(H) rather than O(N) is achievable, which is the signal to use the ordering rather than traverse."
+      ],
       "keyInsight": "In BST, if both p and q are smaller, go left. Both bigger, go right. Otherwise, current node IS the LCA (split point).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Find the root-to-node path for each target, then compare the paths to find the last shared node. Or run the general-tree LCA that recurses into both subtrees.",
+        "time": "O(N)",
+        "space": "O(H)",
+        "whyItFails": "Both ignore that this is a BST. The general-tree algorithm must explore both subtrees because it cannot know where a target lives — but in a BST a single comparison tells you, so there is never a need to branch."
+      },
+      "approach": [
+        "Start at the root.",
+        "If both p and q are smaller than the current node, both lie in the left subtree — move left.",
+        "If both are larger, move right.",
+        "Otherwise the values straddle this node, or one of them *is* this node. Either way the paths diverge here, so this node is the LCA.",
+        "Return it. No recursion is needed, which is what makes the space O(1)."
+      ],
       "code": {
         "python": "def lowestCommonAncestor(root, p, q):\n    while root:\n        if p.val < root.val and q.val < root.val:\n            root = root.left\n        elif p.val > root.val and q.val > root.val:\n            root = root.right\n        else:\n            return root",
         "cpp": "class Solution {\npublic:\n    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {\n        while (root) {\n            if (p->val < root->val && q->val < root->val) root = root->left;\n            else if (p->val > root->val && q->val > root->val) root = root->right;\n            else return root;\n        }\n        return nullptr;\n    }\n};",
@@ -272,15 +624,65 @@
       },
       "complexity": {
         "time": "O(H)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "One comparison per level, following a single root-to-node path — O(log N) for a balanced BST, O(N) for a degenerate one. Written iteratively it uses no stack at all, unlike the general-tree version which is inherently recursive."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "BST:         6\n           /   \\\n          2     8\n         / \\   / \\\n        0   4 7   9\n\nLCA of 2 and 8:\n\n  at 6:  2 < 6 and 8 > 6 — the values straddle the node, so the two\n         paths diverge here  ->  LCA = 6\n\n  One comparison. The subtrees were never entered.\n\n\nLCA of 2 and 4:\n\n  at 6:  both 2 and 4 are smaller than 6  -> go left\n  at 2:  2 is not less than 2, so they no longer both lie on one side\n         (in fact 2 IS the node)           ->  LCA = 2\n\n  return 2\n\nThe second case is why the comparison must not be strict on both\nsides: a node is allowed to be its own ancestor. Using `<` where the\nnode equals p would walk straight past the answer.\n\nNote also that only one root-to-node path is ever followed — no\nbranching, no recursion, O(1) space. The general-tree LCA has to\nsearch both subtrees because it cannot know which side a target is on;\nthe BST ordering removes that uncertainty.",
+      "diagram": {
+        "kind": "tree",
+        "props": {
+          "levels": [
+            6,
+            2,
+            8,
+            0,
+            4,
+            7,
+            9
+          ],
+          "highlight": [
+            0
+          ]
+        },
+        "caption": "LCA of 2 and 8. At the root, 2 < 6 < 8 — the values straddle it, so the paths diverge here and 6 is the answer. For 2 and 4, both are below 6 so you move left, and 2 is then its own ancestor."
+      },
+      "pitfalls": [
+        "Using strict comparisons that exclude the node itself. A node is permitted to be its own ancestor, so when p equals the current node, that node is the LCA.",
+        "Assuming p is smaller than q. The inputs may arrive in either order, so compare against both rather than assuming a range.",
+        "Running the general-tree LCA out of habit, which works but is O(N) and misses the point of the question.",
+        "Recursing when a loop suffices, giving O(H) space instead of O(1)."
+      ],
+      "edgeCases": [
+        "p is an ancestor of q -> p is the answer",
+        "p equals q -> that node",
+        "p and q are the root's two children -> the root",
+        "one of them is the root",
+        "a degenerate BST that is a straight line"
+      ],
+      "followUps": [
+        {
+          "q": "What if it is not a BST?",
+          "a": "Recurse into both subtrees looking for either target. If both sides return something, the current node is the LCA; if only one does, propagate it upward. O(N), because without ordering you cannot know which side to search."
+        },
+        {
+          "q": "What if nodes have parent pointers?",
+          "a": "Walk up from both nodes to collect depths, advance the deeper one until they are level, then step both up together until they meet. O(H) time and O(1) space, and no tree traversal at all — the same technique as finding the intersection of two linked lists."
+        },
+        {
+          "q": "Many LCA queries on the same tree?",
+          "a": "Preprocess for O(1) queries: binary lifting gives O(N log N) build and O(log N) per query, and the Euler tour plus a range-minimum structure gives O(N log N) build and O(1) queries. Worth knowing that repeated queries change the right answer entirely."
+        },
+        {
+          "q": "What if one of the nodes might not be in the tree?",
+          "a": "This algorithm would return a plausible-looking node regardless. You must verify both targets exist — two O(H) searches — or the result is meaningless. A good clarifying question to ask up front."
+        }
+      ],
+      "related": [
+        "validate-binary-search-tree",
+        "kth-smallest-element-in-a-bst",
+        "same-tree"
+      ],
+      "core": true
     },
     {
       "id": "102",
@@ -298,10 +700,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=6ZnyEApgFYg"
       },
       "pattern": "BFS",
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "patternTriggers": [
+        "The output is grouped by **level**, or the question mentions distance from the root.",
+        "You need the *first* node satisfying something, where first means shallowest — BFS finds it before exploring deeper.",
+        "The words *level order*, *by row*, *right side view*, *minimum depth*, *zigzag*."
+      ],
+      "keyInsight": "Snapshot the queue's size **before** processing each level. That one line is what separates a flat traversal from a level-grouped one: the nodes currently in the queue are exactly one level, so looping that many times drains precisely that level while the children you enqueue wait for the next round. Read the size inside the loop instead and it grows as you push, merging all the levels together.",
+      "bruteForce": {
+        "idea": "Find the height, then for each depth run a DFS collecting only nodes at that depth.",
+        "time": "O(N * H)",
+        "space": "O(H)",
+        "whyItFails": "Each level costs a full traversal, so the tree is walked H times. A queue visits every node once and already holds the nodes level by level — the information is free if you take it."
+      },
+      "approach": [
+        "If the root is null, return an empty list.",
+        "Put the root in a queue.",
+        "While the queue is non-empty, record its current size — this is the width of the level about to be processed.",
+        "Loop exactly that many times: dequeue a node, add its value to the current level's list, and enqueue its non-null children.",
+        "Append the completed level to the result.",
+        "Repeat until the queue drains."
+      ],
       "code": {
         "python": "from collections import deque\n\ndef levelOrder(root):\n    if not root: return []\n    result, queue = [], deque([root])\n    while queue:\n        level = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.val)\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        result.append(level)\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root) {\n        vector<vector<int>> result;\n        if (!root) return result;\n        queue<TreeNode*> q;\n        q.push(root);\n        while (!q.empty()) {\n            int sz = q.size();\n            vector<int> level;\n            while (sz--) {\n                auto* node = q.front(); q.pop();\n                level.push_back(node->val);\n                if (node->left) q.push(node->left);\n                if (node->right) q.push(node->right);\n            }\n            result.push_back(level);\n        }\n        return result;\n    }\n};",
@@ -310,15 +728,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(W)",
+        "note": "Every node is enqueued and dequeued once. The space is the maximum **width** of the tree, not its height — for a complete tree the last level holds about N/2 nodes, so BFS is O(N) space where DFS would be O(log N). That trade is the main reason not to use BFS by default."
       },
-      "dryRun": null,
+      "dryRun": "tree:        3\n           /   \\\n          9     20\n               /  \\\n             15    7\n\nThe size snapshot at the top of each iteration IS the level boundary.\n\n  iteration 0   queue before = [3]        snapshot = 1\n                dequeue 3, enqueue 9, 20\n                level = [3]               queue after = [9, 20]\n\n  iteration 1   queue before = [9, 20]    snapshot = 2\n                dequeue 9  (no children)\n                dequeue 20, enqueue 15, 7\n                level = [9, 20]           queue after = [15, 7]\n\n  iteration 2   queue before = [15, 7]    snapshot = 2\n                dequeue both, no children\n                level = [15, 7]           queue after = []\n\n  answer: [[3], [9, 20], [15, 7]]\n\nFollow iteration 1 carefully. The snapshot is 2, so the inner loop\nruns exactly twice and stops — even though the queue grows to hold 15\nand 7 partway through. Read `len(queue)` inside the loop instead and\nit would keep growing, swallowing the next level into this one and\nproducing a single flat list.\n\nThe queue peaks at 2 here, but for a complete tree it peaks at about\nN/2 — the last level. That is the width, not the height, and it is why\nBFS costs more space than DFS on wide trees.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Reading the queue size inside the inner loop rather than snapshotting it, which merges every level into one.",
+        "Enqueueing null children and then dereferencing them, instead of guarding before the push.",
+        "Forgetting the null-root case and returning a list containing an empty level.",
+        "In JavaScript, using `Array.shift()` as the dequeue. It is O(N), making the whole traversal quadratic on large trees — use an index cursor or a real deque."
+      ],
+      "edgeCases": [
+        "empty tree -> empty list",
+        "a single node -> one level with one value",
+        "a completely one-sided tree -> N levels of one node each",
+        "a complete tree, where the final level is the widest",
+        "a very wide tree, which is where BFS's space cost shows"
+      ],
+      "followUps": [
+        {
+          "q": "Return the levels bottom-up.",
+          "a": "Build them normally and reverse at the end, or insert each level at the front. Reversing once is O(N); inserting at the front repeatedly is O(N * H) with an array, so prefer the reverse."
+        },
+        {
+          "q": "Zigzag order, alternating direction per level.",
+          "a": "Keep the same traversal and reverse every other level as you append it. Do not try to alternate the enqueue order — that breaks the level grouping and is a common wrong turn."
+        },
+        {
+          "q": "Can DFS produce level order?",
+          "a": "Yes: pass the depth down and append each value to `result[depth]`, creating the list when a new depth is first reached. O(N) time and O(H) space — strictly better than BFS on space, which makes it the right answer for a very wide tree."
+        },
+        {
+          "q": "When is BFS genuinely required?",
+          "a": "When you need the shallowest answer and want to stop early — minimum depth, or the nearest node satisfying a condition. DFS would explore a deep branch fully before finding a shallow answer."
+        }
+      ],
+      "related": [
+        "binary-tree-right-side-view",
+        "maximum-depth-of-binary-tree",
+        "rotting-oranges"
+      ],
+      "core": true
     },
     {
       "id": "199",
@@ -336,10 +787,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=d4zLyf32e3I"
       },
       "pattern": "BFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "You need one representative node **per level** — the last, the first, the maximum.",
+        "The word *view*, *visible*, *per row*, *rightmost*.",
+        "Level grouping is the real requirement, so this is the level-order template with a different collection step."
+      ],
       "keyInsight": "BFS level by level. The last node in each level is visible from the right.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Compute the full level-order traversal, then take the last element of each level.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "Nothing is wrong with it — it is the same complexity and arguably clearer. It just builds every level in full to keep one value from each, so you can collect only the last node per level and skip the intermediate lists."
+      },
+      "approach": [
+        "Run the standard level-order BFS with a size snapshot per level.",
+        "Inside the level loop, track the index of the node being processed.",
+        "When the index is the last of that level, add its value to the result.",
+        "Enqueue children left-to-right as usual.",
+        "Return the collected values."
+      ],
       "code": {
         "python": "def rightSideView(root):\n    if not root: return []\n    result, queue = [], deque([root])\n    while queue:\n        for i in range(len(queue)):\n            node = queue.popleft()\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        result.append(node.val)  # last node of level\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> rightSideView(TreeNode* root) {\n        vector<int> result;\n        if (!root) return result;\n        queue<TreeNode*> q;\n        q.push(root);\n        while (!q.empty()) {\n            int sz = q.size();\n            for (int i = 0; i < sz; i++) {\n                auto* node = q.front(); q.pop();\n                if (i == sz - 1) result.push_back(node->val);\n                if (node->left) q.push(node->left);\n                if (node->right) q.push(node->right);\n            }\n        }\n        return result;\n    }\n};",
@@ -348,15 +814,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(W)",
+        "note": "Every node is visited once; only one value per level is kept, so the output is O(H). The working space is still the queue, bounded by the tree's maximum width."
       },
-      "dryRun": null,
+      "dryRun": "tree:        1\n           /   \\\n          2     3\n           \\     \\\n            5     4\n\nStandard level-order BFS; keep only the LAST node of each level.\n\n  level [1]      -> visible from the right: 1\n  level [2, 3]   -> visible from the right: 3\n  level [5, 4]   -> visible from the right: 4\n\n  answer: [1, 3, 4]\n\nNow change the tree so the right subtree is shorter:\n\n            1\n          /   \\\n         2     3\n        /\n       5\n\n  level [1]      -> 1\n  level [2, 3]   -> 3\n  level [5]      -> 5      <-- a LEFT child is visible\n\nThat third level is the case the problem is built around. The\nrightmost visible node is not always a right child — when the right\nsubtree runs out, whatever is deepest on the left becomes visible.\nAny solution that just walks right children repeatedly gets this\nwrong.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Assuming the rightmost visible node is always a right child. If the right subtree is shorter, a node deep in the left subtree becomes visible — which is the case this problem is built around.",
+        "Taking the first node of each level instead of the last, which gives the left side view.",
+        "Enqueueing children right-to-left to 'get the right one first' and then taking the first — it works, but it is easy to get backwards and gives no benefit.",
+        "Forgetting the empty-tree case."
+      ],
+      "edgeCases": [
+        "empty tree -> empty list",
+        "a single node -> that value",
+        "a tree with only left children -> every node is visible",
+        "a tree whose right subtree is much shallower than its left",
+        "a complete tree -> the rightmost node of each level"
+      ],
+      "followUps": [
+        {
+          "q": "Left side view instead.",
+          "a": "Take the first node of each level rather than the last. One character of difference, and worth stating because it confirms the level grouping is doing the work, not the direction of enqueueing."
+        },
+        {
+          "q": "Do it with DFS.",
+          "a": "Traverse right child first, passing the depth down, and record a value the first time each depth is reached. O(N) time, O(H) space — better than BFS on a wide tree, and a neat demonstration that traversal order can substitute for level bookkeeping."
+        },
+        {
+          "q": "Return the maximum value per level.",
+          "a": "Same skeleton, different reduction over each level. Most 'per level' questions are this template with the collection step swapped, which is the reusable part."
+        },
+        {
+          "q": "What about the top view or bottom view?",
+          "a": "Those need horizontal position, not level: track a column index that decreases going left and increases going right, and keep the shallowest (or deepest) node per column. Different grouping key, same traversal."
+        }
+      ],
+      "related": [
+        "binary-tree-level-order-traversal",
+        "count-good-nodes-in-binary-tree",
+        "maximum-depth-of-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "1448",
@@ -374,10 +873,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=7cp5imvDzl4"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A node's status depends on its **ancestors**, not its descendants — so information must flow *down*.",
+        "The context needed is a single summarising value (the maximum so far), not the whole path.",
+        "The words *on the path from the root*, *so far*, *along the way*."
+      ],
       "keyInsight": "A node is \"good\" if no node on the path from root has a greater value. Pass the max value seen so far down the recursion.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every node, walk back up to the root (or re-walk down to it) comparing against every ancestor.",
+        "time": "O(N * H)",
+        "space": "O(H)",
+        "whyItFails": "It re-examines the same ancestors for every descendant. The only thing that matters about the ancestors is their maximum, which is a single number the recursion can carry down for free."
+      },
+      "approach": [
+        "Define a recursion taking the node and the maximum value seen on the path above it.",
+        "For the root, pass a maximum of negative infinity, or the root's own value.",
+        "If the node is null, contribute 0.",
+        "The node is good if its value is greater than or equal to the running maximum.",
+        "Compute the new maximum as the larger of the running maximum and this node's value, and recurse into both children with it.",
+        "Return this node's contribution plus both subtree counts."
+      ],
       "code": {
         "python": "def goodNodes(root):\n    def dfs(node, max_val):\n        if not node: return 0\n        good = 1 if node.val >= max_val else 0\n        max_val = max(max_val, node.val)\n        return good + dfs(node.left, max_val) + dfs(node.right, max_val)\n    return dfs(root, root.val)",
         "cpp": "class Solution {\npublic:\n    int goodNodes(TreeNode* root) {\n        return dfs(root, root->val);\n    }\n    int dfs(TreeNode* node, int maxVal) {\n        if (!node) return 0;\n        int good = node->val >= maxVal ? 1 : 0;\n        maxVal = max(maxVal, node->val);\n        return good + dfs(node->left, maxVal) + dfs(node->right, maxVal);\n    }\n};",
@@ -386,15 +901,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "One visit per node, with the ancestor context compressed into a single parameter. This is the counterpart to the 'information up' template — the two together cover most tree DFS problems."
       },
-      "dryRun": null,
+      "dryRun": "tree:        3\n           /   \\\n          1     4\n         /     / \\\n        3     1   5\n\nThe maximum seen so far flows DOWN as a parameter. A node is good when\nits value is >= that maximum.\n\n  node   max above   good?       new max passed down\n   3        -inf      GOOD              3\n   1          3       not good          3\n   3          3       GOOD              3\n   4          3       GOOD              4\n   1          4       not good          4\n   5          4       GOOD              5\n\n  answer: 4 good nodes — the root 3, the deep 3, the 4 and the 5.\n\nThe deep 3 is the instructive one. It equals the maximum above it\nrather than exceeding it, and still counts — so the comparison is\n`>=`, not `>`. Flip that and the answer becomes 3.\n\nContrast the direction of flow with Maximum Depth, where height\ntravels UP as a return value. Here the ancestors' maximum travels\nDOWN as an argument. Deciding which of the two a problem needs is the\nfastest way to write any tree recursion.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using a strict `>` comparison. The root is good, and a node equal to the maximum so far is usually also good — check the problem's wording, since this flips the answer on trees with duplicates.",
+        "Initialising the running maximum to 0, which breaks on negative values. Use negative infinity or the root's value.",
+        "Passing the maximum *including* the current node into its own comparison, so every node compares against itself and all are good.",
+        "Trying to return the maximum upward as well as the count, which conflates the two directions — the maximum goes down, the count comes up."
+      ],
+      "edgeCases": [
+        "a single node -> 1, the root is always good",
+        "strictly increasing values down every path -> every node is good",
+        "strictly decreasing values -> only the root is good",
+        "all values equal -> all good, if the comparison is non-strict",
+        "negative values throughout"
+      ],
+      "followUps": [
+        {
+          "q": "Which direction does information flow here, and why does it matter?",
+          "a": "Down, as a parameter — unlike height, which flows up as a return value. Naming that distinction is the fastest way to decide how to write any tree recursion: ask what each node needs, then put it in the signature or the return type accordingly."
+        },
+        {
+          "q": "Count nodes whose value exceeds every node in their own subtree instead.",
+          "a": "Now the information flows up: return each subtree's maximum and compare. The mirror image of this problem, and a good check that you can switch direction deliberately."
+        },
+        {
+          "q": "Find the path with the most good nodes.",
+          "a": "Carry both the running maximum down and return the best count up — both directions at once, which is the same shape as Diameter and Max Path Sum."
+        },
+        {
+          "q": "What if you needed the whole ancestor path, not just its maximum?",
+          "a": "Pass a mutable list down, appending on entry and popping on exit. That is standard backtracking, and the reason the maximum is nicer here is that it compresses the path into O(1) state."
+        }
+      ],
+      "related": [
+        "validate-binary-search-tree",
+        "binary-tree-maximum-path-sum",
+        "maximum-depth-of-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "98",
@@ -413,10 +961,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=s6ATEkipzow"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A **global** ordering property must hold, not just a local one between parent and child.",
+        "Each node is constrained by the ancestors above it, so a range flows *down* the recursion.",
+        "The words *valid BST*, *strictly less than*, *every node in the left subtree*."
+      ],
       "keyInsight": "Each node must be within a valid range (low, high). Going left, update high. Going right, update low.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "At each node check that `left.val < node.val < right.val`, then recurse.",
+        "time": "O(N)",
+        "space": "O(H)",
+        "whyItFails": "It is **wrong**, not slow — and that is the whole point of the problem. Consider the tree with root 5, left child 4, right child 6, and 6's children being 3 and 7. Every parent-child pair is fine: 4 < 5, 6 > 5, 3 < 6, 7 > 6. Yet 3 sits in the root's right subtree while being less than 5, so it is not a BST. The property constrains a node against **all** of its ancestors, not just its parent."
+      },
+      "approach": [
+        "Define the recursion as taking a node plus an open interval `(lo, hi)` that its value must fall strictly inside.",
+        "Start at the root with an unbounded interval.",
+        "A null node is trivially valid.",
+        "If the node's value is not strictly between `lo` and `hi`, the tree is invalid.",
+        "Recurse left with the interval `(lo, node.val)` — everything left must be below this node.",
+        "Recurse right with `(node.val, hi)`, and require both sides to hold."
+      ],
       "code": {
         "python": "def isValidBST(root):\n    def dfs(node, low, high):\n        if not node: return True\n        if not (low < node.val < high): return False\n        return dfs(node.left, low, node.val) and dfs(node.right, node.val, high)\n    return dfs(root, float('-inf'), float('inf'))",
         "cpp": "class Solution {\npublic:\n    bool isValidBST(TreeNode* root) {\n        return validate(root, LONG_MIN, LONG_MAX);\n    }\n    bool validate(TreeNode* node, long lo, long hi) {\n        if (!node) return true;\n        if (node->val <= lo || node->val >= hi) return false;\n        return validate(node->left, lo, node->val) && validate(node->right, node->val, hi);\n    }\n};",
@@ -425,15 +989,66 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "Each node is visited once and compared against two bounds. Space is the recursion depth. The alternative — an inorder traversal checking the sequence is strictly increasing — is the same complexity and arguably easier to argue correct."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "The naive check — compare each node only with its immediate children —\nis WRONG. Here is a tree that passes it and is not a BST:\n\n            5\n          /   \\\n         4     6\n              / \\\n             3   7\n\n  parent-child pairs:  4 < 5 ok,  6 > 5 ok,  3 < 6 ok,  7 > 6 ok\n  naive verdict: valid        actual verdict: INVALID\n\nThe node 3 sits in the root's RIGHT subtree, so it must be greater\nthan 5 — but it is 3. No parent-child pair reveals this, because the\nconstraint comes from the grandparent.\n\nThe range check catches it:\n\n  node 5:  allowed (-inf, +inf)   ok\n    node 4:  allowed (-inf, 5)    ok\n    node 6:  allowed (5, +inf)    ok\n      node 3:  allowed (5, 6)     VIOLATION  ->  false\n\nGoing left tightens the upper bound to the node's value; going right\ntightens the lower bound. By the time the recursion reaches 3, the\nwindow has narrowed to (5, 6) and 3 is plainly outside it.\n\nNote that LeetCode's own example, [5,1,4,null,null,3,6], is NOT a\ndemonstration of this mistake — its right child 4 is already less than\nits parent 5, so even the naive check rejects it.",
+      "diagram": {
+        "kind": "tree",
+        "props": {
+          "levels": [
+            5,
+            4,
+            6,
+            null,
+            null,
+            3,
+            7
+          ],
+          "highlight": [
+            5
+          ]
+        },
+        "caption": "The counterexample to parent-child checking. Every parent-child pair is locally valid, yet the highlighted 3 lies in the root's right subtree and is less than 5. By the time the recursion reaches it, the allowed range has narrowed to (5, 6) — which it violates."
+      },
+      "pitfalls": [
+        "Checking only parent against child. This is the single mistake the problem is designed to catch.",
+        "Using inclusive comparisons. A BST is usually strict, so a node equal to an ancestor is invalid — confirm whether duplicates are allowed.",
+        "Using the integer minimum and maximum as the initial bounds. A node holding exactly that value then fails a strict comparison; use null or a wider type for the bounds.",
+        "In the inorder variant, comparing against the previous value with `<=` when it should be `<`, or forgetting to track the previous value across recursive calls."
+      ],
+      "edgeCases": [
+        "empty tree -> valid",
+        "a single node -> valid",
+        "duplicate values -> invalid under the strict definition",
+        "a node holding the integer minimum or maximum, which breaks sentinel bounds",
+        "root 5 with children 4 and 6, where 6's left child is 3 — passes every parent-child check and is still invalid",
+        "a valid BST that is a straight line"
+      ],
+      "followUps": [
+        {
+          "q": "Solve it with an inorder traversal.",
+          "a": "Inorder on a BST must emit strictly increasing values, so walk it keeping the previous value and fail on any non-increase. Same complexity, and often easier to justify — the ranges version is easier to get wrong at the bounds."
+        },
+        {
+          "q": "Find the two nodes that were swapped to break a BST.",
+          "a": "Inorder, and look for the places where the sequence decreases. There are at most two such dips; the first dip's earlier node and the last dip's later node are the culprits. That is Recover Binary Search Tree."
+        },
+        {
+          "q": "How should duplicates be handled?",
+          "a": "There is no single convention — some definitions put equal values on the left, some on the right, some forbid them. Ask. Then make the comparison match: non-strict on the chosen side only."
+        },
+        {
+          "q": "Why do the bounds need to be wider than int?",
+          "a": "With `INT_MIN` as the initial lower bound, a root holding `INT_MIN` fails `lo < val`. Using a nullable bound or a 64-bit type avoids special-casing it — a small detail that comes up in real test suites."
+        }
+      ],
+      "related": [
+        "kth-smallest-element-in-a-bst",
+        "lowest-common-ancestor-of-bst",
+        "count-good-nodes-in-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "230",
@@ -452,10 +1067,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=5LUXSvjmGCw"
       },
       "pattern": "Inorder Traversal",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A **BST** plus an order statistic — kth smallest, kth largest, the median.",
+        "Inorder traversal of a BST emits sorted values, so 'kth smallest' becomes 'the kth thing inorder'.",
+        "You can stop early, which means a full traversal is unnecessary."
+      ],
       "keyInsight": "Inorder traversal of BST gives sorted order. The kth element in inorder is the answer.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Collect every value with an inorder traversal into a list, then index k-1.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It materialises the whole sorted sequence to read one element. Counting as you traverse and stopping at the kth lets you touch only the first k values plus the path to them — O(H + k)."
+      },
+      "approach": [
+        "Traverse inorder: left subtree, then the node, then the right subtree.",
+        "Keep a counter of how many nodes have been visited.",
+        "When visiting a node, increment the counter.",
+        "If the counter equals k, that node's value is the answer — record it and stop descending.",
+        "Implemented iteratively with an explicit stack, 'stop' is a clean early return rather than unwinding a recursion.",
+        "Push left children while descending, pop to visit, then move to the right child."
+      ],
       "code": {
         "python": "def kthSmallest(root, k):\n    stack = []\n    curr = root\n    while stack or curr:\n        while curr:\n            stack.append(curr)\n            curr = curr.left\n        curr = stack.pop()\n        k -= 1\n        if k == 0:\n            return curr.val\n        curr = curr.right",
         "cpp": "class Solution {\npublic:\n    int kthSmallest(TreeNode* root, int k) {\n        stack<TreeNode*> st;\n        while (root || !st.empty()) {\n            while (root) { st.push(root); root = root->left; }\n            root = st.top(); st.pop();\n            if (--k == 0) return root->val;\n            root = root->right;\n        }\n        return -1;\n    }\n};",
@@ -463,16 +1094,49 @@
         "js": "var kthSmallest = function(root, k) {\n    const stack = [];\n    while (root || stack.length) {\n        while (root) { stack.push(root); root = root.left; }\n        root = stack.pop();\n        if (--k === 0) return root.val;\n        root = root.right;\n    }\n};"
       },
       "complexity": {
-        "time": "O(H + K)",
-        "space": "O(H)"
+        "time": "O(H + k)",
+        "space": "O(H)",
+        "note": "You descend H levels to reach the smallest value, then visit k nodes — so a small k on a large tree is cheap. The stack holds at most one root-to-leaf path. Recursive and iterative are the same bound, but only the iterative version stops cleanly."
       },
-      "dryRun": null,
+      "dryRun": "BST:         5\n           /   \\\n          3     6\n         / \\\n        2   4\n       /\n      1\n\nk = 3. Iterative inorder with an explicit stack.\n\n  descend left, pushing as you go:\n    push 5      stack [5]\n    push 3      stack [5, 3]\n    push 2      stack [5, 3, 2]\n    push 1      stack [5, 3, 2, 1]\n    1 has no left child, so stop descending\n\n  now pop and visit, going right after each:\n    visit 1     count = 1\n    visit 2     count = 2\n    visit 3     count = 3   <- k reached, return 3\n\n  answer: 3\n\nThe traversal stopped after visiting three nodes. The values 4, 5 and\n6 were never looked at, and node 6's entire subtree was never entered —\nthat early exit is what makes this O(H + k) rather than O(N).\n\nThe inorder sequence here would be 1, 2, 3, 4, 5, 6: sorted, which is\nthe BST property doing the work. Preorder would give 5, 3, 2, 1, 4, 6\nand postorder 1, 2, 4, 3, 6, 5 — neither sorted, so neither usable.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not stopping once k is reached, which turns the early exit into a full O(N) traversal.",
+        "Off-by-one on k. It is conventionally 1-indexed, so the first visited node is k = 1.",
+        "Traversing preorder or postorder, which do not yield sorted order on a BST — only inorder does.",
+        "Trying to return early from a recursion by returning a value that gets discarded up the stack. Use a flag, an exception, or the iterative form."
+      ],
+      "edgeCases": [
+        "k = 1 -> the leftmost node",
+        "k = N -> the rightmost node",
+        "a single node with k = 1",
+        "a degenerate left-leaning tree, where reaching the smallest value costs O(N)",
+        "k larger than the node count, if not guaranteed valid"
+      ],
+      "followUps": [
+        {
+          "q": "What if the tree is modified often and this is queried often?",
+          "a": "Store a subtree size at each node. Then the kth smallest is an O(H) descent: compare k against the left subtree's size to decide which way to go. Insertions and deletions must maintain the counts, which is the trade — and it is exactly how an order-statistic tree works."
+        },
+        {
+          "q": "kth largest instead.",
+          "a": "Reverse inorder — right, node, left — with the same counter. Or ask for the (N + 1 - k)th smallest if you know N."
+        },
+        {
+          "q": "Why is O(H + k) better than O(N) in practice?",
+          "a": "For k = 1 on a balanced tree of a million nodes, it visits about 20 nodes instead of a million. The early exit is the entire value of counting during the traversal rather than after it."
+        },
+        {
+          "q": "Can you do it without any extra space?",
+          "a": "Morris traversal threads temporary links into the tree to walk inorder in O(1) space, restoring the structure as it goes. O(N) time, no stack — clever, rarely worth it, and good to know exists."
+        }
+      ],
+      "related": [
+        "validate-binary-search-tree",
+        "lowest-common-ancestor-of-bst",
+        "find-median-from-data-stream"
+      ],
+      "core": true
     },
     {
       "id": "105",
@@ -491,10 +1155,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=ihj4IQGZ2zc"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Rebuild a structure from two different **traversal orders** of it.",
+        "One order identifies the root; the other reveals how the remaining nodes split into left and right.",
+        "The words *construct*, *rebuild from*, *given preorder and inorder*."
+      ],
       "keyInsight": "Preorder[0] = root. Find root in inorder to split left/right subtrees. Use hashmap for O(1) index lookup in inorder.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Same recursion, but locate the root inside the inorder array by scanning it each time.",
+        "time": "O(N^2)",
+        "space": "O(N)",
+        "whyItFails": "The scan is O(N) and happens once per node, so a degenerate tree gives N scans of length N. A hash map from value to inorder index answers the same question in O(1), which is the only change needed."
+      },
+      "approach": [
+        "Observe that preorder visits the root first, so `preorder[0]` is the root of the whole tree.",
+        "In inorder, everything before the root belongs to the left subtree and everything after it to the right.",
+        "That split tells you the **size** of the left subtree, which in turn tells you where the left subtree's preorder segment ends.",
+        "Build a hash map from value to its inorder index so the split point is found in O(1).",
+        "Recurse: take the next preorder value as the current root, look up its inorder position, and recurse on the two resulting index ranges.",
+        "Advance a shared preorder cursor as you go, so each value is consumed exactly once."
+      ],
       "code": {
         "python": "def buildTree(preorder, inorder):\n    inorder_idx = {v: i for i, v in enumerate(inorder)}\n    self_idx = [0]  # preorder index\n\n    def build(lo, hi):\n        if lo > hi: return None\n        root_val = preorder[self_idx[0]]\n        self_idx[0] += 1\n        root = TreeNode(root_val)\n        mid = inorder_idx[root_val]\n        root.left = build(lo, mid - 1)\n        root.right = build(mid + 1, hi)\n        return root\n\n    return build(0, len(inorder) - 1)",
         "cpp": "class Solution {\npublic:\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        unordered_map<int,int> map;\n        for (int i = 0; i < inorder.size(); i++) map[inorder[i]] = i;\n        int idx = 0;\n        return build(preorder, map, idx, 0, inorder.size() - 1);\n    }\n    TreeNode* build(vector<int>& pre, unordered_map<int,int>& map, int& idx, int l, int r) {\n        if (l > r) return nullptr;\n        TreeNode* root = new TreeNode(pre[idx++]);\n        int mid = map[root->val];\n        root->left = build(pre, map, idx, l, mid - 1);\n        root->right = build(pre, map, idx, mid + 1, r);\n        return root;\n    }\n};",
@@ -503,15 +1183,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "One node constructed per preorder value, with the inorder split found in O(1) via the map. The space is the map plus the recursion stack — O(N) and O(H) respectively."
       },
-      "dryRun": null,
+      "dryRun": "preorder = [3, 9, 20, 15, 7]        root comes FIRST\ninorder  = [9, 3, 15, 20, 7]        root splits left from right\n\nBuild a value -> inorder index map once:  {9:0, 3:1, 15:2, 20:3, 7:4}\n\nA single preorder cursor advances as nodes are created, so no\npreorder index arithmetic is needed — only inorder ranges.\n\n  root 3    preorder cursor 0 -> 1\n            inorder index 1, so left range [0,0], right range [2,4]\n            (one node to the left of 3, three to the right)\n\n    root 9  preorder cursor 1 -> 2\n            inorder index 0, left range [0,-1] empty, right [1,0] empty\n            -> a leaf\n\n    root 20 preorder cursor 2 -> 3\n            inorder index 3, left range [2,2], right range [4,4]\n\n      root 15   cursor 3 -> 4   inorder index 2, both ranges empty -> leaf\n      root 7    cursor 4 -> 5   inorder index 4, both ranges empty -> leaf\n\n  built tree, level order: [3] [9, 20] [15, 7]\n\n        3\n      /   \\\n     9     20\n          /  \\\n        15    7\n\nAn empty range is signalled by lo > hi, which is why [0,-1] and [1,0]\nabove both mean \"no node here\".\n\nWithout the index map, finding each root inside inorder would be a\nlinear scan — once per node, giving O(N^2) on a degenerate tree.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Scanning inorder for the root instead of using a map, which is the O(N^2) version.",
+        "Getting the preorder sub-range arithmetic wrong. Using a single shared cursor that advances as nodes are created avoids the index juggling entirely, and is the more robust formulation.",
+        "Assuming values are unique without checking. The map requires it, and with duplicates the reconstruction is genuinely ambiguous.",
+        "Mixing up which traversal gives the root. Preorder gives it first, postorder gives it last, and inorder gives it nowhere — which is why inorder alone is not enough."
+      ],
+      "edgeCases": [
+        "empty arrays -> null",
+        "a single node",
+        "a tree with only left children, so inorder is the reverse of preorder",
+        "a tree with only right children, so inorder equals preorder",
+        "duplicate values, which make the answer non-unique"
+      ],
+      "followUps": [
+        {
+          "q": "Construct from inorder and postorder instead.",
+          "a": "Postorder gives the root last, so walk it backwards and build the **right** subtree before the left. Same structure, mirrored — and a good test of whether you understood the first one or memorised it."
+        },
+        {
+          "q": "Can you construct from preorder and postorder?",
+          "a": "Not uniquely for a general binary tree: a single left child and a single right child produce the same pair. It becomes unique if every node has 0 or 2 children, because then the ambiguity disappears."
+        },
+        {
+          "q": "Why is inorder the indispensable one?",
+          "a": "Inorder is the only traversal that tells you where the split between subtrees falls. Preorder and postorder tell you which node is the root but nothing about how the rest divides — so you need exactly one of each kind."
+        },
+        {
+          "q": "Construct a BST from preorder alone.",
+          "a": "Possible, because the BST property supplies the missing ordering information — inorder is implicitly the sorted sequence. Build with a valid-range check as you consume values, which is O(N)."
+        }
+      ],
+      "related": [
+        "serialize-and-deserialize-binary-tree",
+        "validate-binary-search-tree",
+        "same-tree"
+      ],
+      "core": true
     },
     {
       "id": "124",
@@ -529,10 +1242,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=Hr5cWUld4vU"
       },
       "pattern": "DFS",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A path that can start and end anywhere, and may not include the root.",
+        "Each node returns one quantity upward while the answer is a different quantity, tracked globally — the same shape as Diameter.",
+        "Values can be **negative**, which means a subtree can be worth skipping entirely."
+      ],
       "keyInsight": "At each node, the max path THROUGH it = node.val + max(left, 0) + max(right, 0). Return the max single-branch path upward. Track global max.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each node, compute the best downward path in each subtree by separate traversals, then combine.",
+        "time": "O(N^2)",
+        "space": "O(H)",
+        "whyItFails": "Each node re-derives information its children already computed. One post-order pass that returns the best downward gain and records the best through-path costs the same as a single traversal."
+      },
+      "approach": [
+        "Write a recursion returning the best **downward** path sum starting at that node — a path that can continue up to the parent.",
+        "Keep the overall best in a variable outside the recursion.",
+        "For a null node return 0.",
+        "Compute each child's gain and **clamp it at zero**: a negative subtree is better skipped than included.",
+        "The best path *through* this node is `node.val + leftGain + rightGain` — update the global best with it.",
+        "Return `node.val + max(leftGain, rightGain)`, since a path continuing to the parent can only use one side.",
+        "Return the global best."
+      ],
       "code": {
         "python": "def maxPathSum(root):\n    result = [root.val]\n    def dfs(node):\n        if not node: return 0\n        left = max(dfs(node.left), 0)   # ignore negative paths\n        right = max(dfs(node.right), 0)\n        result[0] = max(result[0], node.val + left + right)\n        return node.val + max(left, right)\n    dfs(root)\n    return result[0]",
         "cpp": "class Solution {\n    int result = INT_MIN;\npublic:\n    int maxPathSum(TreeNode* root) { dfs(root); return result; }\n    int dfs(TreeNode* node) {\n        if (!node) return 0;\n        int l = max(0, dfs(node->left));\n        int r = max(0, dfs(node->right));\n        result = max(result, l + r + node->val);\n        return max(l, r) + node->val;\n    }\n};",
@@ -541,15 +1271,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(H)"
+        "space": "O(H)",
+        "note": "One post-order pass. The two different quantities are the crux: the parent needs a single-branch gain, while the answer may fork at this node and use both branches — so one is returned and the other is recorded."
       },
-      "dryRun": null,
+      "dryRun": "tree:       -10\n           /    \\\n          9      20\n                /  \\\n              15    7\n\nEach node returns the best DOWNWARD gain; the answer is tracked in a\nglobal. Child gains are clamped at 0 — a negative branch is skipped.\n\n  node    L gain  R gain   through = val+L+R   best    returns val+max(L,R)\n   9        0       0           9                9            9\n   15       0       0          15               15           15\n   7        0       0           7               15            7\n   20      15       7          42               42           35\n  -10       9      35          34               42           25\n\n  answer: 42  —  the path 15 - 20 - 7\n\nThree things this trace shows.\n\n  1. The best path does NOT include the root. At the root the\n     through-value is 34, worse than the 42 already recorded. This is\n     why the answer lives in a global rather than being returned.\n\n  2. Node 20 records 42 (using both children) but returns 35 (using\n     only its better child). A path that forks at a node cannot also\n     continue up to its parent — hence two different numbers.\n\n  3. If the best is initialised to 0 instead of -infinity, an\n     all-negative tree such as [-3] answers 0 rather than -3.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Initialising the global best to 0. With all-negative values the answer is the largest single node, not 0 — use negative infinity.",
+        "Forgetting to clamp child gains at zero, which forces every path to include subtrees that only subtract.",
+        "Returning the through-path sum upward. A path cannot fork and then continue to the parent, so the return must use only one branch.",
+        "Clamping the node's own value at zero. The node is always on the path; only the children's contributions are optional."
+      ],
+      "edgeCases": [
+        "a single node, possibly negative -> its own value",
+        "all values negative -> the largest single value",
+        "a tree where the best path avoids the root",
+        "a mix where one subtree is entirely negative and must be skipped",
+        "a straight line of nodes"
+      ],
+      "followUps": [
+        {
+          "q": "Restrict the path to start at the root.",
+          "a": "Then the answer is simply the returned value at the root, with no global needed — the problem collapses to the 'information up' template. The global exists precisely because the path can fork anywhere."
+        },
+        {
+          "q": "Return the path itself.",
+          "a": "Have the recursion also return the deepest node of its best branch, and record both endpoints when the global improves. Then reconstruct by walking up from each. More bookkeeping, same complexity."
+        },
+        {
+          "q": "How does this relate to Diameter of Binary Tree?",
+          "a": "Same algorithm. Diameter counts edges with every node worth 1, so nothing is ever negative and no clamp is needed. Max Path Sum is just the weighted version, which is why the clamp appears."
+        },
+        {
+          "q": "What about Maximum Subarray — is that the same idea?",
+          "a": "Yes, structurally. Kadane's algorithm clamps a running sum at zero for exactly the same reason: a negative prefix is worth abandoning. This is Kadane's on a tree instead of a line."
+        }
+      ],
+      "related": [
+        "diameter-of-binary-tree",
+        "maximum-subarray",
+        "count-good-nodes-in-binary-tree"
+      ],
+      "core": true
     },
     {
       "id": "297",
@@ -568,10 +1331,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=u4JAi2JJhI8"
       },
       "pattern": "DFS Preorder",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A structure must survive a round-trip through a flat string and come back identical.",
+        "Structure must be recoverable, so **null markers** are mandatory — without them the encoding is ambiguous.",
+        "The words *serialise*, *encode*, *persist*, *send over the wire*."
+      ],
       "keyInsight": "Preorder DFS with null markers. Serialize: \"1,2,N,N,3,4,N,N,5,N,N\". Deserialize: consume tokens one by one in same preorder fashion.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Emit the values in preorder with no markers, and try to rebuild from them.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "It is **irrecoverable**, not slow. A root with one left child and a root with one right child both produce the same two values, so deserialisation cannot know which tree it had. Nulls carry the shape, and omitting them discards it."
+      },
+      "approach": [
+        "Serialise with a preorder DFS: write the node's value, then recurse left, then right.",
+        "Write an explicit marker for every null child, so the shape is encoded alongside the values.",
+        "Join the tokens with a delimiter that cannot appear in a value.",
+        "Deserialise by consuming tokens in the same preorder sequence, using a shared cursor.",
+        "On a marker, return null; otherwise create a node, then recursively build its left child and then its right.",
+        "Because both directions consume in the same order, the cursor keeps them synchronised with no index arithmetic."
+      ],
       "code": {
         "python": "class Codec:\n    def serialize(self, root):\n        vals = []\n        def dfs(node):\n            if not node:\n                vals.append(\"N\")\n                return\n            vals.append(str(node.val))\n            dfs(node.left)\n            dfs(node.right)\n        dfs(root)\n        return \",\".join(vals)\n\n    def deserialize(self, data):\n        vals = iter(data.split(\",\"))\n        def dfs():\n            val = next(vals)\n            if val == \"N\": return None\n            node = TreeNode(int(val))\n            node.left = dfs()\n            node.right = dfs()\n            return node\n        return dfs()",
         "cpp": "class Codec {\npublic:\n    string serialize(TreeNode* root) {\n        if (!root) return \"N\";\n        return to_string(root->val) + \",\" + serialize(root->left) + \",\" + serialize(root->right);\n    }\n    TreeNode* deserialize(string data) {\n        queue<string> q;\n        string token;\n        istringstream ss(data);\n        while (getline(ss, token, ',')) q.push(token);\n        return build(q);\n    }\n    TreeNode* build(queue<string>& q) {\n        string val = q.front(); q.pop();\n        if (val == \"N\") return nullptr;\n        TreeNode* node = new TreeNode(stoi(val));\n        node->left = build(q);\n        node->right = build(q);\n        return node;\n    }\n};",
@@ -580,15 +1359,50 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "Each node and each null child is written and read exactly once. The string length is O(N) — a tree of N nodes has N + 1 null slots, so the encoding is about 2N tokens. Space is the string plus O(H) recursion."
       },
-      "dryRun": null,
+      "dryRun": "tree:        1\n           /   \\\n          2     3\n               / \\\n              4   5\n\nSerialise — preorder, emitting a marker for EVERY null child:\n\n  \"1,2,N,N,3,4,N,N,5,N,N\"\n\n  5 real nodes, 6 null markers. A binary tree with N nodes always has\n  exactly N+1 empty child slots, so the encoding is about 2N tokens.\n\nDeserialise — consume tokens in the same preorder order, sharing one\ncursor between the recursive calls:\n\n  token '1'  -> create node 1, then build its left, then its right\n    token '2'  -> create node 2, then build its left, then its right\n      token 'N'  -> null\n      token 'N'  -> null\n    token '3'  -> create node 3, then build its left, then its right\n      token '4'  -> create node 4\n        token 'N'  -> null\n        token 'N'  -> null\n      token '5'  -> create node 5\n        token 'N'  -> null\n        token 'N'  -> null\n\n  rebuilt level order: [1] [2, 3] [4, 5]   —  identical to the original\n\nThe cursor must be SHARED, not copied. Node 2's subtree consumes two\ntokens, and node 3's construction has to start after them. Pass the\nindex by value and the right subtree re-reads the left subtree's\ntokens — producing a correct left half and nonsense on the right,\nwhich is the classic bug here.\n\nWithout the null markers, \"1,2,3,4,5\" could not be rebuilt: there is\nno way to tell whether 2 is a left or a right child.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting null markers, which makes the round-trip impossible.",
+        "Using a delimiter or marker that can appear in a value — 'N' breaks if values are strings, and a comma breaks on negative numbers only if you also split carelessly.",
+        "Building the string with repeated concatenation in a loop, which is O(N^2) in languages with immutable strings. Use a list and join.",
+        "Deserialising with an index copied by value rather than shared, so the left subtree's progress is invisible to the right. This is the bug that produces a correct-looking left half and nonsense on the right.",
+        "Not handling the empty tree, which must serialise to something that round-trips back to null."
+      ],
+      "edgeCases": [
+        "empty tree -> a string that decodes back to null",
+        "a single node",
+        "negative values, which must survive the delimiter choice",
+        "values containing the delimiter, if values are not integers",
+        "a completely one-sided tree, where half the tokens are markers",
+        "a tree deep enough to overflow the recursion"
+      ],
+      "followUps": [
+        {
+          "q": "Make the encoding more compact.",
+          "a": "Use BFS and drop trailing nulls, or encode the shape as a bit per node separately from the values. Theoretically a binary tree of N nodes needs about 2N bits of shape information, which is the floor — the Catalan number of possible shapes."
+        },
+        {
+          "q": "Serialise a BST more efficiently.",
+          "a": "Preorder alone suffices, because the ordering property supplies the shape — rebuild with a valid-range check as you consume values. No null markers needed at all, which is a nice demonstration that redundancy in the data can replace redundancy in the encoding."
+        },
+        {
+          "q": "Why preorder rather than inorder?",
+          "a": "Preorder gives the root first, so deserialisation can create a node before it needs its children. Inorder gives the root in the middle, which means you cannot know where to split without extra information — the same reason inorder alone cannot rebuild a tree."
+        },
+        {
+          "q": "How do real systems do this?",
+          "a": "Length-prefixed or tagged formats — protobuf, JSON with explicit nulls, or a flat array with computed child indices as in a binary heap. The constant across all of them is that shape must be encoded explicitly, which is the lesson here."
+        }
+      ],
+      "related": [
+        "construct-binary-tree-from-preorder-and-inorder",
+        "subtree-of-another-tree",
+        "encode-and-decode-strings"
+      ],
+      "core": true
     }
   ]
 }
