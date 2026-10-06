@@ -4,13 +4,29 @@
   "icon": "🔤",
   "order": 8,
   "concept": {
-    "heading": "Core Concept",
-    "body": "A Trie (prefix tree) stores strings character by character. Each node has up to 26 children. Enables O(L) prefix search where L = word length.",
-    "bullets": [],
+    "heading": "Core Concepts",
+    "body": "A trie stores strings **character by character along shared paths**, so every word with the same prefix walks the same nodes. That one property is the whole value: a hash set can tell you whether `\"apple\"` is present, but it cannot tell you whether *anything* starts with `\"app\"` without examining every key. A trie answers it in O(prefix length), independent of how many words it holds.\n\nThe second, less obvious use is **pruning a search**. When you are matching many candidate words at once — against a grid, a document, a stream — the trie lets you abandon a path the moment no word continues that way. That turns an exponential search into a tractable one, and it is why Word Search II is a trie problem rather than a string problem.\n\nA node is just a map from character to child, plus a flag marking whether a word ends here. That flag is essential: without it, inserting `\"apple\"` would make `\"app\"` look present too.",
+    "bullets": [
+      "**Node = children map + isWord flag.** A fixed array of 26 is faster for lowercase-only input; a hash map is necessary for a large or unknown alphabet.",
+      "**O(L) per operation,** where L is the word length — independent of how many words are stored. A hash set matches that for exact lookup but cannot do prefixes.",
+      "**Prefix queries are the point:** `startsWith` is the operation no hash structure gives you.",
+      "**Pruning:** when matching many words simultaneously, a missing child means 'abandon this branch now'. This is the trie's real power in search problems.",
+      "**Space is the trade:** O(total characters) in the worst case, though shared prefixes can make it far less. A trie is usually bigger than the equivalent hash set."
+    ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "class TrieNode:\n    def __init__(self):\n        self.children = {}      # char -> TrieNode\n        self.is_word = False    # does a word END here? essential\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n\n    def insert(self, word):\n        node = self.root\n        for ch in word:\n            if ch not in node.children:\n                node.children[ch] = TrieNode()\n            node = node.children[ch]\n        node.is_word = True     # mark the end, do not forget this\n\n    def _walk(self, prefix):\n        \"\"\"Return the node at the end of prefix, or None.\"\"\"\n        node = self.root\n        for ch in prefix:\n            if ch not in node.children:\n                return None\n            node = node.children[ch]\n        return node\n\n    def search(self, word):\n        node = self._walk(word)\n        return node is not None and node.is_word   # BOTH conditions\n\n    def starts_with(self, prefix):\n        return self._walk(prefix) is not None      # reaching it is enough",
+    "cpp": "struct TrieNode {\n    TrieNode* children[26] = {};   // fixed array: fast, lowercase only\n    bool isWord = false;           // does a word END here?\n};\n\nclass Trie {\n    TrieNode* root = new TrieNode();\npublic:\n    void insert(const string& word) {\n        TrieNode* node = root;\n        for (char ch : word) {\n            int i = ch - 'a';\n            if (!node->children[i]) node->children[i] = new TrieNode();\n            node = node->children[i];\n        }\n        node->isWord = true;       // mark the end\n    }\n\n    TrieNode* walk(const string& prefix) {\n        TrieNode* node = root;\n        for (char ch : prefix) {\n            node = node->children[ch - 'a'];\n            if (!node) return nullptr;\n        }\n        return node;\n    }\n\n    bool search(const string& word) {\n        TrieNode* n = walk(word);\n        return n && n->isWord;     // BOTH conditions\n    }\n\n    bool startsWith(const string& prefix) {\n        return walk(prefix) != nullptr;\n    }\n};",
+    "java": "class TrieNode {\n    TrieNode[] children = new TrieNode[26];   // lowercase only\n    boolean isWord = false;                   // does a word END here?\n}\n\nclass Trie {\n    private final TrieNode root = new TrieNode();\n\n    public void insert(String word) {\n        TrieNode node = root;\n        for (char ch : word.toCharArray()) {\n            int i = ch - 'a';\n            if (node.children[i] == null) node.children[i] = new TrieNode();\n            node = node.children[i];\n        }\n        node.isWord = true;        // mark the end\n    }\n\n    private TrieNode walk(String prefix) {\n        TrieNode node = root;\n        for (char ch : prefix.toCharArray()) {\n            node = node.children[ch - 'a'];\n            if (node == null) return null;\n        }\n        return node;\n    }\n\n    public boolean search(String word) {\n        TrieNode n = walk(word);\n        return n != null && n.isWord;   // BOTH conditions\n    }\n\n    public boolean startsWith(String prefix) {\n        return walk(prefix) != null;\n    }\n}",
+    "js": "class TrieNode {\n  constructor() {\n    this.children = new Map();   // char -> TrieNode\n    this.isWord = false;         // does a word END here?\n  }\n}\n\nclass Trie {\n  constructor() { this.root = new TrieNode(); }\n\n  insert(word) {\n    let node = this.root;\n    for (const ch of word) {\n      if (!node.children.has(ch)) node.children.set(ch, new TrieNode());\n      node = node.children.get(ch);\n    }\n    node.isWord = true;          // mark the end\n  }\n\n  #walk(prefix) {\n    let node = this.root;\n    for (const ch of prefix) {\n      node = node.children.get(ch);\n      if (!node) return null;\n    }\n    return node;\n  }\n\n  search(word) {\n    const n = this.#walk(word);\n    return !!n && n.isWord;      // BOTH conditions\n  }\n\n  startsWith(prefix) {\n    return this.#walk(prefix) !== null;\n  }\n}"
+  },
+  "recognitionTriggers": [
+    "Queries about **prefixes** — *starts with*, autocomplete, longest common prefix, 'words beginning with'. A hash set cannot answer these without scanning every key.",
+    "Many words must be matched **at the same time** against something else (a grid, a document). The trie lets one traversal test all of them and abandon dead branches early.",
+    "The words *dictionary*, *word dictionary*, *prefix tree*, *autocomplete*, *spell check*, *IP routing table*.",
+    "Wildcards or fuzzy matching within words, where you need to branch into several children at one position."
+  ],
   "problems": [
     {
       "id": "208",
@@ -27,11 +43,26 @@
         "leetcode": "https://leetcode.com/problems/implement-trie-prefix-tree/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=oobqoCJlHA0"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Trie",
+      "patternTriggers": [
+        "A design question asking for prefix queries alongside exact lookup.",
+        "Many words sharing prefixes, where storing them separately wastes both space and the chance to search them together.",
+        "The words *prefix tree*, *trie*, *autocomplete*, *dictionary*."
+      ],
+      "keyInsight": "Store the strings along **shared paths** rather than as separate keys, one node per character. The operation that justifies the whole structure is `startsWith`: a hash set can match a whole word but has no way to answer \"does anything begin with `app`?\" without inspecting every key. The detail that trips people is the `isWord` flag — inserting `\"apple\"` creates nodes for a, p, p, l, e, so without a flag marking where words actually end, searching for `\"app\"` would succeed.",
+      "bruteForce": {
+        "idea": "Keep the words in a hash set. `insert` and `search` are O(1); `startsWith` loops over every stored word testing whether it begins with the prefix.",
+        "time": "O(1) insert and search, O(W * L) for startsWith",
+        "space": "O(W * L)",
+        "whyItFails": "Exact lookup is actually *better* with a hash set — that is worth saying. It is `startsWith` that fails: its cost grows with the number of stored words, so a dictionary of a million entries scans a million strings to answer one prefix query. The trie makes that cost depend only on the prefix length."
+      },
+      "approach": [
+        "Define a node holding a map (or 26-slot array) from character to child, plus a boolean marking whether a word ends there.",
+        "`insert`: walk from the root, creating any missing child as you go, then set the final node's `isWord` to true.",
+        "Factor out a helper that walks a string and returns the node it lands on, or null if any character is missing.",
+        "`search`: walk the word; return true only if you arrive somewhere **and** that node is marked `isWord`.",
+        "`startsWith`: walk the prefix; arriving at all is sufficient, regardless of the flag."
+      ],
       "code": {
         "python": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n\n    def insert(self, word):\n        node = self.root\n        for c in word:\n            if c not in node.children:\n                node.children[c] = TrieNode()\n            node = node.children[c]\n        node.is_end = True\n\n    def search(self, word):\n        node = self._find(word)\n        return node is not None and node.is_end\n\n    def startsWith(self, prefix):\n        return self._find(prefix) is not None\n\n    def _find(self, prefix):\n        node = self.root\n        for c in prefix:\n            if c not in node.children: return None\n            node = node.children[c]\n        return node",
         "cpp": "class Trie {\n    struct TrieNode {\n        TrieNode* children[26] = {};\n        bool isEnd = false;\n    };\n    TrieNode* root = new TrieNode();\npublic:\n    void insert(string word) {\n        auto* node = root;\n        for (char c : word) {\n            if (!node->children[c-'a']) node->children[c-'a'] = new TrieNode();\n            node = node->children[c-'a'];\n        }\n        node->isEnd = true;\n    }\n    bool search(string word) {\n        auto* node = find(word);\n        return node && node->isEnd;\n    }\n    bool startsWith(string prefix) {\n        return find(prefix) != nullptr;\n    }\n    TrieNode* find(string& s) {\n        auto* node = root;\n        for (char c : s) {\n            if (!node->children[c-'a']) return nullptr;\n            node = node->children[c-'a'];\n        }\n        return node;\n    }\n};",
@@ -40,15 +71,48 @@
       },
       "complexity": {
         "time": "O(L) per operation",
-        "space": "O(N * L) total"
+        "space": "O(total characters inserted)",
+        "note": "L is the length of the word or prefix. Crucially the cost is independent of how many words are stored — unlike the hash-set scan. Space is one node per distinct prefix, so heavily overlapping dictionaries compress well while unrelated words do not."
       },
-      "dryRun": null,
+      "dryRun": "insert(\"apple\")\n\n  root\n   +-- a\n        +-- p\n             +-- p\n                  +-- l\n                       +-- e   [isWord]\n\nNow query, with only \"apple\" inserted:\n\n  search(\"apple\")       walk reaches the 'e' node, isWord = true   -> true\n  startsWith(\"apple\")   walk reaches it                           -> true\n  search(\"app\")         walk reaches the second 'p', isWord = FALSE -> false\n  startsWith(\"app\")     walk reaches it                           -> true\n\nThe `search(\"app\")` line is the whole reason the flag exists. The nodes\nfor a, p, p were all created while inserting \"apple\", so the walk\nsucceeds — but no word ends there. Without the flag, every prefix of\nevery inserted word would report as present.\n\nAnd `startsWith(\"app\")` returning true while `search(\"app\")` returns\nfalse is exactly the distinction a hash set cannot express.\n\ninsert(\"app\")  — sets isWord on the existing second 'p' node; no new\n                 nodes are allocated, because the path already exists.\n\n  search(\"apple\")       -> true\n  search(\"app\")         -> true     (the flag is now set)\n  search(\"appl\")        -> false    (reached, but not a word)\n  startsWith(\"appl\")    -> true\n\nTwo words, eight characters of input, but only five nodes — the shared\nprefix is stored once. That sharing is both the space saving and what\nmakes prefix queries cheap.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Omitting the `isWord` flag, which makes every prefix of an inserted word report as present. This is the defining bug of the problem.",
+        "Returning true from `search` merely because the walk succeeded — both the arrival and the flag are required.",
+        "Using a 26-slot array when the input may contain uppercase, digits or Unicode. Then `ch - 'a'` indexes out of bounds.",
+        "Allocating the 26-slot array at every node for a sparse dictionary, which wastes a great deal of memory — a hash map is better when the branching factor is low."
+      ],
+      "edgeCases": [
+        "inserting the empty string, which marks the root itself",
+        "searching before anything has been inserted",
+        "a word that is a strict prefix of another, e.g. insert \"apple\" then search \"app\"",
+        "inserting the same word twice, which must be idempotent",
+        "`startsWith` on the empty prefix, which is trivially true"
+      ],
+      "followUps": [
+        {
+          "q": "Support deletion.",
+          "a": "Clear the `isWord` flag, then prune upwards: remove a node only if it has no children and is not itself the end of another word. Keeping a child count per node makes this O(L); without one you need to re-examine children at each level."
+        },
+        {
+          "q": "Return all words with a given prefix, for autocomplete.",
+          "a": "Walk to the prefix node, then DFS below it collecting every node with `isWord` set. O(prefix + size of the subtree). To rank suggestions, store a frequency or score at each terminal node and keep the best few per node."
+        },
+        {
+          "q": "When is a trie the wrong choice?",
+          "a": "When you only ever need exact lookup — a hash set is faster and much smaller. Tries also cost a pointer per character, so for a few long unrelated strings the overhead dominates. A compressed trie (radix tree) collapses single-child chains and fixes that."
+        },
+        {
+          "q": "Where are tries used in practice?",
+          "a": "IP routing tables (longest-prefix match is exactly the trie operation), autocomplete and spell check, and the prefix compression inside some database indexes. Radix and Patricia tries are the production variants."
+        }
+      ],
+      "related": [
+        "design-add-and-search-words-data-structure",
+        "word-search-ii",
+        "encode-and-decode-strings"
+      ],
+      "core": true
     },
     {
       "id": "211",
@@ -65,25 +129,78 @@
         "leetcode": "https://leetcode.com/problems/design-add-and-search-words-data-structure/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=BTf05gs_8iU"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Trie + DFS Wildcard",
+      "patternTriggers": [
+        "Prefix storage plus a **wildcard** that can match any single character.",
+        "At a wildcard position the walk is no longer deterministic — it must branch into every child, which turns a loop into a DFS.",
+        "The words *regular expression*, *'.' matches any character*, *fuzzy search*."
+      ],
       "keyInsight": "Same as Trie but search handles '.' wildcard by trying ALL children at that position (DFS branching).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Store words in a list and, for each search, compare against every word position by position, treating '.' as a match.",
+        "time": "O(W * L) per search",
+        "space": "O(W * L)",
+        "whyItFails": "Every search scans the whole dictionary. The trie shares prefixes, so one traversal tests all words with that prefix at once — and a missing child prunes an entire family of candidates instead of rejecting them one by one."
+      },
+      "approach": [
+        "Build an ordinary trie for `addWord` — identical to Implement Trie.",
+        "Make `search` recursive, taking the current node and the position in the pattern.",
+        "If the position reaches the end of the pattern, return the node's `isWord` flag.",
+        "If the current character is a normal letter, follow that single child, or fail if it is absent.",
+        "If it is '.', recurse into **every** child; succeed if any branch does.",
+        "Return false only when every branch has been exhausted."
+      ],
       "code": {
         "python": "def search(self, word):\n    def dfs(node, i):\n        if i == len(word):\n            return node.is_end\n        if word[i] == '.':\n            return any(dfs(child, i+1) for child in node.children.values())\n        if word[i] not in node.children:\n            return False\n        return dfs(node.children[word[i]], i+1)\n    return dfs(self.root, 0)",
         "cpp": "class WordDictionary {\n    struct Node {\n        Node* children[26] = {};\n        bool isEnd = false;\n    };\n    Node* root = new Node();\npublic:\n    void addWord(string word) {\n        auto* node = root;\n        for (char c : word) {\n            if (!node->children[c-'a']) node->children[c-'a'] = new Node();\n            node = node->children[c-'a'];\n        }\n        node->isEnd = true;\n    }\n    bool search(string word) { return dfs(word, 0, root); }\n    bool dfs(string& word, int i, Node* node) {\n        if (i == word.size()) return node->isEnd;\n        if (word[i] == '.') {\n            for (auto* ch : node->children)\n                if (ch && dfs(word, i+1, ch)) return true;\n            return false;\n        }\n        if (!node->children[word[i]-'a']) return false;\n        return dfs(word, i+1, node->children[word[i]-'a']);\n    }\n};",
         "java": "class WordDictionary {\n    WordDictionary[] children = new WordDictionary[26];\n    boolean isEnd = false;\n    public void addWord(String word) {\n        WordDictionary node = this;\n        for (char c : word.toCharArray()) {\n            if (node.children[c-'a'] == null) node.children[c-'a'] = new WordDictionary();\n            node = node.children[c-'a'];\n        }\n        node.isEnd = true;\n    }\n    public boolean search(String word) { return dfs(word, 0, this); }\n    boolean dfs(String word, int i, WordDictionary node) {\n        if (i == word.length()) return node.isEnd;\n        if (word.charAt(i) == '.') {\n            for (var ch : node.children) if (ch != null && dfs(word, i+1, ch)) return true;\n            return false;\n        }\n        if (node.children[word.charAt(i)-'a'] == null) return false;\n        return dfs(word, i+1, node.children[word.charAt(i)-'a']);\n    }\n}",
         "js": "var WordDictionary = function() { this.children = {}; this.isEnd = false; };\nWordDictionary.prototype.addWord = function(word) {\n    let node = this;\n    for (const c of word) {\n        if (!node.children[c]) node.children[c] = new WordDictionary();\n        node = node.children[c];\n    }\n    node.isEnd = true;\n};\nWordDictionary.prototype.search = function(word) {\n    const dfs = (i, node) => {\n        if (i === word.length) return node.isEnd;\n        if (word[i] === '.') {\n            for (const ch of Object.values(node.children))\n                if (dfs(i + 1, ch)) return true;\n            return false;\n        }\n        if (!node.children[word[i]]) return false;\n        return dfs(i + 1, node.children[word[i]]);\n    };\n    return dfs(0, this);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(L) with no wildcards; up to O(26^d * L) with d wildcards",
+        "space": "O(total characters) for the trie, O(L) for the recursion",
+        "note": "A concrete letter follows one child, so the walk stays linear. Each '.' multiplies the branching by the number of children present — bounded by 26, but in practice far smaller because the trie only contains children that actually exist. A leading '.' is the expensive case, since the branching happens before any pruning."
+      },
+      "dryRun": "dictionary: \"bad\", \"dad\", \"mad\"\n\n  root\n   +-- b -- a -- d  [isWord]\n   +-- d -- a -- d  [isWord]\n   +-- m -- a -- d  [isWord]\n\n\nsearch(\"pad\")   — fails immediately\n\n  'p' is not a child of the root  ->  false\n\n  One node inspected. Three words rejected at once, because they all\n  share the property of not starting with 'p'. A list-scan would have\n  compared against each word separately.\n\n\nsearch(\".ad\")   — the wildcard branches\n\n  '.' at position 0 -> branch into every existing child: b, d, m\n    try 'b'\n      'a' -> follow the single child\n        'd' -> follow the single child\n          end of pattern, isWord = true  ->  TRUE\n\n  It succeeded on the first branch, so 'd' and 'm' were never tried.\n  Note the branching is over the three children that EXIST, not over\n  all 26 letters.\n\n\nsearch(\"b..\")   — wildcards after a concrete letter\n\n  'b'  -> follow the single child\n    '.' -> branch into {a}        only one child exists\n      try 'a'\n        '.' -> branch into {d}\n          try 'd'\n            end of pattern, isWord = true  ->  TRUE\n\nThis is the cheap shape for wildcards. The concrete 'b' narrows the\nsearch to one subtree first, so each later '.' has only one child to\ntry. A LEADING dot is the expensive case — it branches before any\npruning has happened.\n\nA pattern must also consume exactly one character per '.', so\nsearch(\"ba\") is false even though \"bad\" is stored: the walk lands on\nthe 'a' node, whose isWord flag is not set.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Treating '.' as a literal character and looking it up in the children map.",
+        "Returning true as soon as a branch reaches the pattern's end, without checking `isWord`. A '.' pattern may land mid-word.",
+        "Recursing into a null child instead of iterating over the children that exist, which in a 26-slot implementation wastes 26 calls per wildcard.",
+        "Forgetting that a '.' must still consume exactly one character, so it cannot match the empty string."
+      ],
+      "edgeCases": [
+        "a pattern of all dots, e.g. \"...\" -> matches any stored 3-letter word",
+        "a single dot against a one-letter dictionary",
+        "a leading dot, which branches before any pruning can help",
+        "a pattern longer than every stored word -> false",
+        "searching before any word is added",
+        "a pattern matching a strict prefix of a stored word -> false, unless that prefix is itself a word"
+      ],
+      "followUps": [
+        {
+          "q": "Support '*' meaning zero or more of the preceding character.",
+          "a": "That is genuinely harder — the match length becomes variable, so you need either a DP over (pattern index, trie node) or a proper NFA simulation. See Regular Expression Matching in the 2-D DP section for the shape of it."
+        },
+        {
+          "q": "How bad is the worst case really?",
+          "a": "A pattern of d dots branches at most 26 ways per dot, but only into children that exist — so the real bound is the number of distinct words of that length sharing the pattern's fixed letters. For a realistic dictionary that is small; for a trie containing every string of length d it genuinely is 26^d."
+        },
+        {
+          "q": "Could you index by length to prune earlier?",
+          "a": "Yes, and it helps: bucket the words by length first, so a pattern of length 3 never explores branches that cannot terminate at depth 3. Cheap to add and it eliminates the longest wasted paths."
+        },
+        {
+          "q": "What if most queries have a wildcard in the same position?",
+          "a": "Then a second index helps — store words keyed by the pattern with that position blanked out, so the common query becomes a hash lookup. This is the same idea as the 'one edit away' trick in Word Ladder."
+        }
+      ],
+      "related": [
+        "implement-trie-prefix-tree",
+        "word-search-ii",
+        "regular-expression-matching"
+      ],
+      "core": true
     },
     {
       "id": "212",
@@ -100,11 +217,28 @@
         "leetcode": "https://leetcode.com/problems/word-search-ii/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=asbcE9mZz_U"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Trie + Backtracking",
+      "patternTriggers": [
+        "**Many** words must be found in one grid or document — searching each independently repeats almost all the work.",
+        "The search is exponential unless it can be abandoned early, and a trie provides exactly that test.",
+        "The words *find all words*, *word search*, *board*, *dictionary* together in one problem."
+      ],
       "keyInsight": "Build Trie from words. DFS from each cell on board, following Trie nodes. Prune branches when no Trie children match. Remove found words to avoid duplicates.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each word, run a separate Word Search DFS from every cell of the board.",
+        "time": "O(W * M * N * 4^L)",
+        "space": "O(L)",
+        "whyItFails": "Every word restarts the search from scratch, even though words sharing a prefix traverse identical paths. Worse, a DFS exploring 'z-q-x' has no way to know that no word starts that way, so it explores to full depth before failing. The trie answers both: shared prefixes are walked once, and a missing child stops the branch immediately."
+      },
+      "approach": [
+        "Build a trie from all the words up front.",
+        "Start a DFS from every cell of the board, carrying the current trie node alongside the position.",
+        "At each step, check whether the current cell's letter is a child of the current trie node. If not, return immediately — this is the pruning that makes the whole thing viable.",
+        "If the new node is marked `isWord`, record the word and clear the flag so it is not reported twice.",
+        "Mark the cell as visited — overwriting it with a sentinel is the usual trick — then recurse into the four neighbours.",
+        "Restore the cell afterwards, since other paths may need it.",
+        "Optionally prune the trie as you go: a node with no children and no word can be removed from its parent, shrinking the search for later cells."
+      ],
       "code": {
         "python": "def findWords(board, words):\n    root = TrieNode()\n    for w in words:  # Build trie\n        node = root\n        for c in w:\n            node.children.setdefault(c, TrieNode())\n            node = node.children[c]\n        node.word = w  # store complete word at end\n\n    result = []\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, node):\n        if r<0 or r>=rows or c<0 or c>=cols: return\n        ch = board[r][c]\n        if ch not in node.children: return\n        node = node.children[ch]\n        if hasattr(node, 'word'):\n            result.append(node.word)\n            del node.word\n        board[r][c] = '#'  # mark visited\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            dfs(r+dr, c+dc, node)\n        board[r][c] = ch  # unmark\n\n    for r in range(rows):\n        for c in range(cols):\n            dfs(r, c, root)\n    return result",
         "cpp": "class Solution {\n    struct TrieNode {\n        TrieNode* children[26] = {};\n        string word;\n    };\npublic:\n    vector<string> findWords(vector<vector<char>>& board, vector<string>& words) {\n        TrieNode* root = new TrieNode();\n        for (string& w : words) {\n            auto* node = root;\n            for (char c : w) {\n                if (!node->children[c-'a']) node->children[c-'a'] = new TrieNode();\n                node = node->children[c-'a'];\n            }\n            node->word = w;\n        }\n        vector<string> result;\n        int m = board.size(), n = board[0].size();\n        for (int i = 0; i < m; i++)\n            for (int j = 0; j < n; j++)\n                dfs(board, root, i, j, result);\n        return result;\n    }\n    void dfs(vector<vector<char>>& board, TrieNode* node, int i, int j, vector<string>& result) {\n        if (i < 0 || j < 0 || i >= board.size() || j >= board[0].size() || board[i][j] == '#') return;\n        char c = board[i][j];\n        if (!node->children[c-'a']) return;\n        node = node->children[c-'a'];\n        if (!node->word.empty()) { result.push_back(node->word); node->word.clear(); }\n        board[i][j] = '#';\n        dfs(board, node, i+1, j, result); dfs(board, node, i-1, j, result);\n        dfs(board, node, i, j+1, result); dfs(board, node, i, j-1, result);\n        board[i][j] = c;\n    }\n};",
@@ -112,16 +246,51 @@
         "js": "var findWords = function(board, words) {\n    const root = {};\n    for (const w of words) {\n        let node = root;\n        for (const c of w) { if (!node[c]) node[c] = {}; node = node[c]; }\n        node.word = w;\n    }\n    const result = [], m = board.length, n = board[0].length;\n    const dfs = (node, i, j) => {\n        if (i < 0 || j < 0 || i >= m || j >= n || board[i][j] === '#') return;\n        const c = board[i][j];\n        if (!node[c]) return;\n        node = node[c];\n        if (node.word) { result.push(node.word); node.word = null; }\n        board[i][j] = '#';\n        dfs(node, i+1, j); dfs(node, i-1, j); dfs(node, i, j+1); dfs(node, i, j-1);\n        board[i][j] = c;\n    };\n    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) dfs(root, i, j);\n    return result;\n};"
       },
       "complexity": {
-        "time": "O(M*N*4^L)",
-        "space": "O(W*L) for trie"
+        "time": "O(M * N * 3^(L-1)) in the worst case",
+        "space": "O(total characters in the dictionary)",
+        "note": "Each of the M*N starting cells can branch three ways after the first step, since you never step back onto the cell you came from — hence 3^(L-1) rather than 4^L, where L is the longest word. The real saving is not in that bound but in how rarely it is approached: the trie cuts most branches within a character or two. The space is the trie plus O(L) recursion."
       },
-      "dryRun": null,
+      "dryRun": "board:   o a a n          words: [\"oath\", \"pea\", \"eat\", \"rain\"]\n         e t a e\n         i h k r\n         i f l v\n\nTrie from the dictionary (showing shared structure):\n\n  root\n   +-- o -- a -- t -- h   [oath]\n   +-- p -- e -- a        [pea]\n   +-- e -- a -- t        [eat]\n   +-- r -- a -- i -- n   [rain]\n\n\nStart at (0,0) = 'o':\n\n  'o' IS a child of root  -> descend. current path \"o\"\n    neighbours: (0,1)='a', (1,0)='e'\n    'a' is a child of the 'o' node  -> descend. path \"oa\"\n      neighbours of (0,1): (0,2)='a', (1,1)='t', (0,0) visited\n      'a' is NOT a child of \"oa\"  -> PRUNE, return at once\n      't' IS a child  -> descend. path \"oat\"\n        neighbours of (1,1): (2,1)='h', (1,2)='a', (1,0)='e', (0,1) visited\n        'h' IS a child  -> descend. path \"oath\", isWord set\n            record \"oath\", then CLEAR the flag so it is not\n            reported again by another path\n        'a' is not a child of \"oat\"  -> prune\n        'e' is not a child of \"oat\"  -> prune\n    'e' is not a child of the 'o' node  -> prune\n\n\nStart at (0,1) = 'a':\n\n  'a' is not a child of root  ->  return immediately, one check\n\n  No word in the dictionary starts with 'a', so this entire cell is\n  dismissed without exploring a single neighbour. Running four separate\n  Word Search passes would instead have descended from here four times.\n\n\nStart at (1,0) = 'e':   finds \"eat\" via e -> a? no...\n  'e' IS a child of root -> descend\n    neighbours of (1,0): (0,0)='o', (1,1)='t', (2,0)='i'\n    none of 'o', 't', 'i' is a child of the 'e' node (only 'a' is)\n    -> all pruned\n\n  So \"eat\" is NOT found at this 'e'. It is found later starting from\n  the 'e' at (1,3), whose neighbour (1,2)='a' continues the path.\n\n\nResult: [\"oath\", \"eat\"]  — neither \"pea\" nor \"rain\" is on the board.\n\n\nHow much the trie prunes, over the whole board. Mark each cell with\nwhether its letter is a child of the root:\n\n     o+  a-  a-  n-\n     e+  t-  a-  e+\n     i-  h-  k-  r+\n     i-  f-  l-  v-\n\n  + = some word starts with this letter, so the DFS descends\n  - = dismissed after ONE map lookup\n\nEleven of the sixteen cells are rejected immediately. The naive\napproach runs a full Word Search from every cell for every word —\n4 words x 16 cells = 64 descents, most of them doomed.\n\nThe pattern across all of this: every branch is tested against the trie\nBEFORE descending. That check is one map lookup, and it eliminates\nwhole subtrees of the 3^(L-1) search space. Checking after descending,\nor searching each word independently, is what makes the naive version\nexponentially slower in practice.\n\nThe visited marking is also what guarantees termination — without it a\npath could oscillate between two adjacent cells forever.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Not clearing the `isWord` flag (or otherwise deduplicating) after recording a word, which reports the same word once per path that reaches it.",
+        "Forgetting to restore the visited cell after recursing, which makes earlier paths corrupt later ones.",
+        "Marking visited cells in a separate set but failing to remove them on the way out — the same bug in a different shape.",
+        "Checking the trie *after* recursing rather than before. The whole point is to prune before descending.",
+        "Building one trie per word, which throws away the prefix sharing that motivates the approach."
+      ],
+      "edgeCases": [
+        "an empty word list -> empty result",
+        "a 1x1 board",
+        "a word longer than the number of cells, which can never fit",
+        "duplicate words in the dictionary",
+        "a word appearing in several places on the board -> reported once",
+        "a board of a single repeated letter with a dictionary of that letter repeated, the pathological case for pruning"
+      ],
+      "followUps": [
+        {
+          "q": "Why prune the trie during the search?",
+          "a": "Once a word has been found, its terminal node may have no remaining purpose. Deleting childless, wordless nodes shrinks the trie as the search proceeds, so later starting cells have fewer branches to explore. It is a meaningful constant-factor win on large dictionaries and a good optimisation to volunteer."
+        },
+        {
+          "q": "Why is the exponent 3^(L-1) and not 4^L?",
+          "a": "After the first move, one of the four neighbours is the cell you just came from and is marked visited — so each subsequent step branches at most three ways. The first step has four choices, giving 4 * 3^(L-1), which is O(3^L)."
+        },
+        {
+          "q": "How would this scale to a document rather than a grid?",
+          "a": "On linear text you no longer need backtracking — use Aho-Corasick, which adds failure links to the trie so a single left-to-right pass finds every dictionary word in O(text + matches). That is how grep's multi-pattern mode and intrusion-detection systems work."
+        },
+        {
+          "q": "What if letters could be reused within a word?",
+          "a": "The visited marking disappears and the search no longer terminates on its own — you would need to bound it by the longest word's length instead. Worth noticing that the visited set is what guarantees termination here, not the trie."
+        }
+      ],
+      "related": [
+        "implement-trie-prefix-tree",
+        "design-add-and-search-words-data-structure",
+        "word-search"
+      ],
+      "core": true
     }
   ]
 }

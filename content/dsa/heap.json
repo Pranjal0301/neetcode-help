@@ -4,13 +4,29 @@
   "icon": "🏔",
   "order": 9,
   "concept": {
-    "heading": "Core Pattern",
-    "body": "Heap = O(log N) insert/delete, O(1) peek min/max. Use for: **Top K** problems, **streaming data**, **merge K sorted** things. Python heapq is a MIN heap.",
-    "bullets": [],
+    "heading": "Core Concepts",
+    "body": "A heap answers one question well: **what is the smallest (or largest) thing right now?** — in O(1), while allowing insertions and removals in O(log N). It does *not* give you sorted order, the kth element directly, or any kind of search. That narrowness is the point: a full sort costs O(N log N) and gives you far more than you asked for.\n\nThree shapes cover this whole category. A **size-k heap** keeps only the k best candidates, so the top k costs O(N log k) and O(k) space instead of sorting everything. A **simulation heap** repeatedly takes the extreme, modifies it, and pushes it back — the shape of greedy scheduling. And **two heaps facing each other** split a dataset at its median, so both middle values stay at the tops.\n\nThe practical detail that bites everyone: most standard libraries give you a **min**-heap only. For a max-heap you negate the values on the way in and on the way out.",
+    "bullets": [
+      "**Size-k heap:** for the k largest, keep a **min**-heap of size k — its root is the weakest survivor, so it is what you evict. For the k smallest, use a max-heap. Getting this backwards is the classic error.",
+      "**Max-heap from a min-heap:** push `-x` and negate on pop (Python, and anywhere without a comparator).",
+      "**Heapify is O(N), not O(N log N):** building a heap from an existing array in bulk is linear. Use it when you have all the data up front.",
+      "**Two heaps:** a max-heap of the lower half and a min-heap of the upper half keeps the median at their tops.",
+      "**When not to use one:** if you need the kth element once from a static array, Quickselect is O(N) average. The heap wins when data streams in or k is small."
+    ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "import heapq\n\n# Top k largest: a MIN-heap of size k. Its root is the weakest keeper.\nheap = []\nfor x in nums:\n    heapq.heappush(heap, x)\n    if len(heap) > k:\n        heapq.heappop(heap)      # evict the smallest of the survivors\n# heap[0] is the kth largest; the heap holds the k largest\n\n# Max-heap: negate going in and coming out.\nmaxheap = [-x for x in nums]\nheapq.heapify(maxheap)           # O(N), not O(N log N)\nlargest = -heapq.heappop(maxheap)\n\n# Custom ordering: push a tuple whose first element is the sort key.\n# Add a tie-breaker when the payload is not comparable.\nheapq.heappush(heap, (dist, idx, point))\n\n# Two heaps straddling the median.\nlo = []   # max-heap (negated) holding the smaller half\nhi = []   # min-heap holding the larger half\ndef add(x):\n    heapq.heappush(lo, -heapq.heappushpop(hi, x))\n    if len(lo) > len(hi) + 1:\n        heapq.heappush(hi, -heapq.heappop(lo))",
+    "cpp": "// Top k largest: a MIN-heap of size k. Its root is the weakest keeper.\npriority_queue<int, vector<int>, greater<int>> heap;   // greater = min-heap\nfor (int x : nums) {\n    heap.push(x);\n    if (heap.size() > k) heap.pop();   // evict the smallest survivor\n}\n// heap.top() is the kth largest\n\n// Max-heap is the DEFAULT in C++ — no negation needed.\npriority_queue<int> maxheap(nums.begin(), nums.end());   // O(N) build\nint largest = maxheap.top();\n\n// Custom ordering: a comparator, or pair with the key first.\npriority_queue<pair<int,int>> byKey;   // sorts on .first, then .second\n\n// Two heaps straddling the median.\npriority_queue<int> lo;                                    // max-heap, lower half\npriority_queue<int, vector<int>, greater<int>> hi;         // min-heap, upper half",
+    "java": "// Top k largest: a MIN-heap of size k. Its root is the weakest keeper.\nPriorityQueue<Integer> heap = new PriorityQueue<>();   // min-heap by default\nfor (int x : nums) {\n    heap.offer(x);\n    if (heap.size() > k) heap.poll();   // evict the smallest survivor\n}\n// heap.peek() is the kth largest\n\n// Max-heap: pass a reversed comparator.\nPriorityQueue<Integer> maxheap =\n    new PriorityQueue<>(Comparator.reverseOrder());\n// Bulk build in O(N):\nPriorityQueue<Integer> built = new PriorityQueue<>(Arrays.asList(boxed));\n\n// Custom ordering: a comparator on whatever the key is.\nPriorityQueue<int[]> byDist =\n    new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));\n\n// Two heaps straddling the median.\nPriorityQueue<Integer> lo = new PriorityQueue<>(Comparator.reverseOrder());\nPriorityQueue<Integer> hi = new PriorityQueue<>();",
+    "js": "// JavaScript has NO built-in heap — say so, then either hand-roll one or\n// state that you are assuming a MinHeap class. Interviewers accept both.\n\nclass MinHeap {\n  constructor(key = (x) => x) { this.a = []; this.key = key; }\n  size() { return this.a.length; }\n  peek() { return this.a[0]; }\n  push(v) {\n    this.a.push(v);\n    let i = this.a.length - 1;\n    while (i > 0) {\n      const p = (i - 1) >> 1;\n      if (this.key(this.a[p]) <= this.key(this.a[i])) break;\n      [this.a[p], this.a[i]] = [this.a[i], this.a[p]];\n      i = p;\n    }\n  }\n  pop() {\n    const top = this.a[0], last = this.a.pop();\n    if (this.a.length) {\n      this.a[0] = last;\n      let i = 0;\n      for (;;) {\n        const l = 2 * i + 1, r = l + 1;\n        let m = i;\n        if (l < this.a.length && this.key(this.a[l]) < this.key(this.a[m])) m = l;\n        if (r < this.a.length && this.key(this.a[r]) < this.key(this.a[m])) m = r;\n        if (m === i) break;\n        [this.a[m], this.a[i]] = [this.a[i], this.a[m]];\n        i = m;\n      }\n    }\n    return top;\n  }\n}\n\n// Max-heap: negate the key.\nconst maxHeap = new MinHeap((x) => -x);"
+  },
+  "recognitionTriggers": [
+    "**Top k** or **kth largest/smallest**, especially with k much smaller than N — a size-k heap beats sorting.",
+    "The data **streams**: you must answer repeatedly as elements arrive, so you cannot sort once and be done.",
+    "A greedy rule of the form *always handle the largest/smallest remaining next*, where handling it changes it and puts it back.",
+    "You need the extreme repeatedly but never the full ordering. Sorting would compute O(N log N) worth of information to use O(k) of it."
+  ],
   "problems": [
     {
       "id": "703",
@@ -27,25 +43,77 @@
         "leetcode": "https://leetcode.com/problems/kth-largest-element-in-a-stream/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=hOjcdrqMoQ8"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Min-Heap of Size K",
+      "patternTriggers": [
+        "The kth largest must be available **repeatedly as data arrives** — a stream, not a static array.",
+        "k is fixed up front, so you can decide once how much to remember.",
+        "Everything smaller than the current kth largest is permanently irrelevant, which is what makes bounded memory possible."
+      ],
       "keyInsight": "Keep a min-heap of size K. The root is always the Kth largest. If new element is bigger than root, replace it.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Keep every value in a list, and sort it on each `add` to read the kth largest.",
+        "time": "O(N log N) per call",
+        "space": "O(N)",
+        "whyItFails": "Re-sorting on every insertion is the waste, and memory grows without bound. You never need the N - k smaller values again: once a value falls below the kth largest, no future insertion can promote it."
+      },
+      "approach": [
+        "Keep a **min**-heap holding only the k largest values seen so far.",
+        "Its root is therefore the smallest of those k — which is exactly the kth largest overall.",
+        "On `add`, push the new value.",
+        "If the heap now holds more than k elements, pop the root, discarding the weakest.",
+        "Return the root, which is the answer.",
+        "Seed the structure by adding each initial value the same way."
+      ],
       "code": {
         "python": "import heapq\n\nclass KthLargest:\n    def __init__(self, k, nums):\n        self.k = k\n        self.heap = nums\n        heapq.heapify(self.heap)\n        while len(self.heap) > k:\n            heapq.heappop(self.heap)\n\n    def add(self, val):\n        heapq.heappush(self.heap, val)\n        if len(self.heap) > self.k:\n            heapq.heappop(self.heap)\n        return self.heap[0]",
         "cpp": "class KthLargest {\n    priority_queue<int, vector<int>, greater<int>> pq;\n    int k;\npublic:\n    KthLargest(int k, vector<int>& nums) : k(k) {\n        for (int n : nums) add(n);\n    }\n    int add(int val) {\n        pq.push(val);\n        if (pq.size() > k) pq.pop();\n        return pq.top();\n    }\n};",
         "java": "class KthLargest {\n    PriorityQueue<Integer> pq = new PriorityQueue<>();\n    int k;\n    public KthLargest(int k, int[] nums) {\n        this.k = k;\n        for (int n : nums) add(n);\n    }\n    public int add(int val) {\n        pq.offer(val);\n        if (pq.size() > k) pq.poll();\n        return pq.peek();\n    }\n}",
         "js": "var KthLargest = function(k, nums) {\n    this.k = k;\n    this.nums = nums.sort((a, b) => a - b);\n    while (this.nums.length > k) this.nums.shift();\n};\nKthLargest.prototype.add = function(val) {\n    // Binary insert\n    let l = 0, r = this.nums.length;\n    while (l < r) { const m = (l + r) >> 1; this.nums[m] < val ? l = m + 1 : r = m; }\n    this.nums.splice(l, 0, val);\n    if (this.nums.length > this.k) this.nums.shift();\n    return this.nums[0];\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(log k) per add",
+        "space": "O(k)",
+        "note": "Memory is bounded by k regardless of how long the stream runs — the whole point. Building the initial heap from a list of n values costs O(n log k). Reading the answer is O(1), since it is just the root."
+      },
+      "dryRun": "k = 3, initial values [4, 5, 8, 2]\n\nThe heap is a MIN-heap holding only the 3 largest seen so far, so its\nroot is the smallest of those three — which is the 3rd largest overall.\n\n  after init:  heap {4, 5, 8}   (2 was pushed then evicted)\n               kth largest = 4\n\n  add( 3)   push 3, size 4 > 3  -> evict 3    heap {4, 5, 8}    -> 4\n  add( 5)   push 5, size 4 > 3  -> evict 4    heap {5, 5, 8}    -> 5\n  add(10)   push 10, evict 5                  heap {5, 8, 10}   -> 5\n  add( 9)   push 9, evict 5                   heap {8, 9, 10}   -> 8\n  add( 4)   push 4, evict 4                   heap {8, 9, 10}   -> 8\n\nTwo things worth noting.\n\n  add(3) evicts the very value just pushed: 3 is smaller than every\n  keeper, so it was never a candidate. The heap self-corrects with no\n  special-case comparison.\n\n  add(5) produces a heap of {5, 5, 8} — duplicates are kept. The 3rd\n  largest of [4,5,8,5] really is 5, counting multiplicity.\n\nMemory never exceeds 3 entries, however long the stream runs. Use a\nmax-heap instead and the root would be 10 — the largest, which tells\nyou nothing about the 3rd.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using a max-heap. A max-heap's root is the largest, which tells you nothing about the kth — and you would have to pop k-1 elements to find it. For the k **largest**, use a **min**-heap; this inversion is the single most common error with heaps.",
+        "Pushing and then conditionally popping in the wrong order, or popping before the heap has reached size k.",
+        "Letting the heap grow past k, which quietly restores O(N) memory.",
+        "Assuming the stream contains distinct values. Duplicates are fine and must not be collapsed — the 2nd largest of [5, 5] is 5."
+      ],
+      "edgeCases": [
+        "k = 1 -> the heap holds a single element, the running maximum",
+        "fewer than k initial values, so early calls may be undefined — check the problem's guarantee",
+        "duplicate values",
+        "negative values",
+        "a long run of values all smaller than the current kth largest, none of which change the answer"
+      ],
+      "followUps": [
+        {
+          "q": "Why a min-heap for the k largest?",
+          "a": "Because the operation you need is *eviction of the weakest keeper*. The heap holds the k best; the one most at risk is the smallest of them, so that must be at the root for O(1) access. The root then doubles as the answer, which is the neat part."
+        },
+        {
+          "q": "What if k could change at runtime?",
+          "a": "Growing k means you need values you have already discarded, so bounded memory is no longer possible — you would need a balanced BST or an order-statistic tree over all the data. Shrinking k is easy: pop until the size matches."
+        },
+        {
+          "q": "What if the array is static rather than streaming?",
+          "a": "Quickselect finds the kth largest in O(N) average time with no extra structure. The heap is the right answer only because this one streams — see Kth Largest Element in an Array for the contrast."
+        },
+        {
+          "q": "How would you do this over a sliding window of the stream?",
+          "a": "A heap cannot evict by position, so stale entries accumulate. Either lazily discard entries as they surface, or use a different structure — a monotonic deque for the max, or a multiset/balanced tree if you need arbitrary order statistics within the window."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-an-array",
+        "find-median-from-data-stream",
+        "k-closest-points-to-origin"
+      ],
+      "core": true
     },
     {
       "id": "1046",
@@ -61,24 +129,76 @@
         "leetcode": "https://leetcode.com/problems/last-stone-weight/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=B-QCq79-Vfw"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Max-Heap Simulation",
+      "patternTriggers": [
+        "A process repeatedly takes the **largest remaining** items, combines them, and puts the result back.",
+        "The result re-enters the pool and may itself be chosen next, so the collection changes shape as you go.",
+        "The words *repeatedly*, *until one remains*, *smash the two heaviest*."
+      ],
       "keyInsight": "Max-heap simulation. Pop two largest, push difference back if nonzero. Python: negate values for max-heap.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Each round, scan the list for the two largest, remove them, and append the difference.",
+        "time": "O(N^2)",
+        "space": "O(N)",
+        "whyItFails": "Each round rescans everything to find the two extremes, and there are O(N) rounds. A heap gives both extremes in O(log N) and absorbs the new value in the same cost — the collection stays organised instead of being re-examined."
+      },
+      "approach": [
+        "Put all stone weights into a max-heap. With a min-heap library, negate every value first.",
+        "While more than one stone remains, pop the two largest.",
+        "If they differ, push their difference back — it is a new stone.",
+        "If they are equal, both are destroyed and nothing is pushed.",
+        "When one stone or none remains, return its weight or 0.",
+        "Building the heap in bulk is O(N), which is cheaper than N individual pushes."
+      ],
       "code": {
         "python": "def lastStoneWeight(stones):\n    stones = [-s for s in stones]\n    heapq.heapify(stones)\n    while len(stones) > 1:\n        a = -heapq.heappop(stones)\n        b = -heapq.heappop(stones)\n        if a != b:\n            heapq.heappush(stones, -(a - b))\n    return -stones[0] if stones else 0",
         "cpp": "class Solution {\npublic:\n    int lastStoneWeight(vector<int>& stones) {\n        priority_queue<int> pq(stones.begin(), stones.end());\n        while (pq.size() > 1) {\n            int a = pq.top(); pq.pop();\n            int b = pq.top(); pq.pop();\n            if (a != b) pq.push(a - b);\n        }\n        return pq.empty() ? 0 : pq.top();\n    }\n};",
         "java": "class Solution {\n    public int lastStoneWeight(int[] stones) {\n        PriorityQueue<Integer> pq = new PriorityQueue<>(Collections.reverseOrder());\n        for (int s : stones) pq.offer(s);\n        while (pq.size() > 1) {\n            int a = pq.poll(), b = pq.poll();\n            if (a != b) pq.offer(a - b);\n        }\n        return pq.isEmpty() ? 0 : pq.peek();\n    }\n}",
         "js": "var lastStoneWeight = function(stones) {\n    while (stones.length > 1) {\n        stones.sort((a, b) => b - a);\n        const a = stones.shift(), b = stones.shift();\n        if (a !== b) stones.push(a - b);\n    }\n    return stones.length ? stones[0] : 0;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N log N)",
+        "space": "O(N)",
+        "note": "The initial heapify is O(N). Each round removes at least one stone and does O(log N) work, so there are at most N rounds — O(N log N) overall. Space is the heap itself."
+      },
+      "dryRun": "stones = [2, 7, 4, 1, 8, 1]\n\nMax-heap (shown as a sorted list for readability; the structure only\nguarantees the largest is at the root).\n\n  round 1   pop 8 and 7   ->  differ, push 8-7 = 1\n            heap: [1, 1, 1, 2, 4]\n  round 2   pop 4 and 2   ->  differ, push 4-2 = 2\n            heap: [1, 1, 1, 2]\n  round 3   pop 2 and 1   ->  differ, push 2-1 = 1\n            heap: [1, 1, 1]\n  round 4   pop 1 and 1   ->  EQUAL, both destroyed, push nothing\n            heap: [1]\n\n  one stone left  ->  return 1\n\nRound 4 is the case to get right. Pushing the zero difference back\nwould leave a phantom stone of weight 0 in the heap, which then gets\npopped in a later round and produces the wrong answer.\n\nNote that the stone of weight 1 pushed in round 1 is itself popped in\nround 3 — results re-enter the pool and compete on equal terms, which\nis why a heap is the right structure rather than a sorted list you walk\nonce.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Forgetting to negate consistently when simulating a max-heap with a min-heap. Negate on push **and** on pop, or the comparisons silently invert.",
+        "Pushing a zero difference. Two equal stones annihilate, so nothing should go back — pushing 0 adds a phantom stone that still gets popped later.",
+        "Looping while the heap is non-empty rather than while it has more than one element, which pops from an empty heap.",
+        "Returning the heap's size or the negated value without flipping the sign back."
+      ],
+      "edgeCases": [
+        "a single stone -> its own weight",
+        "two equal stones -> 0",
+        "all stones equal, with an even or odd count",
+        "an empty input -> 0",
+        "one very heavy stone among light ones, which survives to the end"
+      ],
+      "followUps": [
+        {
+          "q": "Could you minimise the final weight by choosing which stones to smash?",
+          "a": "That is a different and much harder problem — partition the stones into two groups with sums as close as possible, then the answer is the difference. It is subset-sum, solved with dynamic programming. See Partition Equal Subset Sum for the same machinery."
+        },
+        {
+          "q": "Why is heapify O(N) rather than O(N log N)?",
+          "a": "Sift-down from the bottom up: most nodes are near the leaves and sift only a level or two. Summing the work by level gives a geometric series that converges to O(N). Pushing one at a time really is O(N log N), so bulk building matters when you have all the data."
+        },
+        {
+          "q": "What if you had to smash the two *lightest* stones instead?",
+          "a": "A min-heap, with no negation. Worth noting that the algorithm's shape is independent of which extreme you want — only the comparator changes."
+        },
+        {
+          "q": "Does the order of smashing affect the final result here?",
+          "a": "Yes, which is why the greedy rule is part of the problem specification rather than a choice you make. Always taking the two heaviest is what the problem asks for; it is not necessarily what minimises the outcome."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-an-array",
+        "task-scheduler",
+        "partition-equal-subset-sum"
+      ],
       "core": false
     },
     {
@@ -96,25 +216,77 @@
         "leetcode": "https://leetcode.com/problems/k-closest-points-to-origin/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=rI2EBUEMfTk"
       },
-      "pattern": null,
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "pattern": "Max-Heap of Size K",
+      "patternTriggers": [
+        "The k closest, smallest or best by some computable score.",
+        "k is much smaller than N, so sorting everything is more work than needed.",
+        "The comparison can be made on a cheaper proxy for the real quantity — squared distance instead of distance."
+      ],
+      "keyInsight": "Two things make this easy. First, **do not take the square root** — comparing `x² + y²` orders points identically to comparing distances, and avoids both the cost and the floating-point imprecision. Second, for the k *closest* you want a **max**-heap of size k: its root is the farthest of the current keepers, so it is the one to evict when something nearer arrives. That is the mirror of the k-largest case, and getting the direction right is the whole trick.",
+      "bruteForce": {
+        "idea": "Compute every distance, sort all points by it, and take the first k.",
+        "time": "O(N log N)",
+        "space": "O(N)",
+        "whyItFails": "Perfectly acceptable, and the answer to give first. It just sorts all N points to report k of them — a size-k heap gets O(N log k), and Quickselect gets O(N) average when all the data is in hand."
+      },
+      "approach": [
+        "For each point compute its squared distance from the origin, `x*x + y*y`.",
+        "Maintain a **max**-heap of size k keyed on that squared distance.",
+        "Push each point; if the heap exceeds k elements, pop the root — the farthest of the survivors.",
+        "With a min-heap library, negate the distance to simulate the max-heap.",
+        "After the pass, the heap holds exactly the k closest points.",
+        "Return them in any order, since the problem does not require sorting."
+      ],
       "code": {
         "python": "def kClosest(points, k):\n    heap = []\n    for x, y in points:\n        dist = x*x + y*y  # no need for sqrt\n        heapq.heappush(heap, (-dist, x, y))  # max-heap by negating\n        if len(heap) > k:\n            heapq.heappop(heap)\n    return [[x, y] for _, x, y in heap]",
         "cpp": "class Solution {\npublic:\n    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {\n        sort(points.begin(), points.end(), [](auto& a, auto& b) {\n            return a[0]*a[0] + a[1]*a[1] < b[0]*b[0] + b[1]*b[1];\n        });\n        points.resize(k);\n        return points;\n    }\n};",
         "java": "class Solution {\n    public int[][] kClosest(int[][] points, int k) {\n        Arrays.sort(points, (a, b) -> a[0]*a[0] + a[1]*a[1] - b[0]*b[0] - b[1]*b[1]);\n        return Arrays.copyOf(points, k);\n    }\n}",
         "js": "var kClosest = function(points, k) {\n    return points.sort((a, b) => a[0]*a[0] + a[1]*a[1] - b[0]*b[0] - b[1]*b[1]).slice(0, k);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N log k)",
+        "space": "O(k)",
+        "note": "Each of N points costs O(log k) to push and possibly pop, and only k are ever stored. Compare: sorting is O(N log N) and O(N) space; Quickselect is O(N) average but needs the whole array and mutates it. Which is best depends on whether the data streams."
+      },
+      "dryRun": "points = [[1,3], [-2,2], [2,-2]],  k = 2\n\nCompare SQUARED distances — no square root needed, since squaring is\nmonotone on non-negative values.\n\n  point     d2 = x^2 + y^2        max-heap of keepers (by d2)\n  (1, 3)    1 + 9  = 10           {10}\n  (-2, 2)   4 + 4  =  8           {8, 10}\n  (2, -2)   4 + 4  =  8           size 3 > k, so evict the FARTHEST\n                                  -> evict d2 = 10, the point (1,3)\n                                  {8, 8}\n\n  answer: [[-2, 2], [2, -2]]\n\nThe third step is the whole idea. The heap must expose its *worst*\nkeeper so it can be thrown out in O(1) — for the k CLOSEST that is the\nfarthest, so the heap is a MAX-heap. A min-heap of size k would evict\nthe nearest point every time and end up holding the k farthest.\n\nThe two tied distances both survive, and either ordering of the output\nis accepted — the problem does not ask for them sorted.\n\nIf the real distances were needed, sqrt(8) is about 2.83 and sqrt(10)\nabout 3.16 — same ordering, more work, and floating-point comparisons\nwhere integers would do.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Taking the square root. It is slower, introduces floating-point comparison risk, and changes nothing about the ordering since the square root is monotone on non-negative values.",
+        "Using a min-heap of size k. That keeps the k *farthest* points. For the k closest, the heap must expose the worst keeper, so it is a max-heap.",
+        "In Python, pushing a bare tuple whose second element is a list — if two distances tie it will try to compare the lists. Include an index as a tie-breaker.",
+        "Sorting the final output when the problem does not ask for it, which adds an unnecessary O(k log k)."
+      ],
+      "edgeCases": [
+        "k equal to the number of points -> return all of them",
+        "k = 1 -> the single nearest point",
+        "points at the origin, with distance 0",
+        "several points at exactly the same distance, where any valid choice is accepted",
+        "negative coordinates, which the squaring handles naturally"
+      ],
+      "followUps": [
+        {
+          "q": "Can you do better than O(N log k)?",
+          "a": "Quickselect on the squared distances is O(N) on average: partition around a pivot until the kth position settles, then return everything before it. It needs the whole array in memory and reorders it, so the heap remains better for a stream."
+        },
+        {
+          "q": "What if the points stream in and k is large?",
+          "a": "The heap handles it unchanged, with O(k) memory — which is its real advantage. Quickselect cannot run on a stream at all, since it needs random access and multiple passes."
+        },
+        {
+          "q": "What about distance from an arbitrary point, or a different metric?",
+          "a": "Only the key function changes: `(x-a)² + (y-b)²`, or the Manhattan sum. The structure is indifferent to the metric, which is why framing it as 'k best by a score' is the useful generalisation."
+        },
+        {
+          "q": "How would you answer many such queries over a static set of points?",
+          "a": "Build a spatial index — a k-d tree or a ball tree — for O(log N) nearest-neighbour queries after O(N log N) preprocessing. That is the right answer when the points are fixed and the queries numerous."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-an-array",
+        "kth-largest-element-in-a-stream",
+        "last-stone-weight"
+      ],
+      "core": true
     },
     {
       "id": "215",
@@ -131,11 +303,27 @@
         "leetcode": "https://leetcode.com/problems/kth-largest-element-in-an-array/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=XEmy13g1Qc8"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Quickselect / Min-Heap of Size K",
+      "patternTriggers": [
+        "A single order statistic from a **static array** — the kth largest, the median, a percentile.",
+        "The full ordering is not needed, only one position in it.",
+        "You are allowed to reorder the input, which is what lets Quickselect beat the heap."
+      ],
       "keyInsight": "Min-heap of size K, or use QuickSelect for O(N) average.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Sort the array descending and index k-1.",
+        "time": "O(N log N)",
+        "space": "O(1) to O(N) depending on the sort",
+        "whyItFails": "It is correct, one line long, and the right thing to say first. It fully orders N elements to read one of them — Quickselect does the minimum work needed to settle just that position, in O(N) expected time."
+      },
+      "approach": [
+        "Pick a pivot and partition the array so that larger elements sit left of it and smaller ones right.",
+        "After partitioning, the pivot is in its final sorted position — call it `p`.",
+        "If `p` is the target index `k-1`, the pivot is the answer.",
+        "If `p` is greater than the target, recurse into the left part only; otherwise recurse into the right part only.",
+        "Recursing into just one side is what makes this linear rather than N log N — unlike quicksort, which must handle both.",
+        "Choose the pivot randomly to avoid the sorted-input worst case."
+      ],
       "code": {
         "python": "def findKthLargest(nums, k):\n    heap = []\n    for num in nums:\n        heapq.heappush(heap, num)\n        if len(heap) > k:\n            heapq.heappop(heap)\n    return heap[0]",
         "cpp": "class Solution {\npublic:\n    int findKthLargest(vector<int>& nums, int k) {\n        priority_queue<int, vector<int>, greater<int>> pq;\n        for (int n : nums) {\n            pq.push(n);\n            if (pq.size() > k) pq.pop();\n        }\n        return pq.top();\n    }\n};",
@@ -143,16 +331,50 @@
         "js": "var findKthLargest = function(nums, k) {\n    nums.sort((a, b) => b - a);\n    return nums[k - 1];\n};"
       },
       "complexity": {
-        "time": "O(N log K)",
-        "space": "O(K)"
+        "time": "O(N) average, O(N^2) worst case",
+        "space": "O(1) iterative",
+        "note": "Each partition halves the expected remaining work, so N + N/2 + N/4 + ... = 2N. Adversarial pivots give O(N^2), which random pivot selection makes vanishingly unlikely. The heap alternative is a guaranteed O(N log k) with O(k) space — better when k is tiny or the data streams."
       },
-      "dryRun": null,
+      "dryRun": "nums = [3, 2, 1, 5, 6, 4],  k = 2    (expect 5)\n\nFirst convert k into an index. Sorted ASCENDING, the kth largest sits\nat index n - k = 6 - 2 = 4. Getting this conversion wrong is the most\ncommon error on this problem, so write it down before coding.\n\nQuickselect, partitioning around the last element each round:\n\n  range [0..5], pivot 4\n    after partitioning: [3, 2, 1, 4, 6, 5]\n    the pivot 4 lands at index 3 — its final sorted position\n    3 < 4, so the answer is to the RIGHT. Recurse on [4..5] only.\n\n  range [4..5], pivot 5\n    after partitioning: [3, 2, 1, 4, 5, 6]\n    the pivot 5 lands at index 4\n    4 == 4  ->  answer 5\n\n  sorted for reference: [1, 2, 3, 4, 5, 6], and the 2nd largest is 5.\n\nTwo partitions, and the array was never fully sorted — note that\nindices 0..2 are still [3, 2, 1], unordered, because nothing ever\nneeded to know. Recursing into only ONE side is what turns quicksort's\nO(N log N) into O(N) expected.\n\nThe pivot here is the last element, which is O(N^2) on already-sorted\ninput. Choose it randomly in real code.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Converting between kth largest and array index incorrectly. Sorted ascending, the kth largest is at index `n - k`; sorted descending it is at `k - 1`. Write it down before coding.",
+        "Always choosing the first or last element as the pivot, which gives O(N^2) on already-sorted input — a very common test case.",
+        "Recursing into both halves out of quicksort habit, which throws away the whole advantage.",
+        "Off-by-one in the partition loop, producing infinite recursion when all elements are equal. Make sure the pivot's final position is excluded from both recursive ranges."
+      ],
+      "edgeCases": [
+        "k = 1 -> the maximum",
+        "k = n -> the minimum",
+        "all elements equal, the classic infinite-loop trap",
+        "a single element",
+        "an already-sorted array, which is the worst case for a fixed pivot",
+        "duplicates around the kth position"
+      ],
+      "followUps": [
+        {
+          "q": "Which solution would you actually give?",
+          "a": "Name all three and say when each wins: sorting for clarity, a size-k min-heap for O(N log k) with bounded memory or a stream, Quickselect for O(N) average on a static array you may reorder. Picking deliberately is what the question is testing — leading with Quickselect and fumbling the partition is a worse outcome than a clean heap."
+        },
+        {
+          "q": "Can the worst case be made O(N) deterministically?",
+          "a": "Yes — median-of-medians picks a provably good pivot, giving O(N) worst case. The constants are bad enough that it is almost never used in practice; random pivoting is the real-world answer. Worth knowing the result exists."
+        },
+        {
+          "q": "What if the array does not fit in memory?",
+          "a": "Neither sorting nor Quickselect works directly. Use a size-k heap in one streaming pass, or binary search on the value and count elements above it per pass — the same counting idea as the binary-search solution to Find the Duplicate Number."
+        },
+        {
+          "q": "How does this relate to quicksort?",
+          "a": "Identical partition step. Quicksort recurses into both sides to order everything; Quickselect recurses into one, because only one side can contain the position it cares about. That single difference is what turns N log N into N."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-a-stream",
+        "k-closest-points-to-origin",
+        "top-k-frequent-elements"
+      ],
+      "core": true
     },
     {
       "id": "621",
@@ -169,25 +391,78 @@
         "leetcode": "https://leetcode.com/problems/task-scheduler/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=s8p8ukTyA2I"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Greedy + Max-Heap",
+      "patternTriggers": [
+        "Items must be spaced apart by a cooldown, and you want the shortest total schedule.",
+        "The bottleneck is the **most frequent** item — it dictates the structure, and everything else fills the gaps it leaves.",
+        "The words *cooldown*, *at least n units apart*, *minimum time to finish*."
+      ],
       "keyInsight": "Always process the most frequent task first. Use max-heap for frequencies and a cooldown queue. Time advances in cycles.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every ordering of the tasks and keep the shortest valid schedule.",
+        "time": "factorial",
+        "space": "O(N)",
+        "whyItFails": "Hopeless beyond a handful of tasks, and unnecessary: there is a provably optimal greedy rule. Always scheduling the most frequent available task keeps the scarce resource — slots far from the last use of the bottleneck task — as free as possible."
+      },
+      "approach": [
+        "Count how many times each task appears.",
+        "Push the counts into a max-heap.",
+        "Each cycle, pop up to `n + 1` distinct tasks — that is one full cooldown window.",
+        "Decrement each popped count and hold the still-positive ones aside.",
+        "Add the number of tasks actually run to the elapsed time; if the heap is not yet empty, add idle time to fill the rest of the window.",
+        "Push the held-aside tasks back and repeat until the heap drains.",
+        "Alternatively, compute the answer directly with the counting formula — see the follow-up."
+      ],
       "code": {
         "python": "def leastInterval(tasks, n):\n    count = list(Counter(tasks).values())\n    heap = [-c for c in count]\n    heapq.heapify(heap)\n    time = 0\n    cooldown = deque()  # (remaining_count, available_time)\n\n    while heap or cooldown:\n        time += 1\n        if heap:\n            cnt = heapq.heappop(heap) + 1  # process one\n            if cnt: cooldown.append((cnt, time + n))\n        if cooldown and cooldown[0][1] == time:\n            heapq.heappush(heap, cooldown.popleft()[0])\n\n    return time",
         "cpp": "class Solution {\npublic:\n    int leastInterval(vector<char>& tasks, int n) {\n        int freq[26] = {};\n        for (char c : tasks) freq[c - 'A']++;\n        int maxFreq = *max_element(freq, freq + 26);\n        int maxCount = count(freq, freq + 26, maxFreq);\n        return max((int)tasks.size(), (maxFreq - 1) * (n + 1) + maxCount);\n    }\n};",
         "java": "class Solution {\n    public int leastInterval(char[] tasks, int n) {\n        int[] freq = new int[26];\n        for (char c : tasks) freq[c - 'A']++;\n        int maxFreq = Arrays.stream(freq).max().getAsInt();\n        int maxCount = (int) Arrays.stream(freq).filter(f -> f == maxFreq).count();\n        return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);\n    }\n}",
         "js": "var leastInterval = function(tasks, n) {\n    const freq = new Array(26).fill(0);\n    for (const c of tasks) freq[c.charCodeAt(0) - 65]++;\n    const maxFreq = Math.max(...freq);\n    const maxCount = freq.filter(f => f === maxFreq).length;\n    return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N)",
+        "space": "O(1)",
+        "note": "There are at most 26 distinct tasks, so every heap operation is on a structure of bounded size — the heap costs O(log 26) = O(1), and the total work is linear in the number of tasks. The closed-form formula is O(N) for counting and O(1) after that."
+      },
+      "dryRun": "tasks = [A, A, A, B, B, B],  n = 2\n\ncounts: A -> 3, B -> 3.   maxCount = 3, numMax = 2 (both tied).\n\nHeap simulation, taking up to n+1 = 3 distinct tasks per window:\n\n  window 1   run A, run B, nothing else available -> 1 idle slot\n             time = 3        remaining A -> 2, B -> 2\n  window 2   run A, run B, idle\n             time = 6        remaining A -> 1, B -> 1\n  window 3   run A, run B, heap now empty -> STOP, do not pad\n             time = 8\n\n  schedule:  A B idle | A B idle | A B\n  answer: 8\n\nThe closed-form formula agrees:\n\n    (maxCount - 1) * (n + 1) + numMax\n  = (3 - 1) * (2 + 1) + 2\n  = 8\n  then max(8, len(tasks) = 6) = 8\n\nThe formula builds a frame from the most frequent task — two full\nwindows of 3 plus a final partial one holding both tied tasks.\n\nNow a case where the frame is NOT the bottleneck:\n\n  tasks = [A x 6, B, C, D, E, F, G],  n = 2,  len = 12\n    (6 - 1) * 3 + 1 = 16, and max(16, 12) = 16\n\n  and a case where idling is never needed:\n\n  tasks = [A, A, A, B, B, B],  n = 0\n    (3 - 1) * 1 + 2 = 4, but max(4, 6) = 6 — the task count wins,\n    because with no cooldown nothing can idle.\n\nAll three were cross-checked against the heap simulation and agree.\n\nThe trap is window 3: once the heap is empty the schedule ends. Padding\nthat last window to its full width of 3 would answer 9.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Adding idle time on the final cycle. Once the heap is empty, the schedule ends — padding the last window inflates the answer.",
+        "Popping `n` tasks instead of `n + 1`. A window of cooldown n holds n + 1 slots: the task itself plus n others.",
+        "Pushing decremented counts back **during** the cycle rather than after it, which lets a task repeat inside its own cooldown.",
+        "Forgetting that the answer can be simply the number of tasks, when there are enough distinct tasks to fill every gap and no idling is needed."
+      ],
+      "edgeCases": [
+        "n = 0 -> no cooldown, so the answer is the task count",
+        "a single task type -> (count - 1) * (n + 1) + 1",
+        "all tasks distinct -> the task count, with no idling",
+        "two task types tied for most frequent",
+        "many tasks and a large n, where idle time dominates"
+      ],
+      "followUps": [
+        {
+          "q": "Is there a closed-form answer?",
+          "a": "Yes, and it is the better solution. Let `maxCount` be the highest frequency and `numMax` the number of tasks sharing it. The answer is `max(len(tasks), (maxCount - 1) * (n + 1) + numMax)`. The formula builds a frame from the most frequent task and asks whether the remaining tasks fit in its gaps; if they overflow, no idling is needed and the answer is just the task count."
+        },
+        {
+          "q": "Why is the greedy rule optimal?",
+          "a": "The most frequent task needs the most separation, so it constrains the schedule most tightly. Scheduling it as early and as often as legal minimises the chance of being forced to idle later — any schedule that delays it can be rearranged to one that does not, without getting longer."
+        },
+        {
+          "q": "Return the actual schedule, not just its length.",
+          "a": "The heap version already builds it — record which task is run in each slot, and mark the padded slots as idle. The closed-form formula gives only the length, which is the trade for its simplicity."
+        },
+        {
+          "q": "What if different tasks had different cooldowns?",
+          "a": "The greedy rule breaks, because 'most frequent' is no longer the same as 'most constraining'. You need to track each task's earliest legal time, and the problem starts to resemble general job scheduling, which is NP-hard in many formulations."
+        }
+      ],
+      "related": [
+        "top-k-frequent-elements",
+        "last-stone-weight",
+        "partition-labels"
+      ],
+      "core": true
     },
     {
       "id": "355",
@@ -204,24 +479,78 @@
         "leetcode": "https://leetcode.com/problems/design-twitter/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=pNichitDD2E"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Merge K Sorted + Max-Heap",
+      "patternTriggers": [
+        "A design question whose read path is 'the most recent k across several sorted sources'.",
+        "Each source is already in order, so you never need to sort — only to merge.",
+        "You only need k results, so the merge can stop early rather than combining everything."
+      ],
       "keyInsight": "Merge K sorted lists problem! Each user has a sorted list of tweets. Use a max-heap to merge the 10 most recent tweets from user + followees.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "On each feed request, gather every tweet from the user and all followees, sort them all by time, and take the newest 10.",
+        "time": "O(T log T) where T is the total tweet count",
+        "space": "O(T)",
+        "whyItFails": "It sorts a potentially huge history to return ten items, and it re-does that work on every request. Each user's tweets are already in chronological order, so this is a k-way merge that can stop after ten — exactly Merge K Sorted Lists."
+      },
+      "approach": [
+        "Store each user's tweets as a list of `(timestamp, tweetId)`, appended in order, so each list is sorted by construction.",
+        "Store follow relationships as a map from user to a set of followees. Treat a user as following themselves so the feed logic has no special case.",
+        "For `getNewsFeed`, push the **most recent** tweet of the user and of each followee into a max-heap keyed on timestamp, along with the index it came from.",
+        "Pop the newest, add it to the result, and push the next-newest tweet from that same source.",
+        "Stop after ten results or when the heap empties.",
+        "`follow` and `unfollow` are set operations on the followee map."
+      ],
       "code": {
         "python": "class Twitter:\n    def __init__(self):\n        self.time = 0\n        self.tweets = defaultdict(list)  # userId -> [(time, tweetId)]\n        self.follows = defaultdict(set)  # userId -> set of followeeIds\n\n    def postTweet(self, userId, tweetId):\n        self.tweets[userId].append((self.time, tweetId))\n        self.time -= 1  # negative for max-heap\n\n    def getNewsFeed(self, userId):\n        heap = []\n        self.follows[userId].add(userId)\n        for fid in self.follows[userId]:\n            if self.tweets[fid]:\n                idx = len(self.tweets[fid]) - 1\n                t, tid = self.tweets[fid][idx]\n                heapq.heappush(heap, (t, tid, fid, idx))\n        feed = []\n        while heap and len(feed) < 10:\n            t, tid, fid, idx = heapq.heappop(heap)\n            feed.append(tid)\n            if idx > 0:\n                nt, ntid = self.tweets[fid][idx-1]\n                heapq.heappush(heap, (nt, ntid, fid, idx-1))\n        return feed",
         "cpp": "class Twitter {\n    int time = 0;\n    unordered_map<int, unordered_set<int>> follows;\n    unordered_map<int, vector<pair<int,int>>> tweets; // userId -> [{time, tweetId}]\npublic:\n    void postTweet(int userId, int tweetId) { tweets[userId].push_back({time++, tweetId}); }\n    vector<int> getNewsFeed(int userId) {\n        auto cmp = [](auto& a, auto& b) { return a.first < b.first; };\n        priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(cmp)> pq(cmp);\n        follows[userId].insert(userId);\n        for (int uid : follows[userId])\n            for (auto& t : tweets[uid]) pq.push(t);\n        vector<int> result;\n        while (!pq.empty() && result.size() < 10) { result.push_back(pq.top().second); pq.pop(); }\n        return result;\n    }\n    void follow(int followerId, int followeeId) { follows[followerId].insert(followeeId); }\n    void unfollow(int followerId, int followeeId) { follows[followerId].erase(followeeId); }\n};",
         "java": "class Twitter {\n    int time = 0;\n    Map<Integer, Set<Integer>> follows = new HashMap<>();\n    Map<Integer, List<int[]>> tweets = new HashMap<>();\n    public void postTweet(int userId, int tweetId) {\n        tweets.computeIfAbsent(userId, k -> new ArrayList<>()).add(new int[]{time++, tweetId});\n    }\n    public List<Integer> getNewsFeed(int userId) {\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> b[0] - a[0]);\n        Set<Integer> users = follows.computeIfAbsent(userId, k -> new HashSet<>());\n        users.add(userId);\n        for (int uid : users)\n            if (tweets.containsKey(uid)) for (int[] t : tweets.get(uid)) pq.offer(t);\n        List<Integer> result = new ArrayList<>();\n        while (!pq.isEmpty() && result.size() < 10) result.add(pq.poll()[1]);\n        return result;\n    }\n    public void follow(int followerId, int followeeId) {\n        follows.computeIfAbsent(followerId, k -> new HashSet<>()).add(followeeId);\n    }\n    public void unfollow(int followerId, int followeeId) {\n        if (follows.containsKey(followerId)) follows.get(followerId).remove(followeeId);\n    }\n}",
         "js": "var Twitter = function() { this.time = 0; this.tweets = new Map(); this.follows = new Map(); };\nTwitter.prototype.postTweet = function(userId, tweetId) {\n    if (!this.tweets.has(userId)) this.tweets.set(userId, []);\n    this.tweets.get(userId).push([this.time++, tweetId]);\n};\nTwitter.prototype.getNewsFeed = function(userId) {\n    const users = this.follows.get(userId) || new Set();\n    users.add(userId);\n    const all = [];\n    for (const uid of users)\n        if (this.tweets.has(uid)) all.push(...this.tweets.get(uid));\n    all.sort((a, b) => b[0] - a[0]);\n    return all.slice(0, 10).map(t => t[1]);\n};\nTwitter.prototype.follow = function(ferId, feeId) {\n    if (!this.follows.has(ferId)) this.follows.set(ferId, new Set());\n    this.follows.get(ferId).add(feeId);\n};\nTwitter.prototype.unfollow = function(ferId, feeId) {\n    if (this.follows.has(ferId)) this.follows.get(ferId).delete(feeId);\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(1) for postTweet, follow and unfollow; O(F + 10 log F) for getNewsFeed",
+        "space": "O(U + T)",
+        "note": "F is the number of followees. Seeding the heap is O(F), then ten pops of O(log F) each. Crucially the cost does not depend on how many tweets exist in total, only on how many sources there are — which is what the merge buys."
+      },
+      "dryRun": "A short session, capacity of the feed = 10 newest.\n\n  postTweet(1, 5)      user 1 tweets:  [(t=0, 5)]\n  getNewsFeed(1)       user 1 follows themselves, so sources = {1}\n                       heap seeded with (t=0, 5)  ->  [5]\n\n  follow(1, 2)         user 1 now follows {1, 2}\n  postTweet(2, 6)      user 2 tweets:  [(t=1, 6)]\n  getNewsFeed(1)       sources = {1, 2}\n                       seed heap with each source's NEWEST tweet:\n                         (t=1, 6) from user 2\n                         (t=0, 5) from user 1\n                       pop 6  (t=1 is newest)   result [6]\n                         user 2 has no older tweet, nothing to refill\n                       pop 5                    result [6, 5]\n                       heap empty, stop         ->  [6, 5]\n\n  unfollow(1, 2)       user 1 follows {1}\n  getNewsFeed(1)       sources = {1}  ->  [5]\n\nThe seeding step is the point. Only ONE tweet per source enters the\nheap, and a source is refilled only after one of its tweets is popped.\nSo the heap holds at most F entries however long the histories are,\nand the cost depends on the number of followees — not on the total\nnumber of tweets in the system.\n\nThe self-follow is what makes `getNewsFeed(1)` include user 1's own\ntweets with no special case. Drop it and the first call returns empty.\n\nThis is Merge K Sorted Lists: each user's tweet list is already in\nchronological order, and the merge stops after ten results instead of\nconsuming everything.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Not having a user follow themselves, which then needs a special case to include their own tweets — and is easy to forget in one of the two paths.",
+        "Pushing every tweet from every followee into the heap, which restores the O(T) cost. Push one per source and refill as you pop.",
+        "Using a global incrementing timestamp but comparing tweet IDs instead, which breaks ordering as soon as IDs are reused or arbitrary.",
+        "Allowing a user to unfollow themselves, which silently empties their own feed.",
+        "In Python, pushing `(-timestamp, tweetId)` and forgetting to negate back, or omitting a tie-breaker when timestamps collide."
+      ],
+      "edgeCases": [
+        "a user with no tweets and no followees -> an empty feed",
+        "a user following someone with no tweets",
+        "fewer than ten tweets available in total",
+        "following the same user twice, which a set makes idempotent",
+        "unfollowing someone never followed",
+        "a user's own tweets being the only ones in the feed"
+      ],
+      "followUps": [
+        {
+          "q": "How do real systems do this?",
+          "a": "Two approaches, and the trade is the interesting part. **Fan-out on write** precomputes each follower's feed when a tweet is posted — fast reads, expensive for users with millions of followers. **Fan-out on read** merges at request time, which is what this solution does — cheap writes, slower reads. Production systems use both, with celebrity accounts handled on read and everyone else on write."
+        },
+        {
+          "q": "What if a user follows a million people?",
+          "a": "Seeding the heap becomes O(F), which dominates. Real systems cap the merge, precompute, or maintain a materialised feed per user. The complexity analysis pointing at F rather than T is what tells you where to optimise."
+        },
+        {
+          "q": "How would you support pagination?",
+          "a": "Pass a cursor — the timestamp of the last tweet returned — and seed the heap with each source's newest tweet older than it. Offset-based pagination would be wrong, since new tweets arriving shift the offsets."
+        },
+        {
+          "q": "Why keep per-user tweet lists rather than one global list?",
+          "a": "A global list means filtering by followee on every read, which is O(T). Per-user lists make the feed a merge over F sorted sequences instead — the same reason a database would index tweets by author."
+        }
+      ],
+      "related": [
+        "merge-k-sorted-lists",
+        "lru-cache",
+        "find-median-from-data-stream"
+      ],
       "core": false
     },
     {
@@ -240,10 +569,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=itmhHWaHupI"
       },
       "pattern": "Two Heaps",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A **running** order statistic — the median, a percentile — over a stream.",
+        "Both middle values must be reachable in O(1), which means the data must be split exactly at the middle and held from both sides.",
+        "The words *from a data stream*, *running median*, *as numbers arrive*."
+      ],
       "keyInsight": "Split numbers into two halves: max-heap (left/smaller half) and min-heap (right/larger half). Median is at the tops. Keep sizes balanced (differ by at most 1).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Keep every number in a list and sort it on each `findMedian` — or insert each new number into the right position to keep the list sorted.",
+        "time": "O(N log N) per query if sorting, O(N) per insert if maintaining order",
+        "space": "O(N)",
+        "whyItFails": "Sorting repeatedly redoes settled work; sorted insertion costs O(N) for the element shift. Neither is needed — you only ever require the two values straddling the middle, not the full order, and two heaps keep exactly those at their tops."
+      },
+      "approach": [
+        "Keep a **max**-heap `lo` holding the smaller half, and a **min**-heap `hi` holding the larger half.",
+        "Maintain two invariants: every element of `lo` is at most every element of `hi`, and their sizes differ by at most one.",
+        "To add a number, push it through one heap into the other — push onto `hi`, pop `hi`'s smallest, and push that onto `lo`. This guarantees ordering without comparing explicitly.",
+        "Then rebalance: if `lo` has grown more than one larger than `hi`, move its root across.",
+        "For an odd total, the median is the root of the larger heap.",
+        "For an even total, it is the average of the two roots."
+      ],
       "code": {
         "python": "class MedianFinder:\n    def __init__(self):\n        self.small = []  # max-heap (negated)\n        self.large = []  # min-heap\n\n    def addNum(self, num):\n        heapq.heappush(self.small, -num)\n        # Ensure small's max ≤ large's min\n        if self.small and self.large and -self.small[0] > self.large[0]:\n            heapq.heappush(self.large, -heapq.heappop(self.small))\n        # Balance sizes\n        if len(self.small) > len(self.large) + 1:\n            heapq.heappush(self.large, -heapq.heappop(self.small))\n        elif len(self.large) > len(self.small) + 1:\n            heapq.heappush(self.small, -heapq.heappop(self.large))\n\n    def findMedian(self):\n        if len(self.small) > len(self.large):\n            return -self.small[0]\n        if len(self.large) > len(self.small):\n            return self.large[0]\n        return (-self.small[0] + self.large[0]) / 2",
         "cpp": "class MedianFinder {\n    priority_queue<int> lo; // max heap\n    priority_queue<int, vector<int>, greater<int>> hi; // min heap\npublic:\n    void addNum(int num) {\n        lo.push(num);\n        hi.push(lo.top()); lo.pop();\n        if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }\n    }\n    double findMedian() {\n        return lo.size() > hi.size() ? lo.top() : (lo.top() + hi.top()) / 2.0;\n    }\n};",
@@ -251,16 +596,51 @@
         "js": "var MedianFinder = function() { this.lo = []; this.hi = []; }; // simplified with sorted arrays\nMedianFinder.prototype.addNum = function(num) {\n    // Insert into sorted lo (descending) or hi (ascending)\n    const insert = (arr, val, cmp) => {\n        let l = 0, r = arr.length;\n        while (l < r) { const m = (l + r) >> 1; cmp(arr[m], val) ? l = m + 1 : r = m; }\n        arr.splice(l, 0, val);\n    };\n    insert(this.lo, num, (a, b) => a > b);\n    this.hi.push(this.lo.shift());\n    this.hi.sort((a, b) => a - b);\n    if (this.hi.length > this.lo.length) this.lo.unshift(this.hi.shift());\n};\nMedianFinder.prototype.findMedian = function() {\n    return this.lo.length > this.hi.length ? this.lo[0] : (this.lo[0] + this.hi[0]) / 2;\n};"
       },
       "complexity": {
-        "time": "O(log N) add, O(1) find",
-        "space": "O(N)"
+        "time": "O(log N) per add, O(1) per findMedian",
+        "space": "O(N)",
+        "note": "Each add does a constant number of heap operations. findMedian only reads roots, so it is O(1) — which is what makes this better than any structure needing a search. All N numbers must be retained, so the space is unavoidable."
       },
-      "dryRun": null,
+      "dryRun": "Stream: 1, then 2, then 3, then 4.\n\n  lo is a MAX-heap holding the smaller half (largest at its root).\n  hi is a MIN-heap holding the larger half (smallest at its root).\n\n  add(1)   lo = [1]        hi = []          sizes 1, 0\n           odd total, median = lo's root     ->  1\n\n  add(2)   lo = [1]        hi = [2]         sizes 1, 1\n           even total, median = (1 + 2) / 2  ->  1.5\n\n  add(3)   lo = [2, 1]     hi = [3]         sizes 2, 1\n           odd total, median = lo's root     ->  2\n\n  add(4)   lo = [2, 1]     hi = [3, 4]      sizes 2, 2\n           even total, median = (2 + 3) / 2  ->  2.5\n\nEvery invariant holds throughout: every value in lo is at most every\nvalue in hi, and the sizes never differ by more than one. So the two\nmiddle values of the whole dataset are always sitting at the two roots,\nand findMedian is a pair of O(1) reads.\n\nFollow add(3) closely. Pushing 3 onto hi and immediately popping hi's\nsmallest yields 2, which then goes onto lo. The element that crosses\nover is not the one you pushed — that push-through step is what keeps\nthe halves correctly ordered without any explicit comparison, and\nwithout an empty-heap special case.\n\nIf the heap directions were swapped, the roots after add(4) would be 1\nand 4 — the minimum and maximum of the data, not its middle.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Getting the heap directions backwards. The *lower* half needs a **max**-heap so its largest is exposed; the *upper* half needs a **min**-heap. Reversed, the roots are the extremes of the dataset rather than its middle.",
+        "Comparing against a root to decide which heap to push into, then forgetting the empty-heap case. The push-through trick avoids the branch entirely and is harder to get wrong.",
+        "Letting the sizes drift. If they can differ by two, the median is no longer at a root.",
+        "Integer division when averaging two roots for an even count — the median of 1 and 2 is 1.5, so the return type must be floating point.",
+        "Forgetting to negate consistently when simulating the max-heap with a min-heap library."
+      ],
+      "edgeCases": [
+        "a single number -> itself",
+        "exactly two numbers -> their average",
+        "all numbers identical",
+        "a strictly increasing stream, which stresses the rebalancing every step",
+        "negative numbers",
+        "findMedian called before any add, if not guaranteed otherwise"
+      ],
+      "followUps": [
+        {
+          "q": "Support removing a number as well.",
+          "a": "Heaps cannot delete an arbitrary element cheaply. Use lazy deletion — a map of counts to skip when the value surfaces at a root — or switch to a balanced BST / multiset with order statistics, which supports arbitrary removal in O(log N)."
+        },
+        {
+          "q": "What if you need an arbitrary percentile rather than the median?",
+          "a": "Two heaps only straddle one fixed split point, so they generalise to a fixed percentile (by changing the size ratio) but not to arbitrary ones. For arbitrary quantiles use an order-statistic tree, or a streaming sketch like t-digest when approximation is acceptable."
+        },
+        {
+          "q": "What if the numbers are in a small known range?",
+          "a": "Counting beats heaps: keep a frequency array and a running total, and find the median by scanning or with a Fenwick tree for O(log range) queries. This is the right answer for ages or exam scores."
+        },
+        {
+          "q": "Only the median of the last k numbers?",
+          "a": "Now elements expire, which heaps handle badly. Use a sliding-window structure — two multisets with lazy deletion, or an indexed skip list — so both the window boundary and the order statistic stay maintainable."
+        }
+      ],
+      "related": [
+        "kth-largest-element-in-a-stream",
+        "merge-k-sorted-lists",
+        "median-of-two-sorted-arrays"
+      ],
+      "core": true
     }
   ]
 }
