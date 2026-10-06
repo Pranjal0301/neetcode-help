@@ -4,17 +4,31 @@
   "icon": "🌍",
   "order": 12,
   "concept": {
-    "heading": "Advanced Algorithms",
-    "body": "",
+    "heading": "Core Concepts",
+    "body": "This is the **weighted** half of graph theory, plus a few specialised traversals. The thing to internalise first is why BFS stops working: BFS is correct on unweighted graphs because the first time it reaches a node, it arrived by the fewest hops. Once edges have different costs, the first arrival is no longer the cheapest, and the whole guarantee collapses.\n\nWhat replaces it depends on what \"cost\" means. **Dijkstra** minimises the *sum* of edge weights, and it is BFS with the queue swapped for a min-heap — that one substitution is the entire algorithm. **Prim's and Kruskal's** solve a different problem: the cheapest set of edges that connects everything, which is a spanning tree, not a path. **Bellman-Ford** relaxes every edge V-1 times, which is slower but tolerates negative weights and — more usefully here — lets you *bound the number of edges used*, which is exactly what \"within k stops\" asks for. And **Hierholzer's algorithm** finds a path using every **edge** exactly once, which is a very different question from visiting every node.\n\nOne generalisation worth carrying: Dijkstra does not actually care that the cost is a sum. Change the relaxation step from `dist + w` to `max(dist, w)` and it minimises the **worst** edge on the path instead — a bottleneck path. Swim in Rising Water is that, and nothing else changes.",
     "bullets": [
-      "**Dijkstra's:** Shortest path in weighted graph (no negative edges). Min-heap.",
-      "**Prim's/Kruskal's:** Minimum Spanning Tree.",
-      "**Topological Sort on strings:** Alien Dictionary."
+      "**Dijkstra = BFS with a min-heap.** Pop the closest unfinalised node; its distance is then settled. Requires non-negative weights — a negative edge could improve a node you have already finalised.",
+      "**MST is not a path problem.** Prim's grows one tree by always taking the cheapest edge leaving it; Kruskal's sorts all edges and adds any that does not close a cycle (union-find). Both give the same total weight.",
+      "**Bellman-Ford** handles negative weights and bounds path length: after k rounds of relaxing every edge, you have the best paths using at most k edges. That bound is the feature, not a limitation.",
+      "**Eulerian path** uses every EDGE once (Hierholzer's, O(E), and it exists under simple degree conditions). Hamiltonian path uses every NODE once and is NP-hard. Do not confuse them.",
+      "**Bottleneck paths:** keep Dijkstra but relax with `max(dist, w)` instead of `dist + w`. Minimises the largest edge on the path rather than the total.",
+      "**Lazy deletion:** heaps cannot update a key, so push duplicates and skip a popped node that is already finalised. Simpler than a decrease-key and the standard practice."
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "import heapq\nfrom collections import defaultdict\n\n# --- Dijkstra: minimise the SUM of weights. Non-negative only. ---\ndef dijkstra(adj, src, n):\n    dist = [float('inf')] * n\n    dist[src] = 0\n    pq = [(0, src)]                     # (distance, node)\n    while pq:\n        d, node = heapq.heappop(pq)\n        if d > dist[node]:\n            continue                    # lazy deletion: a stale duplicate\n        for nxt, w in adj[node]:\n            nd = d + w\n            if nd < dist[nxt]:\n                dist[nxt] = nd\n                heapq.heappush(pq, (nd, nxt))\n    return dist\n\n# --- Bottleneck variant: minimise the LARGEST edge on the path. ---\n#     Only the relaxation changes.\n#         nd = max(d, w)      instead of      nd = d + w\n\n# --- Prim's MST: cheapest edge set connecting everything. ---\ndef prim(points):\n    n = len(points)\n    visited = set()\n    pq = [(0, 0)]                       # (cost to attach, node)\n    total = 0\n    while len(visited) < n:\n        cost, node = heapq.heappop(pq)\n        if node in visited:\n            continue                    # already attached by a cheaper edge\n        visited.add(node)\n        total += cost\n        for nxt in range(n):\n            if nxt not in visited:\n                heapq.heappush(pq, (weight(node, nxt), nxt))\n    return total\n\n# --- Bellman-Ford: negative weights, and a cap on edges used. ---\ndef bellman_ford(n, edges, src, rounds):\n    dist = [float('inf')] * n\n    dist[src] = 0\n    for _ in range(rounds):\n        snapshot = dist[:]              # CRITICAL: relax against the\n        for u, v, w in edges:           # previous round, so one round\n            if snapshot[u] + w < dist[v]:   # cannot chain two edges\n                dist[v] = snapshot[u] + w\n    return dist\n\n# --- Hierholzer's: Eulerian path, every EDGE exactly once. ---\ndef euler(adj, start):\n    route = []\n    def visit(node):\n        while adj[node]:\n            visit(adj[node].pop(0))     # consume the edge, then recurse\n        route.append(node)              # POSTORDER — append on the way out\n    visit(start)\n    return route[::-1]",
+    "cpp": "// --- Dijkstra: minimise the SUM of weights. Non-negative only. ---\nvector<long> dijkstra(vector<vector<pair<int,int>>>& adj, int src, int n) {\n    vector<long> dist(n, LONG_MAX);\n    dist[src] = 0;\n    priority_queue<pair<long,int>, vector<pair<long,int>>,\n                   greater<>> pq;       // min-heap of (distance, node)\n    pq.push({0, src});\n    while (!pq.empty()) {\n        auto [d, node] = pq.top(); pq.pop();\n        if (d > dist[node]) continue;   // lazy deletion: stale duplicate\n        for (auto [nxt, w] : adj[node]) {\n            long nd = d + w;            // bottleneck variant: max(d, w)\n            if (nd < dist[nxt]) { dist[nxt] = nd; pq.push({nd, nxt}); }\n        }\n    }\n    return dist;\n}\n\n// --- Prim's MST ---\nlong prim(int n) {\n    vector<bool> visited(n, false);\n    priority_queue<pair<long,int>, vector<pair<long,int>>, greater<>> pq;\n    pq.push({0, 0});\n    long total = 0; int count = 0;\n    while (count < n) {\n        auto [cost, node] = pq.top(); pq.pop();\n        if (visited[node]) continue;    // attached already, by a cheaper edge\n        visited[node] = true; total += cost; count++;\n        for (int nxt = 0; nxt < n; nxt++)\n            if (!visited[nxt]) pq.push({weight(node, nxt), nxt});\n    }\n    return total;\n}\n\n// --- Bellman-Ford with a cap on edges used ---\nvector<long> bellmanFord(int n, vector<vector<int>>& edges, int src, int rounds) {\n    vector<long> dist(n, LONG_MAX);\n    dist[src] = 0;\n    for (int i = 0; i < rounds; i++) {\n        vector<long> snapshot = dist;   // CRITICAL: relax against the\n        for (auto& e : edges) {         // previous round only\n            if (snapshot[e[0]] == LONG_MAX) continue;\n            dist[e[1]] = min(dist[e[1]], snapshot[e[0]] + e[2]);\n        }\n    }\n    return dist;\n}",
+    "java": "// --- Dijkstra: minimise the SUM of weights. Non-negative only. ---\nlong[] dijkstra(List<int[]>[] adj, int src, int n) {\n    long[] dist = new long[n];\n    Arrays.fill(dist, Long.MAX_VALUE);\n    dist[src] = 0;\n    PriorityQueue<long[]> pq =          // min-heap of {distance, node}\n        new PriorityQueue<>((a, b) -> Long.compare(a[0], b[0]));\n    pq.add(new long[]{0, src});\n    while (!pq.isEmpty()) {\n        long[] cur = pq.poll();\n        long d = cur[0]; int node = (int) cur[1];\n        if (d > dist[node]) continue;   // lazy deletion: stale duplicate\n        for (int[] e : adj[node]) {\n            long nd = d + e[1];         // bottleneck variant: Math.max(d, e[1])\n            if (nd < dist[e[0]]) {\n                dist[e[0]] = nd;\n                pq.add(new long[]{nd, e[0]});\n            }\n        }\n    }\n    return dist;\n}\n\n// --- Prim's MST ---\nint prim(int n) {\n    boolean[] visited = new boolean[n];\n    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);\n    pq.add(new int[]{0, 0});\n    int total = 0, count = 0;\n    while (count < n) {\n        int[] cur = pq.poll();\n        if (visited[cur[1]]) continue;  // attached already\n        visited[cur[1]] = true; total += cur[0]; count++;\n        for (int nxt = 0; nxt < n; nxt++)\n            if (!visited[nxt]) pq.add(new int[]{weight(cur[1], nxt), nxt});\n    }\n    return total;\n}\n\n// --- Bellman-Ford with a cap on edges used ---\nint[] bellmanFord(int n, int[][] edges, int src, int rounds) {\n    int[] dist = new int[n];\n    Arrays.fill(dist, Integer.MAX_VALUE);\n    dist[src] = 0;\n    for (int i = 0; i < rounds; i++) {\n        int[] snapshot = dist.clone();  // CRITICAL: previous round only\n        for (int[] e : edges) {\n            if (snapshot[e[0]] == Integer.MAX_VALUE) continue;\n            dist[e[1]] = Math.min(dist[e[1]], snapshot[e[0]] + e[2]);\n        }\n    }\n    return dist;\n}",
+    "js": "// JavaScript has no built-in heap — assume a MinHeap keyed on the first\n// tuple element, or hand-roll one (see the Heap category's template).\n\n// --- Dijkstra: minimise the SUM of weights. Non-negative only. ---\nconst dijkstra = (adj, src, n) => {\n  const dist = new Array(n).fill(Infinity);\n  dist[src] = 0;\n  const pq = new MinHeap((x) => x[0]);     // [distance, node]\n  pq.push([0, src]);\n  while (pq.size()) {\n    const [d, node] = pq.pop();\n    if (d > dist[node]) continue;          // lazy deletion: stale duplicate\n    for (const [nxt, w] of adj[node]) {\n      const nd = d + w;                    // bottleneck: Math.max(d, w)\n      if (nd < dist[nxt]) { dist[nxt] = nd; pq.push([nd, nxt]); }\n    }\n  }\n  return dist;\n};\n\n// --- Prim's MST ---\nconst prim = (n, weight) => {\n  const visited = new Set();\n  const pq = new MinHeap((x) => x[0]);     // [cost to attach, node]\n  pq.push([0, 0]);\n  let total = 0;\n  while (visited.size < n) {\n    const [cost, node] = pq.pop();\n    if (visited.has(node)) continue;       // attached already\n    visited.add(node);\n    total += cost;\n    for (let nxt = 0; nxt < n; nxt++)\n      if (!visited.has(nxt)) pq.push([weight(node, nxt), nxt]);\n  }\n  return total;\n};\n\n// --- Bellman-Ford with a cap on edges used ---\nconst bellmanFord = (n, edges, src, rounds) => {\n  let dist = new Array(n).fill(Infinity);\n  dist[src] = 0;\n  for (let i = 0; i < rounds; i++) {\n    const snapshot = [...dist];            // CRITICAL: previous round only\n    for (const [u, v, w] of edges) {\n      if (snapshot[u] === Infinity) continue;\n      dist[v] = Math.min(dist[v], snapshot[u] + w);\n    }\n  }\n  return dist;\n};"
+  },
+  "recognitionTriggers": [
+    "**Weighted edges and a shortest path.** Dijkstra if all weights are non-negative; Bellman-Ford if any can be negative.",
+    "*Connect all nodes at minimum total cost* — that is a **minimum spanning tree**, not a shortest path. The distinction matters: an MST does not contain shortest paths between its nodes.",
+    "A **cap on the number of edges or stops**. That is Bellman-Ford's natural shape, because each round adds one permitted edge.",
+    "*Use every ticket / traverse every edge exactly once* — an **Eulerian path**, solved greedily in linear time. If it says every *node* once, you are in NP-hard territory instead.",
+    "*Minimise the maximum* along a path — a bottleneck problem. Dijkstra with a changed relaxation, or binary search on the answer plus a reachability check."
+  ],
   "problems": [
     {
       "id": "332",
@@ -32,24 +46,77 @@
         "leetcode": "https://leetcode.com/problems/reconstruct-itinerary/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=ZyB_gQ8vqGA"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Hierholzer's Eulerian Path",
+      "patternTriggers": [
+        "Every **edge** must be used exactly once — tickets, roads, bridges. Not every node.",
+        "The answer is an ordering of edges rather than a subset or a cost.",
+        "A tie-break rule is given (lexicographically smallest), which tells you to sort the adjacency lists rather than search for the best order."
+      ],
       "keyInsight": "Eulerian path - visit every edge exactly once. Use DFS with sorted adjacency lists. Add to result in postorder (Hierholzer's algorithm).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Backtrack over every ordering of the tickets, keeping the first valid itinerary in lexicographic order.",
+        "time": "O(E!) in the worst case",
+        "space": "O(E)",
+        "whyItFails": "Exponential, and unnecessary. An Eulerian path can be built greedily: walk edges, consuming each as you use it, and when you get stuck, that node must be the END of the route. Appending stuck nodes in postorder and reversing produces a valid Eulerian path with no backtracking at all."
+      },
+      "approach": [
+        "Build an adjacency list from departure airport to a sorted list of destinations — sorting gives the lexicographic tie-break for free.",
+        "Start a DFS from \"JFK\".",
+        "While the current airport still has unused tickets, remove the smallest destination (consuming that edge) and recurse into it.",
+        "When the airport has no tickets left, append it to the route. This is **postorder** — the node is recorded on the way out, not the way in.",
+        "Reverse the route at the end.",
+        "The postorder-then-reverse is what makes it correct: an airport you get stuck at must come last, and reversing places it correctly in the sequence."
+      ],
       "code": {
         "python": "def findItinerary(tickets):\n    adj = defaultdict(list)\n    for src, dst in sorted(tickets, reverse=True):\n        adj[src].append(dst)\n    route = []\n    def dfs(airport):\n        while adj[airport]:\n            dfs(adj[airport].pop())\n        route.append(airport)\n    dfs(\"JFK\")\n    return route[::-1]",
         "cpp": "class Solution {\npublic:\n    vector<string> findItinerary(vector<vector<string>>& tickets) {\n        unordered_map<string, priority_queue<string, vector<string>, greater<string>>> graph;\n        for (auto& t : tickets) graph[t[0]].push(t[1]);\n        vector<string> result;\n        function<void(string)> dfs = [&](string airport) {\n            while (!graph[airport].empty()) {\n                string next = graph[airport].top(); graph[airport].pop();\n                dfs(next);\n            }\n            result.push_back(airport);\n        };\n        dfs(\"JFK\");\n        reverse(result.begin(), result.end());\n        return result;\n    }\n};",
         "java": "class Solution {\n    Map<String, PriorityQueue<String>> graph = new HashMap<>();\n    List<String> result = new LinkedList<>();\n    public List<String> findItinerary(List<List<String>> tickets) {\n        for (var t : tickets) graph.computeIfAbsent(t.get(0), k -> new PriorityQueue<>()).offer(t.get(1));\n        dfs(\"JFK\");\n        return result;\n    }\n    void dfs(String airport) {\n        while (graph.containsKey(airport) && !graph.get(airport).isEmpty())\n            dfs(graph.get(airport).poll());\n        result.add(0, airport);\n    }\n}",
         "js": "var findItinerary = function(tickets) {\n    const graph = {};\n    for (const [from, to] of tickets) {\n        if (!graph[from]) graph[from] = [];\n        graph[from].push(to);\n    }\n    for (const key in graph) graph[key].sort();\n    const result = [];\n    const dfs = (airport) => {\n        while (graph[airport] && graph[airport].length)\n            dfs(graph[airport].shift());\n        result.unshift(airport);\n    };\n    dfs('JFK');\n    return result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(E log E)",
+        "space": "O(E)",
+        "note": "The sort of the adjacency lists dominates — Hierholzer's walk itself is O(E), since each edge is consumed exactly once and never revisited. Space is the adjacency lists plus the recursion, both O(E). Using a heap per airport instead of a sorted list gives the same bound with lazier sorting."
+      },
+      "dryRun": "tickets = [[JFK,SFO], [JFK,ATL], [SFO,ATL], [ATL,JFK], [ATL,SFO]]\n\nAdjacency, sorted so the smallest destination is always taken first:\n\n  JFK -> [ATL, SFO]\n  SFO -> [ATL]\n  ATL -> [JFK, SFO]\n\nWalk greedily, consuming each ticket as it is used:\n\n  at JFK  take ATL\n    at ATL  take JFK\n      at JFK  take SFO\n        at SFO  take ATL\n          at ATL  take SFO\n            at SFO  no tickets left  ->  APPEND SFO\n          at ATL  no tickets left    ->  APPEND ATL\n        at SFO  no tickets left      ->  APPEND SFO\n      at JFK  no tickets left        ->  APPEND JFK\n    at ATL  no tickets left          ->  APPEND ATL\n  at JFK  no tickets left            ->  APPEND JFK\n\n  postorder route:  SFO ATL SFO JFK ATL JFK\n  reversed:         JFK ATL JFK SFO ATL SFO     <- the answer\n\nSix airports for five tickets, as it must be.\n\nThe postorder is doing real work here. The walk reached SFO with no\noutgoing tickets left while tickets elsewhere were still unused — the\ngreedy walk got stuck. Appending on the way OUT puts that stuck airport\nfirst in the postorder list, so reversing puts it last in the route,\nwhich is exactly where it belongs. Appending on the way IN would have\nproduced JFK ATL JFK SFO ATL SFO only by luck, and breaks in general.\n\nSorting the adjacency lists is the whole tie-break mechanism: at JFK,\nATL is taken before SFO, which is what makes the result\nlexicographically smallest without any search.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Appending the airport in preorder, on the way in. That builds the route in the order visited, which is wrong whenever the greedy walk gets stuck before using every ticket.",
+        "Forgetting to reverse at the end.",
+        "Not consuming the edge before recursing, which revisits the same ticket forever.",
+        "Assuming the greedy walk can never get stuck early. It can — and postorder is precisely what repairs it, which is the insight worth being able to state.",
+        "Sorting the destination list once but then removing from the end, which gives the largest first and breaks the lexicographic requirement."
+      ],
+      "edgeCases": [
+        "a single ticket -> two airports",
+        "several tickets between the same pair, which must each be used",
+        "an airport with no outgoing tickets, which is where the walk terminates",
+        "tickets forming a cycle back through JFK",
+        "a choice of destinations where the lexicographically smaller leads to a dead end"
+      ],
+      "followUps": [
+        {
+          "q": "Why does postorder plus reverse work when the greedy walk gets stuck?",
+          "a": "If you get stuck at a node with edges still unused elsewhere, that node has no outgoing edges left, so it must be the final airport of the route. Appending it first and reversing puts it last. The remaining unused edges form cycles that get spliced in ahead of it as the recursion unwinds — which is exactly Hierholzer's insight."
+        },
+        {
+          "q": "When does an Eulerian path exist at all?",
+          "a": "For a directed graph: it is connected on its edges, and at most one node has out-degree exceeding in-degree by one (the start), at most one has in-degree exceeding out-degree by one (the end), and every other node is balanced. This problem guarantees one exists, so the check is not needed — but knowing the condition is the point of the topic."
+        },
+        {
+          "q": "How is this different from a Hamiltonian path?",
+          "a": "Eulerian uses every edge once and is solvable in linear time. Hamiltonian uses every node once and is NP-complete. The names are similar and the difficulty is not — this is the single most useful distinction in the topic."
+        },
+        {
+          "q": "Can it be done iteratively?",
+          "a": "Yes, with an explicit stack: push the start, and while the top has unused edges push its next destination; when it has none, pop it into the route. Same postorder, no recursion depth risk — worth having if E is large."
+        }
+      ],
+      "related": [
+        "course-schedule-ii",
+        "alien-dictionary",
+        "word-ladder"
+      ],
       "core": false
     },
     {
@@ -68,25 +135,78 @@
         "leetcode": "https://leetcode.com/problems/min-cost-to-connect-all-points/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=f7JOBJIC-NA"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Prim's Minimum Spanning Tree",
+      "patternTriggers": [
+        "**Connect everything at minimum total cost** — a spanning tree, not a shortest path.",
+        "The graph is complete or implicit: any pair can be connected, with the weight computed from the data.",
+        "The words *minimum cost to connect*, *all points*, *network of cables*."
+      ],
       "keyInsight": "Minimum Spanning Tree. Prim's: start from any node, greedily add cheapest edge to unvisited node using min-heap.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Enumerate every spanning tree and take the cheapest.",
+        "time": "By Cayley's formula there are n^(n-2) labelled spanning trees — hopeless.",
+        "space": "O(N)",
+        "whyItFails": "Astronomically many candidates, and completely unnecessary: both Prim's and Kruskal's greedy rules are provably optimal. Always taking the cheapest edge that connects something new cannot lead you astray, which is a genuinely surprising fact and the whole content of MST theory."
+      },
+      "approach": [
+        "Recognise this as a minimum spanning tree over a complete graph, where the weight between two points is their Manhattan distance.",
+        "Use Prim's: maintain a set of points already in the tree and a min-heap of candidate edges leaving it.",
+        "Seed the heap with point 0 at cost 0.",
+        "Pop the cheapest candidate. If its point is already in the tree, discard it — it was attached more cheaply by an earlier edge.",
+        "Otherwise add the point to the tree, add its cost to the running total, and push an edge from it to every point not yet in the tree.",
+        "Stop when all n points are in the tree, and return the total."
+      ],
       "code": {
         "python": "def minCostConnectPoints(points):\n    n = len(points)\n    visited = set()\n    heap = [(0, 0)]  # (cost, point_idx)\n    total = 0\n    while len(visited) < n:\n        cost, i = heapq.heappop(heap)\n        if i in visited: continue\n        visited.add(i)\n        total += cost\n        for j in range(n):\n            if j not in visited:\n                dist = abs(points[i][0]-points[j][0]) + abs(points[i][1]-points[j][1])\n                heapq.heappush(heap, (dist, j))\n    return total",
         "cpp": "class Solution {\npublic:\n    int minCostConnectPoints(vector<vector<int>>& points) {\n        int n = points.size(), cost = 0, connected = 0;\n        vector<int> minDist(n, INT_MAX);\n        vector<bool> visited(n, false);\n        minDist[0] = 0;\n        while (connected < n) {\n            int u = -1;\n            for (int i = 0; i < n; i++)\n                if (!visited[i] && (u == -1 || minDist[i] < minDist[u])) u = i;\n            visited[u] = true;\n            cost += minDist[u]; connected++;\n            for (int v = 0; v < n; v++) {\n                int d = abs(points[u][0]-points[v][0]) + abs(points[u][1]-points[v][1]);\n                minDist[v] = min(minDist[v], d);\n            }\n        }\n        return cost;\n    }\n};",
         "java": "class Solution {\n    public int minCostConnectPoints(int[][] points) {\n        int n = points.length, cost = 0;\n        int[] minDist = new int[n];\n        boolean[] visited = new boolean[n];\n        Arrays.fill(minDist, Integer.MAX_VALUE);\n        minDist[0] = 0;\n        for (int i = 0; i < n; i++) {\n            int u = -1;\n            for (int j = 0; j < n; j++)\n                if (!visited[j] && (u == -1 || minDist[j] < minDist[u])) u = j;\n            visited[u] = true;\n            cost += minDist[u];\n            for (int v = 0; v < n; v++)\n                minDist[v] = Math.min(minDist[v],\n                    Math.abs(points[u][0]-points[v][0]) + Math.abs(points[u][1]-points[v][1]));\n        }\n        return cost;\n    }\n}",
         "js": "var minCostConnectPoints = function(points) {\n    const n = points.length;\n    const minDist = new Array(n).fill(Infinity);\n    const visited = new Array(n).fill(false);\n    minDist[0] = 0;\n    let cost = 0;\n    for (let i = 0; i < n; i++) {\n        let u = -1;\n        for (let j = 0; j < n; j++)\n            if (!visited[j] && (u === -1 || minDist[j] < minDist[u])) u = j;\n        visited[u] = true;\n        cost += minDist[u];\n        for (let v = 0; v < n; v++)\n            minDist[v] = Math.min(minDist[v],\n                Math.abs(points[u][0]-points[v][0]) + Math.abs(points[u][1]-points[v][1]));\n    }\n    return cost;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2 log N)",
+        "space": "O(N^2)",
+        "note": "The graph is complete, so each of the n additions pushes up to n candidates, giving O(N^2) heap entries at O(log N) each. On a dense graph the heap is actually a pessimisation: the array-based Prim's — keep a `minCost[]` array and scan it for the minimum each round — is O(N^2) time and O(N) space, which is strictly better here. Worth saying."
+      },
+      "dryRun": "points = [[0,0], [2,2], [3,10], [5,2], [7,0]]      (indices 0..4)\n\nPairwise Manhattan distances:\n\n         0    1    2    3    4\n   0     0    4   13    7    7\n   1     4    0    9    3    7\n   2    13    9    0   10   14\n   3     7    3   10    0    4\n   4     7    7   14    4    0\n\nPrim's: always attach the point reachable most cheaply from the tree\nbuilt so far.\n\n  pop (cost 0, point 0)   ATTACH   total 0      tree {0}\n  pop (cost 4, point 1)   ATTACH   total 4      tree {0,1}\n  pop (cost 3, point 3)   ATTACH   total 7      tree {0,1,3}\n  pop (cost 4, point 4)   ATTACH   total 11     tree {0,1,3,4}\n  pop (cost 7, point 3)   already attached  ->  discard\n  pop (cost 7, point 4)   already attached  ->  discard\n  pop (cost 7, point 4)   already attached  ->  discard\n  pop (cost 9, point 2)   ATTACH   total 20     tree {0,1,2,3,4}\n\n  answer: 20     edges 0-1 (4), 1-3 (3), 3-4 (4), 1-2 (9)\n\nThe three discarded pops are why the visited check is not optional.\nPoint 3 was pushed with cost 7 (from point 0) and later with cost 3\n(from point 1); the heap surfaces the 3 first, and the stale 7 must be\nthrown away rather than added again.\n\nNote point 2 is attached last at cost 9, even though cheaper edges were\navailable elsewhere in the heap — it is simply expensive to reach from\nanywhere. An MST is not about short paths; it is about the cheapest set\nof edges that leaves nothing disconnected. The path from 0 to 2 within\nthis tree costs 4 + 9 = 13, which happens to equal the direct edge, but\nin general an MST path is NOT a shortest path.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Discarding the already-visited check after popping. Without it a point can be added twice and its cost double-counted.",
+        "Using Euclidean distance when the problem specifies Manhattan. Read the distance definition carefully.",
+        "Confusing MST with shortest path. An MST minimises total edge weight, not the distance between any particular pair — the path between two nodes within an MST is often not their shortest path.",
+        "Pushing edges to points already in the tree, which bloats the heap for no benefit.",
+        "Stopping when the heap empties rather than when all n points are attached — on a complete graph these coincide, but the explicit count is clearer and correct in general."
+      ],
+      "edgeCases": [
+        "a single point -> cost 0",
+        "two points -> their distance",
+        "all points identical -> cost 0",
+        "collinear points, where the MST is a simple chain",
+        "points forming a tie, where several MSTs exist with the same total"
+      ],
+      "followUps": [
+        {
+          "q": "Prim's or Kruskal's?",
+          "a": "Prim's for a dense graph, especially this complete one, since it never materialises the edge list. Kruskal's for a sparse graph with the edges already given: sort them and add any whose union-find merge succeeds, which is O(E log E). Here Kruskal's would first have to build all N^2/2 edges."
+        },
+        {
+          "q": "Why is the greedy choice optimal?",
+          "a": "The cut property: for any partition of the nodes into two sides, the cheapest edge crossing it belongs to some MST. Prim's cut is always (in tree, not in tree), so every edge it takes is safe. That is the theorem, and being able to name it is better than asserting that greedy works."
+        },
+        {
+          "q": "Can you do better than O(N^2) on this input?",
+          "a": "Yes, surprisingly. For Manhattan distance in the plane, only O(N) candidate edges can ever be in the MST, and they can be found with a sweep line in O(N log N). Then Kruskal's finishes in O(N log N) overall. Rarely needed, but it is the right answer to 'can this be faster'."
+        },
+        {
+          "q": "What if some points were already connected?",
+          "a": "Initialise union-find with those connections and run Kruskal's, or seed Prim's tree with the whole pre-connected component. The MST machinery handles a partial starting tree without modification."
+        }
+      ],
+      "related": [
+        "redundant-connection",
+        "network-delay-time",
+        "number-of-connected-components"
+      ],
+      "core": true
     },
     {
       "id": "743",
@@ -103,25 +223,80 @@
         "leetcode": "https://leetcode.com/problems/network-delay-time/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=EaphyqKU4PQ"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Dijkstra",
+      "patternTriggers": [
+        "**Weighted** edges and a shortest path from one source — the canonical Dijkstra setup.",
+        "You need the distance to *every* node, not just one, which Dijkstra gives in the same run.",
+        "All weights are non-negative, which is the condition Dijkstra requires."
+      ],
       "keyInsight": "Classic Dijkstra. Find shortest path from source to ALL nodes. Answer = max of all shortest paths (time for last node to receive signal).",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "BFS from the source, treating all edges as equal.",
+        "time": "O(V + E)",
+        "space": "O(V + E)",
+        "whyItFails": "It is **wrong**, not slow. BFS returns the path with the fewest hops, which on a weighted graph need not be the cheapest — one edge of weight 100 beats BFS's two edges of weight 1 each. Replacing the queue with a min-heap so the *closest* unfinalised node is processed next is the fix, and that is all Dijkstra is."
+      },
+      "approach": [
+        "Build an adjacency list of (neighbour, weight) pairs.",
+        "Keep a distance array initialised to infinity, with the source at 0.",
+        "Push (0, source) onto a min-heap keyed on distance.",
+        "Pop the smallest. If its distance exceeds the recorded one it is a stale duplicate — skip it.",
+        "Otherwise relax every outgoing edge: if going via this node beats the recorded distance to the neighbour, update it and push the new pair.",
+        "When the heap empties, every reachable node holds its shortest distance.",
+        "The answer is the **maximum** of those distances — the time for the last node to receive the signal — or -1 if any node is still at infinity."
+      ],
       "code": {
         "python": "def networkDelayTime(times, n, k):\n    adj = defaultdict(list)\n    for u, v, w in times:\n        adj[u].append((v, w))\n    heap = [(0, k)]\n    dist = {}\n    while heap:\n        d, node = heapq.heappop(heap)\n        if node in dist: continue\n        dist[node] = d\n        for nei, w in adj[node]:\n            if nei not in dist:\n                heapq.heappush(heap, (d + w, nei))\n    return max(dist.values()) if len(dist) == n else -1",
         "cpp": "class Solution {\npublic:\n    int networkDelayTime(vector<vector<int>>& times, int n, int k) {\n        vector<vector<pair<int,int>>> graph(n + 1);\n        for (auto& t : times) graph[t[0]].push_back({t[1], t[2]});\n        vector<int> dist(n + 1, INT_MAX);\n        dist[k] = 0;\n        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n        pq.push({0, k});\n        while (!pq.empty()) {\n            auto [d, u] = pq.top(); pq.pop();\n            if (d > dist[u]) continue;\n            for (auto [v, w] : graph[u]) {\n                if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; pq.push({dist[v], v}); }\n            }\n        }\n        int result = *max_element(dist.begin() + 1, dist.end());\n        return result == INT_MAX ? -1 : result;\n    }\n};",
         "java": "class Solution {\n    public int networkDelayTime(int[][] times, int n, int k) {\n        List<int[]>[] graph = new List[n + 1];\n        for (int i = 0; i <= n; i++) graph[i] = new ArrayList<>();\n        for (int[] t : times) graph[t[0]].add(new int[]{t[1], t[2]});\n        int[] dist = new int[n + 1];\n        Arrays.fill(dist, Integer.MAX_VALUE);\n        dist[k] = 0;\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0] - b[0]);\n        pq.offer(new int[]{0, k});\n        while (!pq.isEmpty()) {\n            int[] cur = pq.poll();\n            if (cur[0] > dist[cur[1]]) continue;\n            for (int[] e : graph[cur[1]])\n                if (dist[cur[1]] + e[1] < dist[e[0]]) {\n                    dist[e[0]] = dist[cur[1]] + e[1];\n                    pq.offer(new int[]{dist[e[0]], e[0]});\n                }\n        }\n        int result = 0;\n        for (int i = 1; i <= n; i++) result = Math.max(result, dist[i]);\n        return result == Integer.MAX_VALUE ? -1 : result;\n    }\n}",
         "js": "var networkDelayTime = function(times, n, k) {\n    const graph = Array.from({length: n+1}, () => []);\n    for (const [u,v,w] of times) graph[u].push([v,w]);\n    const dist = new Array(n+1).fill(Infinity);\n    dist[k] = 0;\n    const pq = [[0, k]]; // [dist, node]\n    while (pq.length) {\n        pq.sort((a,b) => a[0]-b[0]);\n        const [d, u] = pq.shift();\n        if (d > dist[u]) continue;\n        for (const [v, w] of graph[u])\n            if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; pq.push([dist[v], v]); }\n    }\n    const result = Math.max(...dist.slice(1));\n    return result === Infinity ? -1 : result;\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(E log V)",
+        "space": "O(V + E)",
+        "note": "Each edge can push at most one heap entry, so the heap holds O(E) items and each operation is O(log E) = O(log V) for a simple graph. The lazy-deletion skip is what keeps stale entries harmless. A Fibonacci heap gives O(E + V log V) in theory and is never used in practice."
+      },
+      "dryRun": "times = [[2,1,1], [2,3,1], [3,4,1]],  n = 4,  source k = 2\n  (each triple is u -> v with weight w)\n\n  pop (0, node 2)   finalised at 0\n      relax 2->1:  0 + 1 = 1  beats inf   -> dist[1] = 1, push (1,1)\n      relax 2->3:  0 + 1 = 1  beats inf   -> dist[3] = 1, push (1,3)\n  pop (1, node 1)   finalised at 1     (no outgoing edges)\n  pop (1, node 3)   finalised at 1\n      relax 3->4:  1 + 1 = 2  beats inf   -> dist[4] = 2, push (2,4)\n  pop (2, node 4)   finalised at 2\n\n  distances:  node1 = 1,  node2 = 0,  node3 = 1,  node4 = 2\n\n  answer: 2   — the MAXIMUM, not the sum\n\nThe signal travels in parallel, so the network is fully informed when\nthe LAST node receives it. Summing the distances would answer 4, which\nis not a time anything takes.\n\nIf any node were still at infinity the answer would be -1. With\nnodes labelled from 1, remember to size the arrays to n+1 or offset\nconsistently.\n\nWhy the min-heap rather than a plain queue: suppose there were also an\nedge 2->4 of weight 10. A plain BFS would reach node 4 in one hop and\nrecord 10, because it arrived first. Dijkstra pops node 3 at distance 1\nbefore ever considering that heavy edge, and settles node 4 at 2. The\nheap is what makes \"first arrival\" mean \"cheapest\" instead of\n\"fewest hops\".",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Reaching for BFS because the graph looks simple. Weighted edges break BFS's correctness guarantee entirely.",
+        "Forgetting the staleness check after popping. The algorithm still terminates and gives the right answer, but it re-relaxes edges from nodes already finalised and wastes work.",
+        "Returning the sum of the distances rather than the maximum. The signal propagates in parallel, so the total time is when the *last* node receives it.",
+        "Not checking for unreachable nodes, which must produce -1 rather than a finite answer.",
+        "Node labels starting at 1 while the arrays are 0-indexed — size them to n+1 or offset consistently."
+      ],
+      "edgeCases": [
+        "a single node -> 0",
+        "a disconnected node -> -1",
+        "edges with weight 0, which are fine for Dijkstra",
+        "several edges between the same pair, where only the cheapest matters",
+        "a self-loop, which never improves any distance",
+        "all nodes reachable directly from the source"
+      ],
+      "followUps": [
+        {
+          "q": "What if some weights were negative?",
+          "a": "Dijkstra breaks, because once it finalises a node it never reconsiders it, and a negative edge could later offer a cheaper route. Use Bellman-Ford: O(V·E), tolerates negative weights, and detects negative cycles — if a V-th relaxation round still improves something, a negative cycle exists."
+        },
+        {
+          "q": "Why exactly does Dijkstra need non-negative weights?",
+          "a": "Its invariant is that the smallest unfinalised distance is final, because every path to that node goes through some node already popped and adding non-negative weights can only increase the cost. A negative edge violates that — a longer-looking path could become shorter later."
+        },
+        {
+          "q": "What if you only need the distance to one target?",
+          "a": "Return as soon as that target is popped; its distance is settled at that moment. With a geometric heuristic you can go further and use A*, which is Dijkstra with the priority changed to `distance + estimated remaining` — the basis of practical route planning."
+        },
+        {
+          "q": "How does this compare to the grid BFS problems?",
+          "a": "Rotting Oranges and Walls and Gates are the unweighted special case, where every edge costs 1 and a plain queue suffices. Dijkstra is the generalisation, and noticing that the queue is the only difference makes both easier to remember."
+        }
+      ],
+      "related": [
+        "cheapest-flights-within-k-stops",
+        "swim-in-rising-water",
+        "rotting-oranges"
+      ],
+      "core": true
     },
     {
       "id": "778",
@@ -139,25 +314,78 @@
         "leetcode": "https://leetcode.com/problems/swim-in-rising-water/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=amvrKlMLuGY"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Bottleneck Dijkstra",
+      "patternTriggers": [
+        "**Minimise the maximum** along a path, rather than the sum — a bottleneck or widest-path problem.",
+        "The cost of a path is determined by its single worst element, so adding more steps of lower cost is free.",
+        "The words *minimum time*, *lowest elevation you must cross*, *minimise the peak*."
+      ],
       "keyInsight": "Modified Dijkstra on grid. \"Distance\" = max elevation along path. Min-heap by max elevation. Find path minimizing the maximum.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Binary search on the answer t, and for each t run a BFS or DFS using only cells of elevation at most t, checking whether the destination is reachable.",
+        "time": "O(N^2 log(max elevation))",
+        "space": "O(N^2)",
+        "whyItFails": "This one is genuinely good and worth offering first — the predicate is monotone (if you can swim at time t, you can at t+1), so binary search applies cleanly. The Dijkstra variant computes the same answer in a single pass without the outer search, which is tidier but not asymptotically dramatic."
+      },
+      "approach": [
+        "Observe that the cost of a path is the **maximum** elevation on it, so the goal is the path whose maximum is smallest.",
+        "Run Dijkstra from the top-left cell, but change the relaxation: the cost to reach a neighbour is `max(costSoFar, elevation[neighbour])`, not a sum.",
+        "Use a min-heap keyed on that running maximum.",
+        "Pop the cell with the smallest maximum-so-far; skip it if already finalised.",
+        "When the bottom-right cell is popped, its key is the answer — return immediately.",
+        "Everything else about Dijkstra is unchanged, which is the point: the algorithm is indifferent to how costs combine, as long as combining never decreases the value."
+      ],
       "code": {
         "python": "def swimInWater(grid):\n    n = len(grid)\n    visited = set()\n    heap = [(grid[0][0], 0, 0)]\n    while heap:\n        t, r, c = heapq.heappop(heap)\n        if (r, c) == (n-1, n-1): return t\n        if (r, c) in visited: continue\n        visited.add((r, c))\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<n and 0<=nc<n and (nr,nc) not in visited:\n                heapq.heappush(heap, (max(t, grid[nr][nc]), nr, nc))",
         "cpp": "class Solution {\npublic:\n    int swimInWater(vector<vector<int>>& grid) {\n        int n = grid.size();\n        priority_queue<tuple<int,int,int>, vector<tuple<int,int,int>>, greater<>> pq;\n        pq.push({grid[0][0], 0, 0});\n        vector<vector<bool>> visited(n, vector<bool>(n, false));\n        visited[0][0] = true;\n        int dirs[] = {0,1,0,-1,0};\n        while (!pq.empty()) {\n            auto [t, i, j] = pq.top(); pq.pop();\n            if (i == n-1 && j == n-1) return t;\n            for (int d = 0; d < 4; d++) {\n                int ni = i+dirs[d], nj = j+dirs[d+1];\n                if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                    visited[ni][nj] = true;\n                    pq.push({max(t, grid[ni][nj]), ni, nj});\n                }\n            }\n        }\n        return 0;\n    }\n};",
         "java": "class Solution {\n    public int swimInWater(int[][] grid) {\n        int n = grid.length;\n        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0]-b[0]);\n        pq.offer(new int[]{grid[0][0], 0, 0});\n        boolean[][] visited = new boolean[n][n];\n        visited[0][0] = true;\n        int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};\n        while (!pq.isEmpty()) {\n            int[] cur = pq.poll();\n            if (cur[1] == n-1 && cur[2] == n-1) return cur[0];\n            for (int[] d : dirs) {\n                int ni = cur[1]+d[0], nj = cur[2]+d[1];\n                if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                    visited[ni][nj] = true;\n                    pq.offer(new int[]{Math.max(cur[0], grid[ni][nj]), ni, nj});\n                }\n            }\n        }\n        return 0;\n    }\n}",
         "js": "var swimInWater = function(grid) {\n    const n = grid.length;\n    const visited = Array.from({length:n}, () => new Array(n).fill(false));\n    const pq = [[grid[0][0], 0, 0]];\n    visited[0][0] = true;\n    while (pq.length) {\n        pq.sort((a,b) => a[0]-b[0]);\n        const [t, i, j] = pq.shift();\n        if (i === n-1 && j === n-1) return t;\n        for (const [di,dj] of [[0,1],[0,-1],[1,0],[-1,0]]) {\n            const ni = i+di, nj = j+dj;\n            if (ni>=0 && nj>=0 && ni<n && nj<n && !visited[ni][nj]) {\n                visited[ni][nj] = true;\n                pq.push([Math.max(t, grid[ni][nj]), ni, nj]);\n            }\n        }\n    }\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(N^2 log N)",
+        "space": "O(N^2)",
+        "note": "There are N^2 cells and each pushes at most four heap entries, so O(N^2) heap operations at O(log N) each. The binary-search alternative is O(N^2 log(max elevation)), which is comparable — choose on clarity rather than complexity."
+      },
+      "dryRun": "grid:   0  2\n        1  3\n\nThe cost of a path is the MAXIMUM elevation on it, so relax with\nmax(costSoFar, elevation) instead of a sum.\n\nStart at (0,0) with cost equal to its own elevation, 0 — you must\nalready be able to stand there.\n\n  pop (max-so-far 0, cell (0,0))\n      to (1,0) elevation 1:  max(0, 1) = 1  -> push\n      to (0,1) elevation 2:  max(0, 2) = 2  -> push\n  pop (max-so-far 1, cell (1,0))\n      to (1,1) elevation 3:  max(1, 3) = 3  -> push\n  pop (max-so-far 2, cell (0,1))\n      to (1,1) elevation 3:  max(2, 3) = 3  -> push     (a duplicate)\n  pop (max-so-far 3, cell (1,1))\n      this is the destination  ->  answer 3\n\nTwo things worth noticing.\n\n  Both routes to (1,1) give 3, because (1,1) itself has elevation 3 and\n  that alone sets the bottleneck. No path can do better than the\n  destination's own elevation, which is a useful lower bound.\n\n  The second push of (1,1) at cost 3 is a stale duplicate. Heaps cannot\n  update a key, so pushing again and skipping the already-finalised pop\n  is the standard practice — simpler than a decrease-key operation.\n\nThe answer is returned when the destination is POPPED, not when it is\npushed. Only on popping is its key guaranteed final, since a cheaper\nroute could still be sitting lower in the heap.\n\nSumming instead of taking the max would answer 0+1+3 = 4 here, which\nanswers a different question entirely.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Summing elevations instead of taking the maximum. That answers a different question — the cheapest total rather than the lowest peak.",
+        "Initialising the start's cost to 0 rather than to its own elevation. You must already be able to stand there.",
+        "Forgetting the visited check, which lets a cell be processed several times.",
+        "Returning when the destination is *pushed* rather than *popped*. Only on popping is its key final.",
+        "In the binary-search version, searching a range that excludes the maximum elevation, or forgetting that the start and end cells both constrain the answer."
+      ],
+      "edgeCases": [
+        "a 1x1 grid -> that cell's elevation",
+        "a 2x2 grid",
+        "elevations already increasing along every path",
+        "the destination having the highest elevation in the grid, which then is the answer",
+        "a grid where a long detour beats a short high-elevation route — the case that distinguishes bottleneck from sum"
+      ],
+      "followUps": [
+        {
+          "q": "Which solution would you present?",
+          "a": "Name both. Binary search plus reachability is easier to explain and arrives naturally from \"can I finish by time t?\". The Dijkstra variant is a single pass and shows you understand that the algorithm only needs a monotone combining rule. Offering the binary search first and then the refinement is the strongest answer."
+        },
+        {
+          "q": "Why does Dijkstra still work when the cost is a max?",
+          "a": "Dijkstra's correctness needs only that extending a path never *decreases* its cost. For sums that holds because weights are non-negative; for maxima it holds because `max(a, b) >= a` always. So the finalised-node invariant survives unchanged — which is the generalisation worth taking away."
+        },
+        {
+          "q": "Could union-find solve it?",
+          "a": "Yes, elegantly. Sort all cells by elevation and add them one at a time, unioning with already-added neighbours. The answer is the elevation at which the start and end first become connected. O(N^2 log N) for the sort — and it is the same idea as Kruskal's, which is no coincidence: a bottleneck path between two nodes always lies in the MST."
+        },
+        {
+          "q": "What is the widest-path problem?",
+          "a": "The mirror image: maximise the minimum capacity along a path, which is the same algorithm with a max-heap and a `min` relaxation. It shows up in network bandwidth routing, and recognising the pair as one technique is the useful part."
+        }
+      ],
+      "related": [
+        "network-delay-time",
+        "min-cost-to-connect-all-points",
+        "koko-eating-bananas"
+      ],
+      "core": true
     },
     {
       "id": "269",
@@ -174,25 +402,80 @@
         "leetcode": "https://leetcode.com/problems/alien-dictionary/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=6kTZYvNNyps"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Topological Sort on Inferred Edges",
+      "patternTriggers": [
+        "The ordering constraints are not given — they must be **derived** from the data, which is usually the harder half.",
+        "Once derived, the problem is a plain topological sort, and impossibility means a cycle.",
+        "The words *alien dictionary*, *infer the order*, *given a sorted list, determine the ordering*."
+      ],
       "keyInsight": "Compare adjacent words to find ordering constraints (edges). Build graph, topological sort. If cycle exists, return \"\".",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try every permutation of the letters present and check whether the given word list is sorted under it.",
+        "time": "O(26! * total characters)",
+        "space": "O(1)",
+        "whyItFails": "Factorial, and it ignores the structure: each adjacent pair of words yields at most *one* ordering constraint, so the constraints can be read off directly in linear time and then sorted topologically."
+      },
+      "approach": [
+        "Collect every distinct letter appearing anywhere — each is a node, and a letter with no constraints still belongs in the output.",
+        "For each adjacent pair of words, compare them character by character until they first differ.",
+        "That first difference gives exactly one edge: the earlier word's character comes before the later word's. Stop comparing that pair — later characters tell you nothing.",
+        "If no difference is found and the first word is **longer** than the second, the input is invalid — a prefix must sort before the word that extends it. Return the empty string.",
+        "Topologically sort the letters with Kahn's algorithm.",
+        "If fewer letters come out than went in, a cycle exists and no valid order is possible — return the empty string."
+      ],
       "code": {
         "python": "def alienOrder(words):\n    adj = {c: set() for w in words for c in w}\n    for i in range(len(words) - 1):\n        w1, w2 = words[i], words[i+1]\n        min_len = min(len(w1), len(w2))\n        if w1[:min_len] == w2[:min_len] and len(w1) > len(w2):\n            return \"\"  # invalid\n        for j in range(min_len):\n            if w1[j] != w2[j]:\n                adj[w1[j]].add(w2[j])\n                break\n    visited = {}  # False=in-progress, True=done\n    result = []\n    def dfs(c):\n        if c in visited:\n            return visited[c]  # True=ok, False=cycle\n        visited[c] = False\n        for nei in adj[c]:\n            if not dfs(nei): return False\n        visited[c] = True\n        result.append(c)\n        return True\n    for c in adj:\n        if not dfs(c): return \"\"\n    return \"\".join(result[::-1])",
         "cpp": "class Solution {\npublic:\n    string alienOrder(vector<string>& words) {\n        unordered_map<char, unordered_set<char>> graph;\n        unordered_map<char, int> indegree;\n        for (auto& w : words) for (char c : w) indegree[c] = 0;\n        for (int i = 0; i < words.size() - 1; i++) {\n            string &w1 = words[i], &w2 = words[i+1];\n            if (w1.size() > w2.size() && w1.substr(0, w2.size()) == w2) return \"\";\n            for (int j = 0; j < min(w1.size(), w2.size()); j++) {\n                if (w1[j] != w2[j]) {\n                    if (!graph[w1[j]].count(w2[j])) {\n                        graph[w1[j]].insert(w2[j]);\n                        indegree[w2[j]]++;\n                    }\n                    break;\n                }\n            }\n        }\n        queue<char> q;\n        for (auto& [c, d] : indegree) if (d == 0) q.push(c);\n        string result;\n        while (!q.empty()) {\n            char c = q.front(); q.pop();\n            result += c;\n            for (char next : graph[c]) if (--indegree[next] == 0) q.push(next);\n        }\n        return result.size() == indegree.size() ? result : \"\";\n    }\n};",
         "java": "class Solution {\n    public String alienOrder(String[] words) {\n        Map<Character, Set<Character>> graph = new HashMap<>();\n        Map<Character, Integer> indegree = new HashMap<>();\n        for (String w : words) for (char c : w.toCharArray()) indegree.put(c, 0);\n        for (int i = 0; i < words.length - 1; i++) {\n            String w1 = words[i], w2 = words[i+1];\n            if (w1.length() > w2.length() && w1.startsWith(w2)) return \"\";\n            for (int j = 0; j < Math.min(w1.length(), w2.length()); j++) {\n                if (w1.charAt(j) != w2.charAt(j)) {\n                    graph.computeIfAbsent(w1.charAt(j), k -> new HashSet<>());\n                    if (graph.get(w1.charAt(j)).add(w2.charAt(j)))\n                        indegree.merge(w2.charAt(j), 1, Integer::sum);\n                    break;\n                }\n            }\n        }\n        Queue<Character> q = new LinkedList<>();\n        for (var e : indegree.entrySet()) if (e.getValue() == 0) q.offer(e.getKey());\n        StringBuilder sb = new StringBuilder();\n        while (!q.isEmpty()) {\n            char c = q.poll(); sb.append(c);\n            if (graph.containsKey(c))\n                for (char next : graph.get(c)) if (indegree.merge(next, -1, Integer::sum) == 0) q.offer(next);\n        }\n        return sb.length() == indegree.size() ? sb.toString() : \"\";\n    }\n}",
         "js": "var alienOrder = function(words) {\n    const graph = {}, indegree = {};\n    for (const w of words) for (const c of w) indegree[c] = 0;\n    for (let i = 0; i < words.length - 1; i++) {\n        const w1 = words[i], w2 = words[i+1];\n        if (w1.length > w2.length && w1.startsWith(w2)) return '';\n        for (let j = 0; j < Math.min(w1.length, w2.length); j++) {\n            if (w1[j] !== w2[j]) {\n                if (!graph[w1[j]]) graph[w1[j]] = new Set();\n                if (!graph[w1[j]].has(w2[j])) {\n                    graph[w1[j]].add(w2[j]);\n                    indegree[w2[j]]++;\n                }\n                break;\n            }\n        }\n    }\n    const q = Object.keys(indegree).filter(c => indegree[c] === 0);\n    let result = '';\n    while (q.length) {\n        const c = q.shift(); result += c;\n        if (graph[c]) for (const next of graph[c]) if (--indegree[next] === 0) q.push(next);\n    }\n    return result.length === Object.keys(indegree).length ? result : '';\n};"
       },
-      "complexity": null,
-      "dryRun": null,
+      "complexity": {
+        "time": "O(C)",
+        "space": "O(1)",
+        "note": "C is the total number of characters across all words — each is examined at most once while deriving edges. The graph has at most 26 nodes and 26² edges, so the topological sort is constant-sized; the space is therefore O(1) in the alphabet, not O(N)."
+      },
+      "dryRun": "words = [wrt, wrf, er, ett, rftt]\n\nDerive one edge per adjacent pair, from the FIRST differing character:\n\n  wrt vs wrf   first difference  t vs f   ->  edge  t -> f\n  wrf vs er    first difference  w vs e   ->  edge  w -> e\n  er  vs ett   first difference  r vs t   ->  edge  r -> t\n  ett vs rftt  first difference  e vs r   ->  edge  e -> r\n\nFour pairs, four edges. Characters after the first difference tell you\nnothing — 'wrt' vs 'wrf' says nothing about r or w, because the\ncomparison had already been decided by then.\n\n  edges:        w -> e,  e -> r,  r -> t,  t -> f\n  in-degrees:   w:0  e:1  r:1  t:1  f:1\n\nTopological sort from w, the only letter with in-degree 0:\n\n  w -> e -> r -> t -> f\n\n  5 letters out of 5  ->  answer \"wertf\"\n\n\nThe invalid case, which is what this problem is really testing:\n\n  words = [abc, ab]\n    abc vs ab:  no differing character, but the first word is LONGER\n                ->  INVALID, return \"\"\n\n  Lexicographic order always puts a prefix BEFORE the string extending\n  it, under every possible alphabet. So this input is contradictory —\n  not merely under-constrained. [ab, abc] is fine and yields no edge.\n\n\nThe cycle case:\n\n  words = [z, x, z]\n    z vs x  ->  edge z -> x\n    x vs z  ->  edge x -> z\n    in-degrees x:1 z:1, nothing starts at 0\n    0 letters out of 2  ->  CYCLE, return \"\"\n\nBoth failure modes return the empty string, but for different reasons —\none is a contradictory input, the other a contradictory ordering.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Deriving more than one edge per word pair. Only the **first** difference is informative; characters after it are unconstrained by that pair.",
+        "Missing the prefix case. [\"abc\", \"ab\"] is invalid input and must return the empty string — this is the edge case the problem is really testing, and it is easy to omit entirely.",
+        "Omitting letters that appear in no constraint. They are still part of the alphabet and must appear somewhere in the output.",
+        "Returning a partial order when a cycle exists rather than the empty string.",
+        "Comparing only the first characters of each pair, which misses constraints between words sharing a prefix."
+      ],
+      "edgeCases": [
+        "a single word -> any order of its distinct letters",
+        "[\"abc\", \"ab\"] -> invalid, return \"\"",
+        "[\"ab\", \"abc\"] -> valid, a prefix correctly precedes its extension",
+        "a cycle, e.g. [\"ab\", \"ba\"] implying a < b and b < a -> \"\"",
+        "letters appearing in no constraint at all",
+        "duplicate words, which yield no constraint",
+        "several valid orders, any of which is acceptable"
+      ],
+      "followUps": [
+        {
+          "q": "Why is only the first differing character informative?",
+          "a": "Lexicographic comparison stops at the first difference — everything after it is irrelevant to the ordering of those two words. Deriving edges from later positions invents constraints the input never implied, which can create a spurious cycle and wrongly report impossibility."
+        },
+        {
+          "q": "Why is the prefix case invalid rather than just unconstrained?",
+          "a": "Lexicographic order always places a prefix before the string that extends it, regardless of alphabet. So [\"abc\", \"ab\"] cannot be sorted under *any* letter ordering — it is not a question of which order, but that the input is contradictory."
+        },
+        {
+          "q": "How many valid orders are there, and which do you return?",
+          "a": "Any topological order is acceptable here. For the lexicographically smallest one, replace Kahn's queue with a min-heap — the same adjustment as in Course Schedule II."
+        },
+        {
+          "q": "What if the alphabet were unbounded, Unicode say?",
+          "a": "The algorithm is unchanged, but the space becomes O(U) in distinct characters rather than O(1), and the topological sort is O(U + edges). Worth stating, because the O(1) space claim depends entirely on the 26-letter assumption."
+        }
+      ],
+      "related": [
+        "course-schedule-ii",
+        "course-schedule",
+        "reconstruct-itinerary"
+      ],
+      "core": true
     },
     {
       "id": "787",
@@ -210,11 +493,28 @@
         "leetcode": "https://leetcode.com/problems/cheapest-flights-within-k-stops/",
         "neetcodeVideo": "https://www.youtube.com/watch?v=5eIK3zUdYmE"
       },
-      "pattern": null,
-      "patternTriggers": [],
+      "pattern": "Bellman-Ford",
+      "patternTriggers": [
+        "A **cap on the number of edges** — at most k stops, at most k moves, within k steps. That bound is Bellman-Ford's natural shape.",
+        "Cheapest path with weights, but the hop count also matters, so Dijkstra's pure cost ordering is not enough.",
+        "The words *within k stops*, *at most k edges*, *using no more than*."
+      ],
       "keyInsight": "Bellman-Ford with K+1 iterations (K stops = K+1 edges max). Each iteration relaxes all edges once.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "DFS or BFS over every path from source to destination using at most k+1 edges, keeping the cheapest.",
+        "time": "exponential in k",
+        "space": "O(N)",
+        "whyItFails": "Paths proliferate: each additional stop multiplies the possibilities. Bellman-Ford collapses this by noting that all you need per node is the cheapest way to reach it using at most i edges — a single number per node per round, so the state is O(N·k), not exponential."
+      },
+      "approach": [
+        "Observe that \"at most k stops\" means at most k+1 edges, so run exactly k+1 relaxation rounds.",
+        "Keep a distance array, infinity everywhere except the source at 0.",
+        "In each round, **snapshot** the distances first, then relax every edge against the snapshot.",
+        "Relaxing against the snapshot is essential: it guarantees each round adds at most one edge to any path. Relaxing against the live array lets one round chain several edges and silently exceed the stop limit.",
+        "After k+1 rounds, the destination's distance is the cheapest price using at most k+1 edges.",
+        "Return it, or -1 if it is still infinity.",
+        "Skip edges whose source is still unreachable, to avoid arithmetic on infinity."
+      ],
       "code": {
         "python": "def findCheapestPrice(n, flights, src, dst, k):\n    prices = [float('inf')] * n\n    prices[src] = 0\n    for _ in range(k + 1):\n        tmp = prices[:]\n        for u, v, w in flights:\n            if prices[u] + w < tmp[v]:\n                tmp[v] = prices[u] + w\n        prices = tmp\n    return prices[dst] if prices[dst] != float('inf') else -1",
         "cpp": "class Solution {\npublic:\n    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {\n        vector<int> prices(n, INT_MAX);\n        prices[src] = 0;\n        for (int i = 0; i <= k; i++) {\n            vector<int> tmp(prices);\n            for (auto& f : flights) {\n                if (prices[f[0]] == INT_MAX) continue;\n                tmp[f[1]] = min(tmp[f[1]], prices[f[0]] + f[2]);\n            }\n            prices = tmp;\n        }\n        return prices[dst] == INT_MAX ? -1 : prices[dst];\n    }\n};",
@@ -223,15 +523,50 @@
       },
       "complexity": {
         "time": "O(K * E)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "K+1 rounds, each relaxing all E edges. Only two distance arrays are needed at a time, so the space is O(N) rather than O(N·K) — you never need the full table of (node, edges used). This is simpler than it looks, and the simplicity comes entirely from the snapshot discipline."
       },
-      "dryRun": null,
+      "dryRun": "n = 4,  flights = [[0,1,100], [1,2,100], [2,0,100], [1,3,600], [2,3,200]]\nsrc = 0,  dst = 3,  k = 1 stop  ->  at most 2 edges\n\nRelax every edge once per round, always against a SNAPSHOT of the\nprevious round's distances.\n\n  round 1  (best paths using at most 1 edge)\n      0->1 gives 0 + 100 = 100\n      dist = [0, 100, inf, inf]\n\n  round 2  (best paths using at most 2 edges)\n      1->2 gives 100 + 100 = 200\n      1->3 gives 100 + 600 = 700\n      dist = [0, 100, 200, 700]\n\n  answer: 700     the route 0 -> 1 -> 3, two flights, one stop\n\n\nNow the same input relaxing against the LIVE array — the defining bug:\n\n  round 1  dist = [0, 100, 200, 400]\n  round 2  dist = [0, 100, 200, 400]\n\n  buggy answer: 400\n\nThat 400 is the route 0 -> 1 -> 2 -> 3 — three flights, TWO stops,\nwhich exceeds the limit of one. It leaked in because within a single\nround, the update to dist[1] was immediately reused to update dist[2],\nand that in turn to update dist[3]. One round chained three edges.\n\nThe snapshot prevents it: every update in round i+1 extends a path that\nwas already complete at round i by exactly one edge. That is the entire\nreason the snapshot exists, and it is the line reviewers look for.\n\nNote also that 400 really is the cheapest route overall — which is why\nplain Dijkstra would also answer 400 and be wrong here. The constraint\nis not cost alone but cost subject to a hop limit, and Bellman-Ford's\nround structure is what encodes it.\n\nk+1 rounds, not k: one stop means one intermediate city, hence two\nflights.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Relaxing against the live distance array instead of a snapshot. One round can then chain multiple edges, so paths using more than k+1 edges leak in and the answer comes out too cheap. This is the defining bug of the problem.",
+        "Running k rounds instead of k+1. k stops means k intermediate nodes, hence k+1 flights.",
+        "Using plain Dijkstra. It finds the globally cheapest path, which may use too many stops, and it has no mechanism to explore a pricier path with fewer hops.",
+        "Adding a weight to an infinite distance, which overflows in fixed-width integer types — guard with a reachability check.",
+        "Returning 0 for an unreachable destination instead of -1."
+      ],
+      "edgeCases": [
+        "source equals destination -> 0",
+        "k = 0, so only a direct flight will do",
+        "no route at all within the limit -> -1",
+        "a cheaper route existing but needing more than k stops, which must be rejected",
+        "several flights between the same pair at different prices",
+        "a single city"
+      ],
+      "followUps": [
+        {
+          "q": "Can Dijkstra be adapted?",
+          "a": "Yes, by expanding the state: push (cost, node, stopsUsed) and treat (node, stops) as the thing you finalise rather than just node. That works and is O(E·K log(E·K)) — more machinery than Bellman-Ford for the same answer, which is why Bellman-Ford is the better fit when a hop limit is the constraint."
+        },
+        {
+          "q": "Why does the snapshot enforce the edge limit?",
+          "a": "After round i, `dist[v]` holds the cheapest cost to reach v using at most i edges. Relaxing against the snapshot means every update in round i+1 extends an at-most-i-edge path by exactly one edge. Relax against the live array and an update made earlier in the same round can be extended again, chaining two edges in one round."
+        },
+        {
+          "q": "What about negative weights or negative cycles?",
+          "a": "Bellman-Ford handles negative edges natively. For negative cycle detection, run a V-th round over the full graph: if anything still improves, a negative cycle is reachable. Here the k-round cap makes cycles irrelevant anyway, since no shortest path with bounded edges would revisit a node."
+        },
+        {
+          "q": "How does this relate to dynamic programming?",
+          "a": "It *is* dynamic programming — `dp[i][v]` = cheapest cost to reach v with at most i edges, with the i dimension rolled into two arrays. Seeing Bellman-Ford as a DP over hop count rather than a graph algorithm makes the snapshot requirement obvious."
+        }
+      ],
+      "related": [
+        "network-delay-time",
+        "swim-in-rising-water",
+        "course-schedule-ii"
+      ],
+      "core": true
     }
   ]
 }
