@@ -12,8 +12,18 @@
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# Classic: find an exact value. Inclusive range [lo, hi].\nlo, hi = 0, len(nums) - 1\nwhile lo <= hi:                      # <= because hi is a valid index\n    mid = lo + (hi - lo) // 2        # overflow-safe habit\n    if nums[mid] == target:\n        return mid\n    if nums[mid] < target:\n        lo = mid + 1                 # mid is excluded, so +1\n    else:\n        hi = mid - 1                 # mid is excluded, so -1\nreturn -1\n\n# Boundary search: smallest index where predicate is True.\n# Range [lo, hi) — hi is one PAST the end, and mid is never excluded.\nlo, hi = 0, len(nums)\nwhile lo < hi:                       # < because hi is not a valid index\n    mid = lo + (hi - lo) // 2\n    if predicate(nums[mid]):\n        hi = mid                     # mid might BE the answer: no -1\n    else:\n        lo = mid + 1\nreturn lo                            # lo == hi == the boundary\n\n# Binary search on the ANSWER, when the array is not what you search.\nlo, hi = 1, max(nums)                # the range of possible answers\nwhile lo < hi:\n    mid = lo + (hi - lo) // 2\n    if feasible(mid):                # can we achieve it with mid?\n        hi = mid                     # yes -> try smaller\n    else:\n        lo = mid + 1                 # no  -> must go bigger\nreturn lo",
+    "cpp": "// Classic: find an exact value. Inclusive range [lo, hi].\nint lo = 0, hi = nums.size() - 1;\nwhile (lo <= hi) {                   // <= because hi is a valid index\n    int mid = lo + (hi - lo) / 2;    // NOT (lo+hi)/2 — that overflows\n    if (nums[mid] == target) return mid;\n    if (nums[mid] < target) lo = mid + 1;\n    else                    hi = mid - 1;\n}\nreturn -1;\n\n// Boundary search: smallest index where predicate is true.\n// Range [lo, hi) — hi is one PAST the end, and mid is never excluded.\nint lo = 0, hi = nums.size();\nwhile (lo < hi) {                    // < because hi is not a valid index\n    int mid = lo + (hi - lo) / 2;\n    if (predicate(nums[mid])) hi = mid;      // mid might BE the answer\n    else                      lo = mid + 1;\n}\nreturn lo;\n\n// Binary search on the ANSWER.\nlong lo = 1, hi = *max_element(nums.begin(), nums.end());\nwhile (lo < hi) {\n    long mid = lo + (hi - lo) / 2;\n    if (feasible(mid)) hi = mid;     // yes -> try smaller\n    else               lo = mid + 1; // no  -> must go bigger\n}\nreturn lo;",
+    "java": "// Classic: find an exact value. Inclusive range [lo, hi].\nint lo = 0, hi = nums.length - 1;\nwhile (lo <= hi) {                   // <= because hi is a valid index\n    int mid = lo + (hi - lo) / 2;    // NOT (lo+hi)/2 — that overflows\n    if (nums[mid] == target) return mid;\n    if (nums[mid] < target) lo = mid + 1;\n    else                    hi = mid - 1;\n}\nreturn -1;\n\n// Boundary search: smallest index where predicate is true.\n// Range [lo, hi) — hi is one PAST the end, and mid is never excluded.\nint lo = 0, hi = nums.length;\nwhile (lo < hi) {                    // < because hi is not a valid index\n    int mid = lo + (hi - lo) / 2;\n    if (predicate(nums[mid])) hi = mid;      // mid might BE the answer\n    else                      lo = mid + 1;\n}\nreturn lo;\n\n// Binary search on the ANSWER.\nlong lo = 1, hi = Arrays.stream(nums).max().getAsInt();\nwhile (lo < hi) {\n    long mid = lo + (hi - lo) / 2;\n    if (feasible(mid)) hi = mid;     // yes -> try smaller\n    else               lo = mid + 1; // no  -> must go bigger\n}\nreturn (int) lo;",
+    "js": "// Classic: find an exact value. Inclusive range [lo, hi].\nlet lo = 0, hi = nums.length - 1;\nwhile (lo <= hi) {                   // <= because hi is a valid index\n  const mid = lo + ((hi - lo) >> 1); // >> 1 floors; also avoids a float mid\n  if (nums[mid] === target) return mid;\n  if (nums[mid] < target) lo = mid + 1;\n  else                    hi = mid - 1;\n}\nreturn -1;\n\n// Boundary search: smallest index where predicate is true.\n// Range [lo, hi) — hi is one PAST the end, and mid is never excluded.\nlet lo = 0, hi = nums.length;\nwhile (lo < hi) {                    // < because hi is not a valid index\n  const mid = lo + ((hi - lo) >> 1);\n  if (predicate(nums[mid])) hi = mid;      // mid might BE the answer\n  else                      lo = mid + 1;\n}\nreturn lo;\n\n// Binary search on the ANSWER.\nlet lo = 1, hi = Math.max(...nums);\nwhile (lo < hi) {\n  const mid = lo + Math.floor((hi - lo) / 2);\n  if (feasible(mid)) hi = mid;       // yes -> try smaller\n  else               lo = mid + 1;   // no  -> must go bigger\n}\nreturn lo;"
+  },
+  "recognitionTriggers": [
+    "The input is sorted, or the **answer space** is monotone — a predicate that is false, false, …, true, true and never flips back.",
+    "A required complexity of O(log N) when the data is O(N). That is almost an instruction.",
+    "The phrasing *minimum X such that*, *maximum X such that*, *smallest capacity*, *least time* — these are binary search on the answer, not on the array.",
+    "You can cheaply **test** a candidate answer even though you cannot directly compute it. Testing is enough."
+  ],
   "problems": [
     {
       "id": "704",
@@ -30,10 +40,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=s4DPM8ct1pI"
       },
       "pattern": "Classic Binary Search",
-      "patternTriggers": [],
-      "keyInsight": null,
-      "bruteForce": null,
-      "approach": [],
+      "patternTriggers": [
+        "A sorted array and an exact value to locate.",
+        "A stated requirement of O(log N) runtime.",
+        "Any situation where you can ask 'is the answer to my left or my right?' and get a reliable answer."
+      ],
+      "keyInsight": "Every comparison discards half the remaining candidates, so a sorted array of a billion elements is searched in thirty steps. The algorithm is three lines; the difficulty is entirely in the **loop invariant** — decide once whether your range excludes `hi` or includes it, and make every update and the loop condition agree with that choice. Almost every binary search bug is a mismatch between those three decisions, not a misunderstanding of the idea.",
+      "bruteForce": {
+        "idea": "Scan from the start until the target appears or the array runs out.",
+        "time": "O(N)",
+        "space": "O(1)",
+        "whyItFails": "It ignores the sortedness completely. A linear scan is the correct answer for *unsorted* data — here, one comparison at the midpoint tells you which half cannot possibly contain the target, and throwing away half the candidates per step is what turns N into log N."
+      },
+      "approach": [
+        "Set `lo` to 0 and `hi` to the last index, treating the range as inclusive on both ends.",
+        "Loop while `lo <= hi` — with `hi` a valid index, the range is non-empty whenever they are equal.",
+        "Compute `mid` as `lo + (hi - lo) / 2`, which never overflows.",
+        "If `nums[mid]` equals the target, return `mid`.",
+        "If `nums[mid]` is smaller, the target must be to the right: set `lo = mid + 1`, excluding `mid` since it has been ruled out.",
+        "Otherwise set `hi = mid - 1`. If the loop exits, the target is absent — return -1."
+      ],
       "code": {
         "python": "def search(nums, target):\n    l, r = 0, len(nums) - 1\n    while l <= r:\n        mid = l + (r - l) // 2\n        if nums[mid] == target:\n            return mid\n        elif nums[mid] < target:\n            l = mid + 1\n        else:\n            r = mid - 1\n    return -1",
         "cpp": "class Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        int l = 0, r = nums.size() - 1;\n        while (l <= r) {\n            int m = l + (r - l) / 2;\n            if (nums[m] == target) return m;\n            else if (nums[m] < target) l = m + 1;\n            else r = m - 1;\n        }\n        return -1;\n    }\n};",
@@ -42,15 +68,82 @@
       },
       "complexity": {
         "time": "O(log N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "The range halves every iteration, so it takes log2(N) steps to shrink to nothing. Iterative, so no recursion stack — a recursive version is equally correct but costs O(log N) space."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "nums = [-1, 0, 3, 5, 9, 12]\n index     0  1  2  3  4   5\n\nFound case, target = 9:\n\n  lo=0 hi=5  mid=2  nums[2]=3   3 < 9   -> lo = mid+1 = 3\n  lo=3 hi=5  mid=4  nums[4]=9   MATCH   -> return 4\n\nTwo comparisons for six elements. The first step discarded indices\n0..2 — half the array — in one move.\n\n\nAbsent case, target = 2:\n\n  lo=0 hi=5  mid=2  nums[2]=3    3 > 2  -> hi = mid-1 = 1\n  lo=0 hi=1  mid=0  nums[0]=-1  -1 < 2  -> lo = mid+1 = 1\n  lo=1 hi=1  mid=1  nums[1]=0    0 < 2  -> lo = mid+1 = 2\n  lo=2 hi=1  ->  lo > hi, range empty  -> return -1\n\nNote where lo ends up: 2, which is exactly where 2 would be inserted\nto keep the array sorted. That is why the same loop also answers\nSearch Insert Position — just return lo instead of -1.\n\nThe loop condition and the updates must agree:\n   lo <= hi   pairs with   hi = mid - 1\n   lo <  hi   pairs with   hi = mid\nMix them and you get an infinite loop or a skipped answer.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            -1,
+            0,
+            3,
+            5,
+            9,
+            12
+          ],
+          "highlight": [
+            4,
+            5
+          ],
+          "pointers": [
+            {
+              "at": 4,
+              "label": "lo",
+              "tone": "accent"
+            },
+            {
+              "at": 4,
+              "label": "mid",
+              "tone": "hard"
+            },
+            {
+              "at": 5,
+              "label": "hi",
+              "tone": "info"
+            }
+          ]
+        },
+        "caption": "Searching for 9. The first mid (index 2, value 3) is too small, so the whole left half including index 2 is discarded in one step and the search continues in indices 3..5."
+      },
+      "pitfalls": [
+        "Computing `mid` as `(lo + hi) / 2`. In Java and C++ that overflows when both are near the integer maximum — a bug that sat in the JDK for years. `lo + (hi - lo) / 2` is the habit to build.",
+        "Mismatching the loop condition with the updates. `lo <= hi` pairs with `hi = mid - 1`; `lo < hi` pairs with `hi = mid`. Mixing them either loops forever or skips the answer.",
+        "In JavaScript, forgetting that `/` produces a float, so `nums[2.5]` is `undefined`. Use `Math.floor` or `>> 1`.",
+        "Returning `lo` instead of -1 when the target is absent. `lo` is the *insertion point*, which is a different and also useful answer — just not this one."
+      ],
+      "edgeCases": [
+        "empty array -> -1",
+        "single element, present or absent",
+        "target smaller than everything, or larger than everything",
+        "target at index 0 or at the last index",
+        "an array whose length is a power of two, where the halving is exact"
+      ],
+      "followUps": [
+        {
+          "q": "Find the **first** occurrence when duplicates exist.",
+          "a": "Do not return on a match. On `nums[mid] >= target` move `hi = mid`, otherwise `lo = mid + 1`, and return `lo` — the boundary form. For the last occurrence, search for the first element strictly greater than the target and step back one."
+        },
+        {
+          "q": "Return where the target should be inserted if absent.",
+          "a": "`lo` already holds it when the classic loop exits. That is Search Insert Position, and it is why the boundary form is worth internalising: it answers both questions with one template."
+        },
+        {
+          "q": "How do you binary search something that is not an array?",
+          "a": "You only need a monotone predicate over an ordered candidate space. Search the range of possible *answers* and test feasibility at each midpoint — that is what Koko Eating Bananas does, and it is the more valuable half of this topic."
+        },
+        {
+          "q": "What if the array is rotated?",
+          "a": "One comparison against an endpoint tells you which half is still sorted, and you recurse into whichever half can contain the target. Same O(log N) — see Search in Rotated Sorted Array."
+        }
+      ],
+      "related": [
+        "search-a-2d-matrix",
+        "find-minimum-in-rotated-sorted-array",
+        "koko-eating-bananas"
+      ],
+      "core": true
     },
     {
       "id": "74",
@@ -68,10 +161,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=Ber2pi2C0j0"
       },
       "pattern": "Binary Search",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A matrix sorted so that reading row by row yields one globally sorted sequence — every row starts above where the previous ended.",
+        "A required O(log(M*N)), which rules out even one pass per row.",
+        "The 2-D shape is incidental; the data is really a sorted list wearing a different coordinate system."
+      ],
       "keyInsight": "Treat the 2D matrix as a flattened sorted 1D array. Index i maps to row = i // cols, col = i % cols.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Scan every cell, or binary search each row in turn.",
+        "time": "O(M*N) scanning, O(M log N) per-row",
+        "space": "O(1)",
+        "whyItFails": "The per-row version is close, but it still touches every row. The strong fact is that the rows chain together into a single sorted order, so the whole matrix can be treated as one array and searched in log(M*N)."
+      },
+      "approach": [
+        "Treat the matrix as a flat sorted array of length `rows * cols`.",
+        "Binary search the index range 0 to `rows * cols - 1`.",
+        "Convert a flat index `i` to coordinates with `row = i / cols` and `col = i % cols` — note both use **cols**, the row width.",
+        "Compare the value there with the target and halve the range as usual.",
+        "Return true on a match, false if the range empties."
+      ],
       "code": {
         "python": "def searchMatrix(matrix, target):\n    rows, cols = len(matrix), len(matrix[0])\n    l, r = 0, rows * cols - 1\n    while l <= r:\n        mid = l + (r - l) // 2\n        val = matrix[mid // cols][mid % cols]\n        if val == target:\n            return True\n        elif val < target:\n            l = mid + 1\n        else:\n            r = mid - 1\n    return False",
         "cpp": "class Solution {\npublic:\n    bool searchMatrix(vector<vector<int>>& matrix, int target) {\n        int m = matrix.size(), n = matrix[0].size();\n        int l = 0, r = m * n - 1;\n        while (l <= r) {\n            int mid = l + (r - l) / 2;\n            int val = matrix[mid / n][mid % n];\n            if (val == target) return true;\n            else if (val < target) l = mid + 1;\n            else r = mid - 1;\n        }\n        return false;\n    }\n};",
@@ -80,15 +188,90 @@
       },
       "complexity": {
         "time": "O(log(M*N))",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Identical to a binary search over M*N elements, because that is exactly what it is. Note log(M*N) = log M + log N, so this is also what you would get from a binary search over rows followed by one within the row — the flattening is just tidier."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "matrix (3 rows x 4 cols)          flat index = row*4 + col\n\n        c0  c1  c2  c3                 0   1   2   3\n  r0     1   3   5   7                  4   5   6   7\n  r1    10  11  16  20                  8   9  10  11\n  r2    23  30  34  60\n\nReading left to right, top to bottom: 1,3,5,7,10,11,16,20,23,30,34,60\nThat is one sorted sequence, which is what licenses a single search.\n\nFound case, target = 3:\n\n  lo= 0 hi=11  mid= 5  -> row 5//4=1, col 5%4=1, value 11   too large -> hi=4\n  lo= 0 hi= 4  mid= 2  -> row 0, col 2, value 5             too large -> hi=1\n  lo= 0 hi= 1  mid= 0  -> row 0, col 0, value 1             too small -> lo=1\n  lo= 1 hi= 1  mid= 1  -> row 0, col 1, value 3             MATCH -> true\n\nAbsent case, target = 13 (falls between rows):\n\n  lo= 0 hi=11  mid= 5  -> row 1, col 1, value 11            too small -> lo=6\n  lo= 6 hi=11  mid= 8  -> row 2, col 0, value 23            too large -> hi=7\n  lo= 6 hi= 7  mid= 6  -> row 1, col 2, value 16            too large -> hi=5\n  lo=6 hi=5 -> range empty -> false\n\nBoth divisions use cols = 4, the row WIDTH. Dividing by rows instead\nis the classic bug here and produces plausible-looking nonsense.",
+      "diagram": {
+        "kind": "grid",
+        "props": {
+          "rowLabels": [
+            "r0",
+            "r1",
+            "r2"
+          ],
+          "colLabels": [
+            "c0",
+            "c1",
+            "c2",
+            "c3"
+          ],
+          "cells": [
+            [
+              1,
+              3,
+              5,
+              7
+            ],
+            [
+              10,
+              11,
+              16,
+              20
+            ],
+            [
+              23,
+              30,
+              34,
+              60
+            ]
+          ],
+          "highlight": [
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        "caption": "Flat index 5 maps to row 5/4 = 1, col 5%4 = 1, the value 11. Reading the cells left to right, top to bottom gives 1,3,5,7,10,11,... — one sorted sequence, which is what makes a single binary search valid."
+      },
+      "pitfalls": [
+        "Dividing by `rows` instead of `cols`. The row index is the flat index divided by the **row width**, which is the number of columns.",
+        "Assuming the weaker property — rows sorted and columns sorted, but rows not chained. That is Search a 2D Matrix II, where a single binary search is invalid; see the follow-up.",
+        "Setting `hi` to `rows * cols` while using the inclusive `lo <= hi` loop, which reads one past the end.",
+        "Handling an empty matrix or an empty first row, which makes `cols` zero and the division undefined."
+      ],
+      "edgeCases": [
+        "a 1x1 matrix",
+        "a single row, or a single column",
+        "target smaller than the first element or larger than the last",
+        "an empty matrix, or a matrix containing one empty row",
+        "target falling exactly between two rows"
+      ],
+      "followUps": [
+        {
+          "q": "What if rows and columns are each sorted, but rows do not chain?",
+          "a": "Binary search is no longer valid, because the flattened order is not sorted. Start at the **top-right** corner: if the value is too large move left, if too small move down. Each step eliminates a whole row or column, giving O(M + N) — the staircase search."
+        },
+        {
+          "q": "Why can't you binary search the staircase version?",
+          "a": "Because halving needs a total order on the candidates, and knowing a cell is too small does not rule out everything before it — the target could be above and to the right. The monotonicity binary search requires simply is not there."
+        },
+        {
+          "q": "Return the coordinates rather than a boolean.",
+          "a": "Convert the found flat index back with the same two formulas. Worth asking about before coding, since it costs nothing but changes the signature."
+        },
+        {
+          "q": "What if the matrix is enormous and stored on disk?",
+          "a": "Binary search is ideal: it touches only O(log(M*N)) cells, so the number of random reads is tiny. This is roughly why B-trees look the way they do."
+        }
+      ],
+      "related": [
+        "binary-search",
+        "search-in-rotated-sorted-array",
+        "spiral-matrix"
+      ],
+      "core": true
     },
     {
       "id": "875",
@@ -105,10 +288,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=U2SzFBbR6HA"
       },
       "pattern": "Binary Search on Answer",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "**Minimise (or maximise) some rate, capacity or limit** subject to a constraint — speed, weight, days, size.",
+        "You cannot compute the answer directly, but given a candidate you can *check* it cheaply. That asymmetry is the whole signal.",
+        "The feasibility predicate is monotone: if speed k works, every speed above k works too. So the answers form FFFF…TTTT and you want the first T."
+      ],
       "keyInsight": "Binary search on eating speed k (1 to max(piles)). For each k, check if Koko can finish in h hours. Find minimum valid k.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Try k = 1, then 2, then 3, … and return the first speed that finishes within h hours.",
+        "time": "O(max(piles) * N)",
+        "space": "O(1)",
+        "whyItFails": "The maximum pile can be 10^9, so stepping through candidates is hopeless. But the feasibility check is monotone, which means the candidate space is sorted even though it is not an array — and sorted spaces are binary-searchable."
+      },
+      "approach": [
+        "Recognise the search space: the answer is a speed between 1 and `max(piles)` — at that speed every pile takes one hour, which is always the fastest possible.",
+        "Write a feasibility test: at speed k, pile p takes `ceil(p / k)` hours; sum over all piles and compare with h.",
+        "Binary search the range [1, max(piles)] using the boundary form.",
+        "If speed `mid` is feasible, it might be the answer — record it by setting `hi = mid`, and try slower.",
+        "If it is not feasible, the answer must be faster: `lo = mid + 1`.",
+        "When `lo` meets `hi`, that is the minimum feasible speed."
+      ],
       "code": {
         "python": "import math\n\ndef minEatingSpeed(piles, h):\n    l, r = 1, max(piles)\n    result = r\n    while l <= r:\n        k = l + (r - l) // 2\n        hours = sum(math.ceil(p / k) for p in piles)\n        if hours <= h:\n            result = k\n            r = k - 1  # try smaller speed\n        else:\n            l = k + 1  # need faster speed\n    return result",
         "cpp": "class Solution {\npublic:\n    int minEatingSpeed(vector<int>& piles, int h) {\n        int l = 1, r = *max_element(piles.begin(), piles.end());\n        while (l < r) {\n            int m = l + (r - l) / 2;\n            long hours = 0;\n            for (int p : piles) hours += (p + m - 1) / m;\n            if (hours <= h) r = m;\n            else l = m + 1;\n        }\n        return l;\n    }\n};",
@@ -116,16 +315,50 @@
         "js": "var minEatingSpeed = function(piles, h) {\n    let l = 1, r = Math.max(...piles);\n    while (l < r) {\n        const m = Math.floor((l + r) / 2);\n        const hours = piles.reduce((sum, p) => sum + Math.ceil(p / m), 0);\n        if (hours <= h) r = m;\n        else l = m + 1;\n    }\n    return l;\n};"
       },
       "complexity": {
-        "time": "O(N * log(max(piles)))",
-        "space": "O(1)"
+        "time": "O(N log(max(piles)))",
+        "space": "O(1)",
+        "note": "Each feasibility check is O(N) and there are log(max pile) of them — about 30 checks for values up to 10^9. The log factor is over the *answer range*, not the array length, which is the distinguishing feature of this pattern."
       },
-      "dryRun": null,
+      "dryRun": "piles = [3, 6, 7, 11], h = 8\n\nThe answer is a SPEED, so that is what gets searched — not the array.\nAt speed k, pile p takes ceil(p / k) hours.\n\nThe whole answer space, for illustration (the algorithm never builds this):\n\n  k        1    2    3    4    5    6    7    8    9   10   11\n  hours   27   15   10    8    8    6    5    5    5    5    4\n  <= 8?    F    F    F    T    T    T    T    T    T    T    T\n                         ^\n                         first T — the answer is 4\n\nThe predicate is FFF TTTTTTTT: once a speed works, every faster speed\nworks. That monotonicity is the only thing binary search needs.\n\n  lo= 1 hi=11  mid= 6  hours= 6 <= 8  feasible -> hi = mid = 6\n  lo= 1 hi= 6  mid= 3  hours=10 >  8  no       -> lo = mid+1 = 4\n  lo= 4 hi= 6  mid= 5  hours= 8 <= 8  feasible -> hi = mid = 5\n  lo= 4 hi= 5  mid= 4  hours= 8 <= 8  feasible -> hi = mid = 4\n  lo == hi == 4  ->  return 4\n\nFour checks instead of eleven — and if the piles held 10^9 bananas,\nstill only about 30.\n\nOn a feasible mid, note `hi = mid` and NOT `mid - 1`: mid itself is\nstill a candidate for being the smallest feasible speed.\n\nCheck the ceiling by hand at k=4: 3->1, 6->2, 7->2, 11->3, total 8.\nWith floor division that would be 0+1+1+2 = 4 and the answer would\nwrongly come out as 2.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using floor division for the hours. A pile of 7 at speed 3 takes **3** hours, not 2 — Koko cannot eat from two piles in one hour. Use `(p + k - 1) / k` or `ceil(p / k)`.",
+        "Starting the search at 0. Speed 0 never finishes, and it will divide by zero.",
+        "Binary searching the piles array. The array is not even sorted, and it is not what the answer lives in — the answer space is the range of speeds.",
+        "Setting `hi = sum(piles)` instead of `max(piles)`. Correct but wasteful, and it suggests the monotonicity is not yet clear.",
+        "Overflow when summing hours for a large h in a 32-bit type."
+      ],
+      "edgeCases": [
+        "h equal to the number of piles -> the answer is max(piles), one pile per hour",
+        "h very large -> the answer is 1",
+        "a single pile -> ceil(pile / answer) <= h",
+        "all piles the same size",
+        "piles containing a single huge value among small ones"
+      ],
+      "followUps": [
+        {
+          "q": "How do you spot this pattern in an unfamiliar problem?",
+          "a": "Ask two questions: can I *verify* a candidate answer quickly, and is verification monotone? If both are yes, binary search the answer. Capacity To Ship Packages, Split Array Largest Sum and Minimum Number of Days to Make Bouquets are all the same problem in different clothes."
+        },
+        {
+          "q": "Prove the predicate is monotone.",
+          "a": "If Koko finishes within h hours at speed k, then at speed k+1 every pile takes the same number of hours or fewer, since ceil is non-increasing in k. So feasibility never flips back to false, which is exactly the condition binary search needs."
+        },
+        {
+          "q": "What if she may eat from multiple piles in one hour?",
+          "a": "Then the constraint collapses to total bananas divided by hours, computable in O(N) with no search at all. The 'one pile per hour' rule is what creates the ceiling and therefore the need to search."
+        },
+        {
+          "q": "What if the piles were sorted or could be rearranged?",
+          "a": "It changes nothing. The feasibility sum is order-independent, which is a useful observation — it tells you the sortedness you might reflexively look for is irrelevant here."
+        }
+      ],
+      "related": [
+        "binary-search",
+        "median-of-two-sorted-arrays",
+        "koko-eating-bananas"
+      ],
+      "core": true
     },
     {
       "id": "153",
@@ -143,10 +376,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=nIVW4P8b1VA"
       },
       "pattern": "Binary Search",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A sorted array that has been **rotated**, so it is sorted in two pieces with one drop between them.",
+        "You are asked for the pivot, the minimum, or the rotation count — all the same thing.",
+        "Although not globally sorted, a single comparison against an endpoint still tells you which side the break is on. That is enough for binary search."
+      ],
       "keyInsight": "If nums[mid] > nums[right], the minimum is in the right half (rotation point is there). Otherwise, minimum is in the left half including mid.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Scan for the smallest element, or for the one place where an element is smaller than its predecessor.",
+        "time": "O(N)",
+        "space": "O(1)",
+        "whyItFails": "Correct and often fine in practice, but it does not use the structure. The array is still 'almost sorted', and comparing the midpoint with the right end localises the break to one half every time."
+      },
+      "approach": [
+        "Use the half-open form: `lo = 0`, `hi = last index`, loop while `lo < hi`.",
+        "Compute `mid`.",
+        "If `nums[mid] > nums[hi]`, the drop must be strictly to the right of `mid`, so set `lo = mid + 1`.",
+        "Otherwise `nums[mid] <= nums[hi]`, which means the right portion from `mid` onwards is sorted, so the minimum is at `mid` or to its left: set `hi = mid`.",
+        "When `lo` equals `hi`, that index holds the minimum."
+      ],
       "code": {
         "python": "def findMin(nums):\n    l, r = 0, len(nums) - 1\n    while l < r:\n        mid = l + (r - l) // 2\n        if nums[mid] > nums[r]:\n            l = mid + 1  # min is in right half\n        else:\n            r = mid  # mid could be the min\n    return nums[l]",
         "cpp": "class Solution {\npublic:\n    int findMin(vector<int>& nums) {\n        int l = 0, r = nums.size() - 1;\n        while (l < r) {\n            int m = l + (r - l) / 2;\n            if (nums[m] > nums[r]) l = m + 1;\n            else r = m;\n        }\n        return nums[l];\n    }\n};",
@@ -155,15 +403,48 @@
       },
       "complexity": {
         "time": "O(log N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "One comparison per halving. The comparison must be against `nums[hi]`, not `nums[lo]` — see the follow-up, because the asymmetry is not arbitrary."
       },
       "dryRun": "[3, 4, 5, 1, 2]\n\nl=0, r=4: mid=2, nums[2]=5 > nums[4]=2 → l=3\nl=3, r=4: mid=3, nums[3]=1 ≤ nums[4]=2 → r=3\nl=3, r=3: return nums[3] = 1 ✓",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Comparing `nums[mid]` with `nums[lo]`. It fails on a non-rotated array: with [1,2,3,4,5], `nums[mid] > nums[lo]` wrongly suggests the break is to the right.",
+        "Using `lo <= hi` with `hi = mid`, which never shrinks the range when `lo == hi` and loops forever.",
+        "Setting `hi = mid - 1`, which can step over the minimum itself — `mid` is still a candidate here, so it must stay in range.",
+        "Assuming it still works with duplicates. [3,3,1,3] defeats the comparison, and the worst case degrades to O(N)."
+      ],
+      "edgeCases": [
+        "not rotated at all, e.g. [1,2,3] -> 1",
+        "rotated by one position",
+        "a single element",
+        "two elements, in either order",
+        "the minimum sitting at index 0 or at the last index"
+      ],
+      "followUps": [
+        {
+          "q": "Why compare against the right end rather than the left?",
+          "a": "Because `nums[mid] <= nums[hi]` implies the segment mid..hi is sorted, which is a conclusion you can act on. Comparing with `nums[lo]` gives no such implication when the array is not rotated — that case is indistinguishable from being fully rotated. The right end breaks the tie."
+        },
+        {
+          "q": "What if duplicates are allowed?",
+          "a": "When `nums[mid] == nums[hi]` you cannot tell which side holds the drop — consider [3,3,1,3] against [3,1,3,3]. The standard fix is to decrement `hi` by one and continue, which keeps correctness but makes the worst case O(N) for an array of identical values. That lower bound is unavoidable."
+        },
+        {
+          "q": "How many times was it rotated?",
+          "a": "The index of the minimum is exactly the rotation count, so the same search answers it. A rotation count of 0 means it was never rotated."
+        },
+        {
+          "q": "Now search for a target in the same array.",
+          "a": "Either find the pivot with this search and then binary search the appropriate sorted piece — two clean passes — or do it in one, deciding each step which half is sorted and whether the target lies inside it. That is Search in Rotated Sorted Array."
+        }
+      ],
+      "related": [
+        "search-in-rotated-sorted-array",
+        "binary-search",
+        "search-a-2d-matrix"
+      ],
+      "core": true
     },
     {
       "id": "33",
@@ -181,10 +462,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=U8XENwh8Oy8"
       },
       "pattern": "Binary Search",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A rotated sorted array plus a target to find, with O(log N) demanded.",
+        "The array is not sorted, but **at least one half always is** — and a sorted half is one you can reason about completely.",
+        "You need to decide, at each step, not just which half is sorted but whether the target could be inside it."
+      ],
       "keyInsight": "At least one half is always sorted. Check which half is sorted, then check if target falls in that sorted range.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Linear scan for the target.",
+        "time": "O(N)",
+        "space": "O(1)",
+        "whyItFails": "Only because the problem demands O(log N). The structural insight it misses: splitting at the midpoint always leaves one side free of the rotation break, and a comparison against that side's endpoints settles whether to go there."
+      },
+      "approach": [
+        "Standard inclusive binary search: `lo = 0`, `hi = last`, loop while `lo <= hi`.",
+        "Compute `mid` and return it if it holds the target.",
+        "Decide which half is sorted: if `nums[lo] <= nums[mid]`, the left half is sorted; otherwise the right half is.",
+        "If the left is sorted, the target is in it only when `nums[lo] <= target < nums[mid]` — then search left, else search right.",
+        "If the right is sorted, the target is in it only when `nums[mid] < target <= nums[hi]` — then search right, else search left.",
+        "Return -1 if the range empties."
+      ],
       "code": {
         "python": "def search(nums, target):\n    l, r = 0, len(nums) - 1\n    while l <= r:\n        mid = l + (r - l) // 2\n        if nums[mid] == target:\n            return mid\n        # Left half is sorted\n        if nums[l] <= nums[mid]:\n            if nums[l] <= target < nums[mid]:\n                r = mid - 1\n            else:\n                l = mid + 1\n        # Right half is sorted\n        else:\n            if nums[mid] < target <= nums[r]:\n                l = mid + 1\n            else:\n                r = mid - 1\n    return -1",
         "cpp": "class Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        int l = 0, r = nums.size() - 1;\n        while (l <= r) {\n            int m = l + (r - l) / 2;\n            if (nums[m] == target) return m;\n            if (nums[l] <= nums[m]) {\n                if (nums[l] <= target && target < nums[m]) r = m - 1;\n                else l = m + 1;\n            } else {\n                if (nums[m] < target && target <= nums[r]) l = m + 1;\n                else r = m - 1;\n            }\n        }\n        return -1;\n    }\n};",
@@ -193,15 +490,48 @@
       },
       "complexity": {
         "time": "O(log N)",
-        "space": "O(1)"
+        "space": "O(1)",
+        "note": "Still one halving per step; the extra work is a constant number of comparisons to pick a side. The two-pass alternative — find the pivot, then binary search one piece — is also O(log N) and arguably easier to get right under pressure."
       },
-      "dryRun": null,
+      "dryRun": "nums = [4, 5, 6, 7, 0, 1, 2], target = 0\n index     0  1  2  3  4  5  6\n                        ^ the single break point\n\n  lo=0 hi=6  mid=3  nums[3]=7\n     nums[lo]=4 <= nums[mid]=7, so the LEFT half [4,5,6,7] is sorted.\n     Is 0 in [4, 7)?  No.  -> the target must be on the right: lo=4\n\n  lo=4 hi=6  mid=5  nums[5]=1\n     nums[lo]=0 <= nums[mid]=1, so the LEFT half [0,1] is sorted.\n     Is 0 in [0, 1)?  Yes. -> hi = mid-1 = 4\n\n  lo=4 hi=4  mid=4  nums[4]=0   MATCH -> return 4\n\nEach step asks two questions: which half is sorted, and could the\ntarget be inside that sorted half. Only a sorted half can be reasoned\nabout with simple range comparisons — and there is always at least\none, because a single break point cannot land in both halves.\n\nThe comparison must be `nums[lo] <= nums[mid]`, not `<`. When the\nrange narrows to two elements, lo == mid, and the strict version\nmisclassifies which half is sorted.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Using `nums[lo] < nums[mid]` instead of `<=`. When the range narrows to two elements, `lo == mid`, and the strict version misclassifies which half is sorted.",
+        "Getting the range test boundaries wrong. The sorted half's endpoints are inclusive on the outer side and exclusive at `mid`, because `mid` was already checked.",
+        "Deciding which half is sorted but then forgetting to check whether the target is actually in it, and searching there regardless.",
+        "Assuming no duplicates when the problem allows them. With duplicates, `nums[lo] == nums[mid]` is ambiguous and the worst case becomes O(N)."
+      ],
+      "edgeCases": [
+        "not rotated, which must still work",
+        "target at the pivot, or at index 0, or at the last index",
+        "a single element, present or absent",
+        "target absent entirely -> -1",
+        "two elements in either rotation"
+      ],
+      "followUps": [
+        {
+          "q": "Would you rather do it in two passes?",
+          "a": "Honestly, yes, and it is worth saying so: find the minimum with the Find Minimum search, then binary search whichever side can contain the target. Two simple, independently testable searches instead of one with four branches — same complexity, far fewer places to slip."
+        },
+        {
+          "q": "What changes with duplicates?",
+          "a": "When `nums[lo] == nums[mid] == nums[hi]` neither half can be identified, so you shrink both ends by one and continue. Correct, but [1,1,1,1,1,0,1] forces O(N), and that is provably the best possible."
+        },
+        {
+          "q": "Why is at least one half always sorted?",
+          "a": "There is exactly one break point. Splitting at `mid` puts that break in one half or the other, never both — so the half without it is a contiguous piece of the original sorted order."
+        },
+        {
+          "q": "What if the array is rotated more than once?",
+          "a": "Rotating k times is the same as rotating k mod N times, so there is still only ever one break. Nothing changes."
+        }
+      ],
+      "related": [
+        "find-minimum-in-rotated-sorted-array",
+        "binary-search",
+        "search-a-2d-matrix"
+      ],
+      "core": true
     },
     {
       "id": "981",
@@ -219,10 +549,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=fu2cD_6E8Hw"
       },
       "pattern": "Binary Search",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A design problem whose query is 'the most recent value at or before time T' — a predecessor lookup, not an exact match.",
+        "Writes arrive in increasing key order, so the per-key history is **already sorted** and needs no sorting.",
+        "The words *at or before*, *floor*, *latest version*, *as of*."
+      ],
       "keyInsight": "Store (timestamp, value) pairs in a list per key. Since timestamps are always increasing, binary search for the largest timestamp ≤ given timestamp.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Store each key's history as a list and scan it backwards until a timestamp at or below the query is found.",
+        "time": "O(1) set, O(N) get",
+        "space": "O(N)",
+        "whyItFails": "For a key with a long history, every read walks it. Since the timestamps are guaranteed non-decreasing, the list is sorted — so the right-most timestamp not exceeding the query is a binary search, not a scan."
+      },
+      "approach": [
+        "Keep a hash map from key to a list of `(timestamp, value)` pairs.",
+        "`set` appends to that key's list. Because timestamps are strictly increasing per the problem statement, appending keeps the list sorted — no insertion cost.",
+        "`get` looks up the key; if absent, return the empty string.",
+        "Binary search that list for the **last** entry whose timestamp is less than or equal to the query — the upper-bound form, then step back one.",
+        "If no such entry exists, every recorded timestamp is in the future, so return the empty string."
+      ],
       "code": {
         "python": "class TimeMap:\n    def __init__(self):\n        self.store = {}  # key -> [(timestamp, value)]\n\n    def set(self, key, value, timestamp):\n        self.store.setdefault(key, []).append((timestamp, value))\n\n    def get(self, key, timestamp):\n        vals = self.store.get(key, [])\n        l, r = 0, len(vals) - 1\n        result = \"\"\n        while l <= r:\n            mid = l + (r - l) // 2\n            if vals[mid][0] <= timestamp:\n                result = vals[mid][1]\n                l = mid + 1\n            else:\n                r = mid - 1\n        return result",
         "cpp": "class TimeMap {\n    unordered_map<string, vector<pair<int, string>>> store;\npublic:\n    void set(string key, string value, int timestamp) {\n        store[key].push_back({timestamp, value});\n    }\n    string get(string key, int timestamp) {\n        auto& arr = store[key];\n        int l = 0, r = arr.size() - 1;\n        string result = \"\";\n        while (l <= r) {\n            int m = l + (r - l) / 2;\n            if (arr[m].first <= timestamp) { result = arr[m].second; l = m + 1; }\n            else r = m - 1;\n        }\n        return result;\n    }\n};",
@@ -230,15 +575,48 @@
         "js": "var TimeMap = function() { this.store = new Map(); };\nTimeMap.prototype.set = function(key, value, timestamp) {\n    if (!this.store.has(key)) this.store.set(key, []);\n    this.store.get(key).push([timestamp, value]);\n};\nTimeMap.prototype.get = function(key, timestamp) {\n    const arr = this.store.get(key) || [];\n    let l = 0, r = arr.length - 1, result = '';\n    while (l <= r) {\n        const m = Math.floor((l + r) / 2);\n        if (arr[m][0] <= timestamp) { result = arr[m][1]; l = m + 1; }\n        else r = m - 1;\n    }\n    return result;\n};"
       },
       "complexity": {
-        "time": "O(1) set, O(log N) get",
-        "space": "O(N)"
+        "time": "O(1) for set, O(log N) for get",
+        "space": "O(N)",
+        "note": "N is the number of entries for the queried key, not the total. `set` is amortised O(1) because the guarantee of increasing timestamps turns an insertion into an append — without that guarantee it would be O(log N) with a shift, or you would need a balanced tree."
       },
-      "dryRun": null,
+      "dryRun": "  set(\"k\", \"foo\", 1)     history for \"k\": [(1, foo)]\n  set(\"k\", \"bar\", 4)     history for \"k\": [(1, foo), (4, bar)]\n\nTimestamps are guaranteed increasing, so each set is an APPEND and\nthe list stays sorted for free — no insertion cost, no re-sorting.\n\nEach get finds the last entry whose timestamp is <= the query:\n\n  get(\"k\", 1)   last ts <= 1  -> index 0  -> \"foo\"   (exact match)\n  get(\"k\", 3)   last ts <= 3  -> index 0  -> \"foo\"   (no exact match;\n                                                      falls back)\n  get(\"k\", 4)   last ts <= 4  -> index 1  -> \"bar\"\n  get(\"k\", 5)   last ts <= 5  -> index 1  -> \"bar\"   (past the end of\n                                                      history)\n  get(\"k\", 0)   last ts <= 0  -> index -1 -> \"\"      (nothing recorded\n                                                      yet)\n\nThe query at time 3 is the whole point: there is no entry at 3, and\nthe answer is the most recent value *before* it. Searching for an\nexact match would return nothing.\n\nThe index -1 case must be handled explicitly — it means every recorded\ntimestamp is in the future, so the answer is the empty string rather\nthan the first value.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Searching for an exact timestamp match. The query asks for the latest value at or before T, which usually is not an exact hit.",
+        "Off-by-one in the boundary search. It is easy to land one past the answer; a clean way is to search for the first timestamp strictly greater than T and take the element before it.",
+        "Forgetting the 'nothing yet' case, where the earliest timestamp already exceeds T — the answer is the empty string, not the first value.",
+        "Not relying on the increasing-timestamp guarantee, and re-sorting on every `set` for no reason."
+      ],
+      "edgeCases": [
+        "a key that was never set -> empty string",
+        "a timestamp earlier than every recorded one -> empty string",
+        "an exact timestamp match",
+        "a single entry for the key",
+        "repeated sets then a query far in the future -> the last value"
+      ],
+      "followUps": [
+        {
+          "q": "What if timestamps can arrive out of order?",
+          "a": "`set` must now insert in position: O(N) with an array, or O(log N) with a balanced BST or skip list. In Python a `bisect.insort` is O(N) for the shift but fast in practice; in Java a `TreeMap` per key with `floorEntry` is the natural fit and makes `get` trivially correct."
+        },
+        {
+          "q": "Support deletes, or a TTL.",
+          "a": "Deletion of a version is a removal from the sorted list. A TTL is cleaner: store an expiry alongside each value and skip expired entries during the search, or sweep lazily. Both want a tree rather than an array once writes are not append-only."
+        },
+        {
+          "q": "Return the whole history in a time range.",
+          "a": "Two boundary searches give the start and end indices, then slice — O(log N + k) for k results. The sorted list pays off again."
+        },
+        {
+          "q": "How is this used in practice?",
+          "a": "It is the read path of a versioned or multi-version store: 'what did this key look like as of time T'. MVCC databases, git, and time-travel queries in analytics engines are all this shape."
+        }
+      ],
+      "related": [
+        "binary-search",
+        "lru-cache",
+        "design-twitter"
+      ],
       "core": false
     },
     {
@@ -256,10 +634,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=q6IEA26hvXc"
       },
       "pattern": "Binary Search",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Two (or more) sorted inputs and a required complexity below O(M + N) — which rules out merging.",
+        "You need an order statistic (the median, or the kth smallest) rather than the whole merged sequence.",
+        "The answer can be characterised by a **partition**: a split where everything on the left is at most everything on the right. Finding the split is a binary search."
+      ],
       "keyInsight": "Binary search on the shorter array to find a partition where all left elements ≤ all right elements. The partition point gives us the median.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Merge the two arrays and take the middle element — or elements, for an even total.",
+        "time": "O(M + N)",
+        "space": "O(M + N), or O(1) with a counting merge that stops halfway",
+        "whyItFails": "Correct, simple, and the right answer unless logarithmic time is demanded. It builds the entire ordering when all you needed was one position in it — and a position can be pinned down by binary searching where the split falls, without ever producing the merged array."
+      },
+      "approach": [
+        "Ensure you binary search the **shorter** array; swap them if needed, so the complexity is log of the smaller length.",
+        "Let `half = (m + n + 1) / 2` be how many elements belong on the left side of the split in total.",
+        "Binary search how many elements `i` to take from the shorter array; the rest, `half - i`, come from the longer one.",
+        "Use infinities for the elements just outside each array, so the boundary cases need no special handling: left of index 0 is -infinity, right of the end is +infinity.",
+        "The split is correct when `leftA <= rightB` and `leftB <= rightA`. If `leftA > rightB`, take fewer from A; if `leftB > rightA`, take more.",
+        "Once correct, the median is `max(leftA, leftB)` for an odd total.",
+        "For an even total it is the average of `max(leftA, leftB)` and `min(rightA, rightB)`."
+      ],
       "code": {
         "python": "def findMedianSortedArrays(nums1, nums2):\n    A, B = nums1, nums2\n    if len(A) > len(B):\n        A, B = B, A  # ensure A is shorter\n    total = len(A) + len(B)\n    half = total // 2\n    l, r = 0, len(A) - 1\n\n    while True:\n        i = l + (r - l) // 2  # A's partition\n        j = half - i - 2      # B's partition\n\n        Aleft  = A[i] if i >= 0 else float('-inf')\n        Aright = A[i+1] if i+1 < len(A) else float('inf')\n        Bleft  = B[j] if j >= 0 else float('-inf')\n        Bright = B[j+1] if j+1 < len(B) else float('inf')\n\n        if Aleft <= Bright and Bleft <= Aright:\n            if total % 2:\n                return min(Aright, Bright)\n            return (max(Aleft, Bleft) + min(Aright, Bright)) / 2\n        elif Aleft > Bright:\n            r = i - 1\n        else:\n            l = i + 1",
         "cpp": "class Solution {\npublic:\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        if (nums1.size() > nums2.size()) swap(nums1, nums2);\n        int m = nums1.size(), n = nums2.size(), half = (m + n + 1) / 2;\n        int l = 0, r = m;\n        while (l <= r) {\n            int i = (l + r) / 2, j = half - i;\n            int left1 = i > 0 ? nums1[i-1] : INT_MIN;\n            int right1 = i < m ? nums1[i] : INT_MAX;\n            int left2 = j > 0 ? nums2[j-1] : INT_MIN;\n            int right2 = j < n ? nums2[j] : INT_MAX;\n            if (left1 <= right2 && left2 <= right1) {\n                if ((m + n) % 2) return max(left1, left2);\n                return (max(left1, left2) + min(right1, right2)) / 2.0;\n            } else if (left1 > right2) r = i - 1;\n            else l = i + 1;\n        }\n        return 0;\n    }\n};",
@@ -267,16 +662,51 @@
         "js": "var findMedianSortedArrays = function(nums1, nums2) {\n    if (nums1.length > nums2.length) return findMedianSortedArrays(nums2, nums1);\n    const m = nums1.length, n = nums2.length, half = Math.floor((m + n + 1) / 2);\n    let l = 0, r = m;\n    while (l <= r) {\n        const i = Math.floor((l + r) / 2), j = half - i;\n        const left1 = i > 0 ? nums1[i-1] : -Infinity;\n        const right1 = i < m ? nums1[i] : Infinity;\n        const left2 = j > 0 ? nums2[j-1] : -Infinity;\n        const right2 = j < n ? nums2[j] : Infinity;\n        if (left1 <= right2 && left2 <= right1) {\n            if ((m + n) % 2) return Math.max(left1, left2);\n            return (Math.max(left1, left2) + Math.min(right1, right2)) / 2;\n        } else if (left1 > right2) r = i - 1;\n        else l = i + 1;\n    }\n};"
       },
       "complexity": {
-        "time": "O(log(min(M,N)))",
-        "space": "O(1)"
+        "time": "O(log(min(M, N)))",
+        "space": "O(1)",
+        "note": "The binary search runs over how many elements to take from the shorter array, which is why the log is of the smaller length. No merging and no extra storage — each step only inspects four values at the proposed boundary."
       },
-      "dryRun": null,
+      "dryRun": "nums1 = [1, 3], nums2 = [2]      combined [1, 2, 3], median 2\n\nFirst, search the SHORTER array, so swap: A = [2], B = [1, 3].\n  m = 1, n = 2\n  half = (m + n + 1) // 2 = (1 + 2 + 1) // 2 = 2\n            ^ how many elements belong on the LEFT of the split\n\nTry i elements from A; the other j = half - i come from B.\nElements just outside an array are treated as -inf on the left and\n+inf on the right, so no index check is ever needed.\n\n  i=0 from A, j=2-0=2 from B\n      left side:  A gives nothing, B gives [1, 3]\n      leftA=-inf  rightA=2    |    leftB=3   rightB=+inf\n      Check: leftB (3) <= rightA (2)?   NO.\n      B's left side reaches too high -> take MORE from A.  lo = 1\n\n  i=1 from A, j=2-1=1 from B\n      left side:  A gives [2], B gives [1]      -> {1, 2}\n      right side: A gives nothing, B gives [3]  -> {3}\n      leftA=2  rightA=+inf    |    leftB=1   rightB=3\n      Check: leftA (2) <= rightB (3)?  yes\n             leftB (1) <= rightA (inf)? yes      VALID SPLIT\n\n  Total length 3 is odd, so the median is the largest element on the\n  left: max(leftA, leftB) = max(2, 1) = 2\n\nreturn 2.0\n\nNothing was merged. Two candidate splits were examined, each costing\nfour value lookups — and the search is over A's length, which is why\nthe bound is log of the SHORTER array.\n\nFor an even total the median would instead be\n   (max(leftA, leftB) + min(rightA, rightB)) / 2\nwhich is why `half` uses the +1: the same split formula then serves\nboth parities.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Binary searching the longer array, which still works but gives O(log(max(M,N))) and more boundary cases.",
+        "Using `(m + n) / 2` instead of `(m + n + 1) / 2` for the left-half size. The `+1` is what makes the same formula serve both odd and even totals.",
+        "Handling the ends with explicit index checks instead of infinity sentinels. The checks multiply fast and are where this problem is usually lost.",
+        "Returning an integer for an even-length median. The average of two ints can be a half, so the return type must be floating point.",
+        "Forgetting the case where one array is empty, though the sentinels handle it automatically once they are in place."
+      ],
+      "edgeCases": [
+        "one array empty -> the other's median",
+        "both arrays of size 1",
+        "every element of one array smaller than every element of the other",
+        "wildly different sizes, e.g. 1 and 10^5",
+        "odd versus even combined length",
+        "duplicate values spanning the split"
+      ],
+      "followUps": [
+        {
+          "q": "Find the kth smallest instead of the median.",
+          "a": "The same partition idea with `half` replaced by k — the median is just k = (m+n+1)/2. Solving the general version first and specialising is usually the cleaner way to write it."
+        },
+        {
+          "q": "What about k sorted arrays?",
+          "a": "The partition argument does not extend cleanly beyond two. Use a min-heap of the array heads for O(k log n) to walk the merged order, or binary search on the *value* and count how many elements are below it in each array — O(n log k log(range))."
+        },
+        {
+          "q": "Would you write the merge solution in an interview?",
+          "a": "Write it first, state that it is O(M + N), and then say you can do O(log(min(M,N))) with a partition search. Many interviewers accept the merge once you have shown you know it is not optimal — and starting with the partition version and getting the indices wrong is a much worse outcome."
+        },
+        {
+          "q": "What if the arrays are streams you cannot index?",
+          "a": "Binary search needs random access, so it no longer applies. For a true stream, maintain two heaps — a max-heap of the lower half and a min-heap of the upper — for O(log N) inserts and O(1) median. That is Find Median from Data Stream."
+        }
+      ],
+      "related": [
+        "binary-search",
+        "find-median-from-data-stream",
+        "merge-k-sorted-lists"
+      ],
+      "core": true
     }
   ]
 }

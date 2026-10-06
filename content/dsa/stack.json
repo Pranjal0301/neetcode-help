@@ -13,8 +13,18 @@
     ],
     "legacySvg": null
   },
-  "patternTemplate": null,
-  "recognitionTriggers": [],
+  "patternTemplate": {
+    "python": "# Matching pairs: push openers, pop and verify on closers.\npairs = {')': '(', ']': '[', '}': '{'}\nstack = []\nfor ch in s:\n    if ch in pairs.values():\n        stack.append(ch)\n    else:\n        if not stack or stack.pop() != pairs[ch]:\n            return False\nreturn not stack          # leftover openers are unbalanced\n\n# Monotonic stack: \"next greater element\" for every index.\n# Stack holds INDICES, values decreasing from bottom to top.\nresult = [0] * len(nums)\nstack = []\nfor i, x in enumerate(nums):\n    while stack and nums[stack[-1]] < x:\n        j = stack.pop()       # x is j's next greater element\n        result[j] = i - j\n    stack.append(i)\n# anything left never found a greater element",
+    "cpp": "// Matching pairs: push openers, pop and verify on closers.\nunordered_map<char, char> pairs{{')','('}, {']','['}, {'}','{'}};\nstack<char> st;\nfor (char ch : s) {\n    if (!pairs.count(ch)) { st.push(ch); continue; }\n    if (st.empty() || st.top() != pairs[ch]) return false;\n    st.pop();\n}\nreturn st.empty();        // leftover openers are unbalanced\n\n// Monotonic stack: \"next greater element\" for every index.\n// Stack holds INDICES, values decreasing from bottom to top.\nvector<int> result(nums.size(), 0);\nvector<int> idx;\nfor (int i = 0; i < nums.size(); i++) {\n    while (!idx.empty() && nums[idx.back()] < nums[i]) {\n        int j = idx.back(); idx.pop_back();\n        result[j] = i - j;\n    }\n    idx.push_back(i);\n}",
+    "java": "// Matching pairs: push openers, pop and verify on closers.\nMap<Character, Character> pairs = Map.of(')', '(', ']', '[', '}', '{');\nDeque<Character> st = new ArrayDeque<>();\nfor (char ch : s.toCharArray()) {\n    if (!pairs.containsKey(ch)) { st.push(ch); continue; }\n    if (st.isEmpty() || st.pop() != pairs.get(ch)) return false;\n}\nreturn st.isEmpty();      // leftover openers are unbalanced\n\n// Monotonic stack: \"next greater element\" for every index.\n// Stack holds INDICES, values decreasing from bottom to top.\nint[] result = new int[nums.length];\nDeque<Integer> idx = new ArrayDeque<>();\nfor (int i = 0; i < nums.length; i++) {\n    while (!idx.isEmpty() && nums[idx.peek()] < nums[i]) {\n        int j = idx.pop();\n        result[j] = i - j;\n    }\n    idx.push(i);\n}",
+    "js": "// Matching pairs: push openers, pop and verify on closers.\nconst pairs = { ')': '(', ']': '[', '}': '{' };\nconst stack = [];\nfor (const ch of s) {\n  if (!(ch in pairs)) { stack.push(ch); continue; }\n  if (stack.pop() !== pairs[ch]) return false;   // pop() on [] gives undefined\n}\nreturn stack.length === 0;   // leftover openers are unbalanced\n\n// Monotonic stack: \"next greater element\" for every index.\n// Stack holds INDICES, values decreasing from bottom to top.\nconst result = new Array(nums.length).fill(0);\nconst idx = [];\nfor (let i = 0; i < nums.length; i++) {\n  while (idx.length && nums[idx[idx.length - 1]] < nums[i]) {\n    const j = idx.pop();\n    result[j] = i - j;\n  }\n  idx.push(i);\n}"
+  },
+  "recognitionTriggers": [
+    "The **most recent** unfinished thing must be resolved first — brackets, function calls, undo, nesting of any kind.",
+    "For each element you need the *nearest* element to one side satisfying a comparison: next greater, previous smaller. That is a monotonic stack, and it is the single highest-yield idea in this category.",
+    "A new element makes some earlier elements permanently irrelevant. Popping them is how O(N^2) becomes O(N).",
+    "You are evaluating an expression, or anything else with deferred operands."
+  ],
   "problems": [
     {
       "id": "20",
@@ -32,10 +42,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=WTzjTskDFMg"
       },
       "pattern": "Stack",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Brackets, tags, or any nesting where the most recently opened must close first.",
+        "There is more than one *kind* of pair — with a single kind a counter would do, and the moment there are several a stack becomes necessary.",
+        "The words *balanced*, *valid*, *well-formed* or *matching*."
+      ],
       "keyInsight": "Push opening brackets onto stack. For closing brackets, pop and check if it matches. Stack must be empty at end.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Repeatedly delete every occurrence of \"()\", \"[]\" and \"{}\" from the string until it stops changing; valid if nothing remains.",
+        "time": "O(N^2)",
+        "space": "O(N)",
+        "whyItFails": "Each deletion pass is O(N) and there can be O(N) passes, so nesting depth costs you quadratically. The stack does the same collapsing in one pass by remembering what is still open."
+      },
+      "approach": [
+        "Create an empty stack and a map from each closing bracket to its matching opener.",
+        "Walk the string one character at a time.",
+        "If the character is an opening bracket, push it.",
+        "If it is a closing bracket, the stack must be non-empty and its top must be the matching opener — otherwise return false.",
+        "On a match, pop and continue.",
+        "At the end, return true only if the stack is empty; anything left is an unclosed opener."
+      ],
       "code": {
         "python": "def isValid(s):\n    stack = []\n    match = {')': '(', ']': '[', '}': '{'}\n    for c in s:\n        if c in match:\n            if not stack or stack[-1] != match[c]:\n                return False\n            stack.pop()\n        else:\n            stack.append(c)\n    return len(stack) == 0",
         "cpp": "class Solution {\npublic:\n    bool isValid(string s) {\n        stack<char> st;\n        unordered_map<char,char> m = {{')', '('}, {']', '['}, {'}', '{'}};\n        for (char c : s) {\n            if (m.count(c)) {\n                if (st.empty() || st.top() != m[c]) return false;\n                st.pop();\n            } else st.push(c);\n        }\n        return st.empty();\n    }\n};",
@@ -44,15 +70,70 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "Each character is pushed or popped at most once. The space is the nesting depth, which is O(N) in the worst case of \"((((((\" — and it genuinely needs that, since you must remember every open bracket's type."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "s = \"()[]{}\"            sequential, not nested\n\n  '('  opener  -> push        stack: (\n  ')'  closer  -> top is '(' -> matches, pop    stack: empty\n  '['  opener  -> push        stack: [\n  ']'  closer  -> matches, pop                  stack: empty\n  '{'  opener  -> push        stack: {\n  '}'  closer  -> matches, pop                  stack: empty\n\n  end of string, stack empty  -> true\n\n\ns = \"([)]\"             the input that proves order matters\n\n  '('  opener  -> push        stack: (\n  '['  opener  -> push        stack: ( [\n  ')'  closer  -> top is '[', but ')' needs '('  -> false\n\n  A pair of counters would accept this string: one '(' matched by\n  one ')', one '[' matched by one ']'. Only a stack sees that the\n  ')' arrived while '[' was still open.\n\n\ns = \"((\"\n\n  '('  opener  -> push        stack: (\n  '('  opener  -> push        stack: ( (\n\n  end of string, stack is NOT empty  -> false\n\n  Nothing failed inside the loop. Without the final empty check,\n  every unclosed string would be reported valid.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            "(",
+            "[",
+            "{"
+          ],
+          "highlight": [
+            2
+          ],
+          "showIndices": false,
+          "pointers": [
+            {
+              "at": 2,
+              "label": "top",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Stack shown bottom-to-top after reading \"([{\". The next character must be '}' — the top of the stack dictates what is allowed, which is exactly why order matters and a counter cannot work."
+      },
+      "pitfalls": [
+        "Popping without first checking the stack is non-empty. A leading \")\" crashes or, in JavaScript, silently pops `undefined`.",
+        "Forgetting the final empty check. \"(((\" never fails inside the loop, so without it every unclosed string reports valid.",
+        "Using counters per bracket type instead of a stack. That accepts \"([)]\", which is the input that proves order matters.",
+        "Inverting the map and looking up openers instead of closers, which makes the matching test subtly wrong."
+      ],
+      "edgeCases": [
+        "empty string -> true",
+        "a single bracket of any kind -> false",
+        "\"([)]\" -> false, correct nesting matters",
+        "\"()[]{}\" -> true, sequential rather than nested",
+        "only closing brackets, e.g. \")))\"",
+        "deeply nested input, which exercises the stack depth"
+      ],
+      "followUps": [
+        {
+          "q": "What if there is only one kind of bracket?",
+          "a": "A single counter suffices: increment on '(', decrement on ')', fail if it ever goes negative, and require zero at the end. O(1) space. Knowing when the stack is overkill is as useful as knowing when it is needed."
+        },
+        {
+          "q": "Find the longest valid parentheses substring.",
+          "a": "Push indices rather than characters, seeding the stack with -1 as a base. On each ')' pop and measure `i - stack.top()`. Still O(N), and the index trick is what makes lengths recoverable."
+        },
+        {
+          "q": "What is the minimum number of insertions to make the string valid?",
+          "a": "Track unmatched openers and unmatched closers in one pass; the answer is their sum. No stack needed once you only want the count, since the types never conflict in the single-bracket version."
+        },
+        {
+          "q": "What if '*' can be '(' or ')' or empty?",
+          "a": "The stack generalises badly, so track a *range* of possible open counts — a low and a high — clamping low at zero and failing if high goes negative. That is Valid Parenthesis String in the greedy section."
+        }
+      ],
+      "related": [
+        "generate-parentheses",
+        "min-stack",
+        "valid-parenthesis-string"
+      ],
+      "core": true
     },
     {
       "id": "155",
@@ -70,10 +151,25 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=qkLl7nAwDPo"
       },
       "pattern": "Two Stacks",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "A data structure must answer an **aggregate query in O(1)** alongside its normal operations.",
+        "The aggregate is only ever asked about the *current* contents, and the contents change at one end only.",
+        "The words *design*, *support getMin in constant time*, or any 'all operations O(1)' requirement."
+      ],
       "keyInsight": "Keep a second stack that tracks the minimum at each level. When you push, also push the current min. When you pop, pop from both.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Store the values in a plain stack and scan the whole thing whenever `getMin` is called.",
+        "time": "O(1) push/pop, O(N) getMin",
+        "space": "O(N)",
+        "whyItFails": "The scan rediscovers a minimum that barely changed. Because a stack only ever mutates at the top, the minimum for every prefix can be recorded as you go and discarded in exactly the reverse order — which is itself a stack."
+      },
+      "approach": [
+        "Keep two stacks: one for the values, one for the minimum as of each level.",
+        "On push, append the value, and append `min(value, currentMin)` to the minimum stack.",
+        "On pop, pop from both stacks together so the minimum stack always mirrors the value stack's height.",
+        "`top` reads the value stack's last element.",
+        "`getMin` reads the minimum stack's last element — already computed, so O(1)."
+      ],
       "code": {
         "python": "class MinStack:\n    def __init__(self):\n        self.stack = []\n        self.min_stack = []  # parallel min tracking\n\n    def push(self, val):\n        self.stack.append(val)\n        curr_min = min(val, self.min_stack[-1] if self.min_stack else val)\n        self.min_stack.append(curr_min)\n\n    def pop(self):\n        self.stack.pop()\n        self.min_stack.pop()\n\n    def top(self):\n        return self.stack[-1]\n\n    def getMin(self):\n        return self.min_stack[-1]",
         "cpp": "class MinStack {\n    stack<pair<int,int>> st; // {val, currentMin}\npublic:\n    void push(int val) {\n        int curMin = st.empty() ? val : min(val, st.top().second);\n        st.push({val, curMin});\n    }\n    void pop() { st.pop(); }\n    int top() { return st.top().first; }\n    int getMin() { return st.top().second; }\n};",
@@ -81,16 +177,49 @@
         "js": "var MinStack = function() { this.stack = []; };\nMinStack.prototype.push = function(val) {\n    const min = this.stack.length ? Math.min(val, this.getMin()) : val;\n    this.stack.push([val, min]);\n};\nMinStack.prototype.pop = function() { this.stack.pop(); };\nMinStack.prototype.top = function() { return this.stack[this.stack.length-1][0]; };\nMinStack.prototype.getMin = function() { return this.stack[this.stack.length-1][1]; };"
       },
       "complexity": {
-        "time": "O(1) all operations",
-        "space": "O(N)"
+        "time": "O(1)",
+        "space": "O(N)",
+        "note": "Every operation is constant time, including getMin, which is the whole point. The cost is a second stack of the same height — see the follow-up for how to shrink it."
       },
-      "dryRun": null,
+      "dryRun": "Two stacks move in lockstep. mins[i] is the minimum of vals[0..i].\n\n  operation    vals             mins\n  push(2)      [2]              [2]\n  push(0)      [2, 0]           [2, 0]\n  push(3)      [2, 0, 3]        [2, 0, 0]      <- 3 > 0, so min stays 0\n  push(0)      [2, 0, 3, 0]     [2, 0, 0, 0]\n  pop()        [2, 0, 3]        [2, 0, 0]\n  getMin()     -> 0                            O(1), just read the top\n  pop()        [2, 0]           [2, 0]\n  getMin()     -> 0\n\nThe duplicate 0 is the case worth sitting with. After the first pop\nthere is still a 0 in vals, and mins correctly still reports 0.\n\nIf you compress the mins stack — pushing only on a new minimum —\nthis is exactly where a strict `<` breaks: the second 0 would not be\nrecorded, so popping it would discard the only 0 in mins while a 0\nis still present in vals. Use `<=`.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Popping only one of the two stacks, which desynchronises them and makes getMin return a minimum from the wrong level.",
+        "Storing a single `min` variable instead of a stack. It cannot be restored once the element holding it is popped.",
+        "Using strict `<` when pushing onto a *compressed* minimum stack. With duplicates of the minimum — push 2, push 2, pop — a strict comparison drops the only record of the 2 that is still present. Use `<=`.",
+        "Not handling getMin or top on an empty stack, if the problem does not guarantee non-empty calls."
+      ],
+      "edgeCases": [
+        "duplicate minimum values, e.g. push 2, push 2, pop, getMin -> 2",
+        "a strictly decreasing push sequence, where every level is a new minimum",
+        "a strictly increasing push sequence, where the minimum never changes",
+        "popping down to empty and pushing again",
+        "negative values"
+      ],
+      "followUps": [
+        {
+          "q": "Can you use less than a full second stack?",
+          "a": "Yes — only push to the minimum stack when the new value is less than or equal to the current minimum, and only pop it when the popped value equals it. Same O(1) operations, often far less space. The `<=` is load-bearing: with `<`, duplicate minima break it."
+        },
+        {
+          "q": "Can you do it with O(1) extra space altogether?",
+          "a": "There is a trick: store `2 * value - currentMin` when a new minimum arrives, so the previous minimum can be recovered arithmetically on pop. It works but risks overflow and is unreadable — worth knowing it exists, not worth writing unless asked."
+        },
+        {
+          "q": "Now support getMax too.",
+          "a": "Add a third stack with the same discipline. The pattern generalises to any aggregate that is cheap to extend but not to undo — which is exactly why it fails for a queue, where removal happens at the far end."
+        },
+        {
+          "q": "What about a queue with O(1) getMin?",
+          "a": "Harder, because elements leave from the opposite end to where they arrive. Use two stacks to simulate the queue, each carrying its own minimum, and take the min of the two — amortised O(1). Or a monotonic deque if you only need the minimum over a window."
+        }
+      ],
+      "related": [
+        "valid-parentheses",
+        "find-median-from-data-stream",
+        "evaluate-reverse-polish-notation"
+      ],
+      "core": true
     },
     {
       "id": "150",
@@ -108,10 +237,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=iu0082c4HDE"
       },
       "pattern": "Stack",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Operands appear **before** the operator that consumes them — postfix, or any deferred evaluation.",
+        "Each operator consumes a fixed number of the most recent results, which is precisely a stack's access pattern.",
+        "No parentheses are present and none are needed, because the order is already unambiguous."
+      ],
       "keyInsight": "Numbers go on stack. When you hit an operator, pop two numbers, apply operator, push result back. Final answer is the only element left.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Convert the postfix expression back to infix, add parentheses, and evaluate recursively.",
+        "time": "O(N)",
+        "space": "O(N)",
+        "whyItFails": "Not slower in order terms, just needlessly indirect. Postfix is already in evaluation order, so building a tree or an infix string throws away the property that makes it easy. One left-to-right pass with a stack is the direct reading."
+      },
+      "approach": [
+        "Create an empty stack for operands.",
+        "Walk the tokens left to right.",
+        "If the token is a number, push it.",
+        "If it is an operator, pop twice — the **first** pop is the right operand, the **second** is the left.",
+        "Apply the operator in that order and push the result back.",
+        "After all tokens, the stack holds exactly one value: the answer."
+      ],
       "code": {
         "python": "def evalRPN(tokens):\n    stack = []\n    for t in tokens:\n        if t in \"+-*/\":\n            b, a = stack.pop(), stack.pop()\n            if t == '+': stack.append(a + b)\n            elif t == '-': stack.append(a - b)\n            elif t == '*': stack.append(a * b)\n            else: stack.append(int(a / b))  # truncate toward zero\n        else:\n            stack.append(int(t))\n    return stack[0]",
         "cpp": "class Solution {\npublic:\n    int evalRPN(vector<string>& tokens) {\n        stack<int> st;\n        for (const string& t : tokens) {\n            if (t == \"+\" || t == \"-\" || t == \"*\" || t == \"/\") {\n                int b = st.top(); st.pop();\n                int a = st.top(); st.pop();\n                if (t == \"+\") st.push(a + b);\n                else if (t == \"-\") st.push(a - b);\n                else if (t == \"*\") st.push(a * b);\n                else st.push(a / b);\n            } else st.push(stoi(t));\n        }\n        return st.top();\n    }\n};",
@@ -120,15 +265,48 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "One pass over the tokens with constant work each. The stack's depth is the expression's operand nesting, O(N) in the worst case of a long chain of pushes before any operator."
       },
-      "dryRun": null,
+      "dryRun": "tokens = [\"2\", \"1\", \"+\", \"3\", \"*\"]\n\n  \"2\"  number     -> push            stack [2]\n  \"1\"  number     -> push            stack [2, 1]\n  \"+\"  pop b=1, a=2  -> 2 + 1 = 3    stack [3]\n  \"3\"  number     -> push            stack [3, 3]\n  \"*\"  pop b=3, a=3  -> 3 * 3 = 9    stack [9]\n\n  one value left -> return 9        ((2 + 1) * 3)\n\n\ntokens = [\"4\", \"13\", \"5\", \"/\", \"+\"]        order matters here\n\n  \"4\"   push                         stack [4]\n  \"13\"  push                         stack [4, 13]\n  \"5\"   push                         stack [4, 13, 5]\n  \"/\"   pop b=5, a=13 -> 13 / 5 = 2  stack [4, 2]\n  \"+\"   pop b=2, a=4  -> 4 + 2 = 6   stack [6]\n\n  return 6                          (4 + (13 / 5))\n\n  The FIRST pop is the right operand. Had they been swapped this\n  would compute 5 / 13 = 0 and answer 4.\n\n\ntokens = [\"-7\", \"2\", \"/\"]                 truncation direction\n\n  \"-7\"  push        (a leading minus before digits is a NUMBER,\n                     not the subtraction operator)\n  \"2\"   push\n  \"/\"   pop b=2, a=-7 -> -7 / 2 = -3\n\n  return -3, not -4. Truncation is toward zero, so Python's `//`\n  is wrong here — use int(a / b).",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Getting the operand order backwards. For `-` and `/` it matters: the second value popped is the left operand, so `[\"4\",\"2\",\"/\"]` is 4 / 2, not 2 / 4.",
+        "Using floor division for negative results. Most statements require truncation **toward zero**, so -7 / 2 is -3, not -4. Python's `//` gives -4 — use `int(a / b)` or `math.trunc`.",
+        "Treating \"-3\" as the subtraction operator while tokenising. A leading minus followed by digits is a negative number.",
+        "Assuming single-character tokens, which breaks on multi-digit numbers."
+      ],
+      "edgeCases": [
+        "a single number with no operators",
+        "negative numbers in the input",
+        "division that truncates, e.g. [\"7\",\"2\",\"/\"] -> 3 and [\"-7\",\"2\",\"/\"] -> -3",
+        "division by zero, if the problem permits it",
+        "a deeply left-nested expression"
+      ],
+      "followUps": [
+        {
+          "q": "Evaluate an infix expression instead.",
+          "a": "Two stacks — operands and operators — applying any pending operator of higher or equal precedence before pushing a new one, and treating parentheses as scope markers. That is the shunting-yard algorithm, and it is the reason postfix exists: it has already done this work."
+        },
+        {
+          "q": "What about prefix notation?",
+          "a": "Scan right to left with the same stack, and swap which pop is the left operand. The symmetry is the nice observation."
+        },
+        {
+          "q": "How would you validate the expression?",
+          "a": "Track the stack depth as you go: it must never go below two when an operator arrives, and must be exactly one at the end. That check costs nothing extra and catches every malformed input."
+        },
+        {
+          "q": "Build an expression tree rather than a value.",
+          "a": "Identical loop, but push nodes instead of numbers: an operator pops two subtrees and pushes a new node with them as children. You then get evaluation, printing and simplification from the same structure."
+        }
+      ],
+      "related": [
+        "min-stack",
+        "valid-parentheses",
+        "generate-parentheses"
+      ],
+      "core": true
     },
     {
       "id": "22",
@@ -146,10 +324,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=s9fokUqJ76A"
       },
       "pattern": "Backtracking",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "**Enumerate all** valid configurations, not count them and not find one best.",
+        "Validity can be enforced *while building*, so invalid branches are never explored — pruning, rather than generate-then-filter.",
+        "The output size is exponential, which tells you the algorithm cannot be polynomial and that is fine."
+      ],
       "keyInsight": "Two choices at each step: add '(' if open_count < n, add ')' if close_count < open_count. This ensures validity without checking.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Generate all 2^(2n) strings of '(' and ')' of length 2n, then keep the ones that are balanced.",
+        "time": "O(2^(2n) * n)",
+        "space": "O(n)",
+        "whyItFails": "For n = 8 that is 65,536 candidates of which only 1,430 are valid — the rest were built in full and then thrown away. Enforcing the two rules during construction means every leaf reached is already an answer."
+      },
+      "approach": [
+        "Track how many '(' and ')' have been placed so far, and build the string in place.",
+        "If the length has reached 2n, record a copy of the current string and return.",
+        "You may add '(' whenever `open < n`.",
+        "You may add ')' only when `close < open` — this single condition is what guarantees validity without ever checking it.",
+        "After each recursive call, undo the character you added so the buffer is reusable.",
+        "Return the collected list."
+      ],
       "code": {
         "python": "def generateParenthesis(n):\n    result = []\n    def backtrack(curr, open_count, close_count):\n        if len(curr) == 2 * n:\n            result.append(curr)\n            return\n        if open_count < n:\n            backtrack(curr + \"(\", open_count + 1, close_count)\n        if close_count < open_count:\n            backtrack(curr + \")\", open_count, close_count + 1)\n    backtrack(\"\", 0, 0)\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        function<void(string&, int, int)> backtrack = [&](string& cur, int open, int close) {\n            if (cur.size() == 2 * n) { result.push_back(cur); return; }\n            if (open < n) { cur += '('; backtrack(cur, open+1, close); cur.pop_back(); }\n            if (close < open) { cur += ')'; backtrack(cur, open, close+1); cur.pop_back(); }\n        };\n        string s;\n        backtrack(s, 0, 0);\n        return result;\n    }\n};",
@@ -157,16 +351,48 @@
         "js": "var generateParenthesis = function(n) {\n    const result = [];\n    const backtrack = (cur, open, close) => {\n        if (cur.length === 2 * n) { result.push(cur); return; }\n        if (open < n) backtrack(cur + '(', open + 1, close);\n        if (close < open) backtrack(cur + ')', open, close + 1);\n    };\n    backtrack('', 0, 0);\n    return result;\n};"
       },
       "complexity": {
-        "time": "O(4^n / sqrt(n)) Catalan number",
-        "space": "O(N)"
+        "time": "O(4^n / n^(3/2))",
+        "space": "O(n)",
+        "note": "The number of valid strings is the nth Catalan number, which grows as roughly 4^n / n^(3/2), and each costs O(n) to copy out. Because of the pruning, almost no work is wasted on invalid branches — the recursion stack itself is only O(n) deep."
       },
-      "dryRun": null,
+      "dryRun": "n = 2. Build left to right. Two rules, checked before adding:\n    add '('  only while  open < n\n    add ')'  only while  close < open\n\n  \"\"                              open=0 close=0\n   +-- add '('  -> \"(\"            open=1 close=0\n   |    +-- add '('  -> \"((\"      open=2 close=0\n   |    |    ')' only  (open == n, so '(' is pruned)\n   |    |    +-- \"(()\"           open=2 close=1\n   |    |         +-- \"(())\"      COMPLETE\n   |    +-- add ')'  -> \"()\"      open=1 close=1\n   |         +-- add '(' -> \"()(\" open=2 close=1\n   |              +-- \"()()\"      COMPLETE\n   |\n   +-- ')' was never an option at the root: close < open is\n       0 < 0, which is false. \")(\" is never even started.\n\n  result = [\"(())\", \"()()\"]\n\nNo candidate is ever generated and then rejected. Every leaf the\nrecursion reaches is already a valid string — that is the whole\ndifference from generating all 2^(2n) strings and filtering.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "pitfalls": [
+        "Allowing ')' when `close == open`, which produces strings like \")(\" and forces a validity check afterwards.",
+        "Comparing `close < n` instead of `close < open`. It yields the right count of characters and the wrong strings.",
+        "Forgetting to undo the appended character after recursing, so the shared buffer accumulates garbage.",
+        "Appending the buffer itself rather than a copy. In languages with mutable strings or lists, every result ends up referencing the same object."
+      ],
+      "edgeCases": [
+        "n = 0 -> a list containing just the empty string",
+        "n = 1 -> [\"()\"]",
+        "n = 2 -> [\"(())\", \"()()\"]",
+        "large n, where the output size is the real constraint"
+      ],
+      "followUps": [
+        {
+          "q": "What if you only need the count?",
+          "a": "That is the nth Catalan number: C(2n, n) / (n + 1). Computable in O(n) with no enumeration at all — and recognising a Catalan count is a genuinely useful reflex, since the same number counts binary trees, triangulations and valid stack sequences."
+        },
+        {
+          "q": "Generate them iteratively instead of recursively.",
+          "a": "Build up by length with dynamic programming: every valid string of length 2n is '(' + A + ')' + B where A and B are valid strings of smaller total size. That decomposition is also where the Catalan recurrence comes from."
+        },
+        {
+          "q": "What about multiple bracket types?",
+          "a": "The pruning rule gets richer — you now need a stack of what is currently open, not just two counters, so you only close the bracket type on top. The structure of the recursion is unchanged."
+        },
+        {
+          "q": "Why is this in the stack section rather than backtracking?",
+          "a": "Honestly, it is backtracking. It sits here because the validity rule it enforces is exactly the invariant a stack maintains in Valid Parentheses — `close < open` is 'the stack is non-empty'. Seeing that equivalence is the point."
+        }
+      ],
+      "related": [
+        "valid-parentheses",
+        "subsets",
+        "permutations"
+      ],
+      "core": true
     },
     {
       "id": "739",
@@ -184,10 +410,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=cTBiBSnjO60"
       },
       "pattern": "Monotonic Stack",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "For each element, find the **nearest** later element that is greater — or smaller, or any fixed comparison.",
+        "The words *next greater*, *next warmer*, *how many days until*, *span*.",
+        "A new element resolves several waiting earlier ones at once, and resolves them permanently."
+      ],
       "keyInsight": "Maintain a decreasing stack of indices. When current temp is warmer than stack top, pop and record the difference in days. Classic \"next greater element\" pattern.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For each day, scan forward until a warmer temperature appears.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "On a long descending run every day rescans almost the whole tail. The stack fixes this by keeping the unresolved days together: when a warm day arrives it settles all of them in one sweep, and each day is settled exactly once."
+      },
+      "approach": [
+        "Create a result array of zeros — zero is the correct answer for days with nothing warmer ahead.",
+        "Keep a stack of **indices** whose temperatures are decreasing from bottom to top.",
+        "Walk the days left to right.",
+        "While the stack is non-empty and today is strictly warmer than the temperature at the stack's top index, pop that index and set its answer to `today - poppedIndex`.",
+        "Push today's index.",
+        "Anything still on the stack at the end keeps its zero."
+      ],
       "code": {
         "python": "def dailyTemperatures(temperatures):\n    n = len(temperatures)\n    result = [0] * n\n    stack = []  # indices, decreasing temps\n\n    for i in range(n):\n        while stack and temperatures[i] > temperatures[stack[-1]]:\n            prev = stack.pop()\n            result[prev] = i - prev\n        stack.append(i)\n\n    return result",
         "cpp": "class Solution {\npublic:\n    vector<int> dailyTemperatures(vector<int>& temperatures) {\n        int n = temperatures.size();\n        vector<int> result(n, 0);\n        stack<int> st;\n        for (int i = 0; i < n; i++) {\n            while (!st.empty() && temperatures[i] > temperatures[st.top()]) {\n                result[st.top()] = i - st.top();\n                st.pop();\n            }\n            st.push(i);\n        }\n        return result;\n    }\n};",
@@ -196,15 +438,75 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "The inner while loop looks like it could make this quadratic, but each index is pushed once and popped at most once, so the total number of pops across the whole run is at most N — amortised O(1) per day. Space is the stack, which is O(N) on a strictly decreasing input."
       },
       "dryRun": "temps = [73, 74, 75, 71, 69, 72, 76, 73]\n\ni=0 (73): stack=[0]\ni=1 (74): 74>73, pop 0, res[0]=1. stack=[1]\ni=2 (75): 75>74, pop 1, res[1]=1. stack=[2]\ni=3 (71): stack=[2,3]\ni=4 (69): stack=[2,3,4]\ni=5 (72): 72>69, pop 4, res[4]=1. 72>71, pop 3, res[3]=2. stack=[2,5]\ni=6 (76): 76>72, pop 5, res[5]=1. 76>75, pop 2, res[2]=4. stack=[6]\ni=7 (73): stack=[6,7]\n\nResult: [1, 1, 4, 2, 1, 1, 0, 0]",
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            73,
+            74,
+            75,
+            71,
+            69,
+            72,
+            76,
+            73
+          ],
+          "highlight": [
+            3,
+            4,
+            5
+          ],
+          "pointers": [
+            {
+              "at": 6,
+              "label": "76 resolves 3 days",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Indices 3, 4 and 5 (71, 69, 72) sit unresolved on the stack. Day 6's temperature of 76 pops all three at once, giving them 3, 2 and 1 — each index is settled exactly once, which is why the total work is linear."
+      },
+      "pitfalls": [
+        "Pushing temperatures instead of indices. The answer is a *distance*, so the position is the part you need.",
+        "Using `>=` rather than `>`. 'Warmer' is strict, so equal temperatures must not resolve each other.",
+        "Initialising the result with -1 or leaving it unset. Days with nothing warmer ahead answer 0 here.",
+        "Popping with `if` instead of `while`, which resolves only the topmost waiting day."
+      ],
+      "edgeCases": [
+        "strictly decreasing temperatures -> all zeros",
+        "strictly increasing temperatures -> all ones except the last",
+        "all temperatures equal -> all zeros, because of the strict comparison",
+        "a single day -> [0]",
+        "a warm day at the very end resolving a long backlog"
+      ],
+      "followUps": [
+        {
+          "q": "What if the array is circular?",
+          "a": "Run the same loop twice over the concatenation of the array with itself — or just iterate indices modulo N for 2N steps — and do not push during the second pass. That is Next Greater Element II."
+        },
+        {
+          "q": "Previous smaller element instead of next greater?",
+          "a": "Flip both the direction of the scan and the comparison, or equivalently keep an increasing stack and read the answer at push time rather than pop time. All four variants are the same code with two knobs."
+        },
+        {
+          "q": "Prove the linear bound.",
+          "a": "Count pushes and pops rather than loop iterations: N pushes total, and at most N pops total, because an index once popped is never pushed again. The inner loop can be long on one day only because it was empty on many others."
+        },
+        {
+          "q": "What if you need the next greater value, not its distance?",
+          "a": "Store the value at the resolving index instead of the difference. Everything else is identical — which is worth noticing, because it means the stack is carrying 'things still waiting for an answer', independent of what the answer is."
+        }
+      ],
+      "related": [
+        "largest-rectangle-in-histogram",
+        "sliding-window-maximum",
+        "car-fleet"
+      ],
+      "core": true
     },
     {
       "id": "853",
@@ -222,10 +524,26 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=Pr6T-3yB9QM"
       },
       "pattern": "Stack",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "Items interact only with what is **ahead** of them, so processing from the destination backwards removes the interaction.",
+        "Things merge and then move as one — once merged they never separate.",
+        "Sorting establishes the order in which influence flows, after which a single running value (or a stack) is enough."
+      ],
       "keyInsight": "Sort by position (closest to target first). Calculate time for each car to reach target. If a car behind takes LESS time, it merges into the fleet ahead. Count distinct fleets.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "Simulate time step by step, moving every car and merging any that collide.",
+        "time": "O(N^2) or worse, and sensitive to the time step",
+        "space": "O(N)",
+        "whyItFails": "Simulation is both slow and fragile — collisions happen at fractional times, so a discrete step either misses them or needs an event queue. Reasoning about arrival *times* instead sidesteps motion entirely."
+      },
+      "approach": [
+        "Pair each car's position with its speed, and sort by position **descending** so the car closest to the target comes first.",
+        "Compute each car's solo arrival time as `(target - position) / speed`.",
+        "Walk the sorted cars, keeping a stack of fleet arrival times.",
+        "If the current car's solo time is greater than the time on top of the stack, it arrives later and cannot catch up — it forms a new fleet, so push its time.",
+        "Otherwise it would reach the target sooner, meaning it catches the fleet ahead and is absorbed into it — so push nothing, and the fleet keeps the slower (larger) time.",
+        "The answer is the number of entries left on the stack."
+      ],
       "code": {
         "python": "def carFleet(target, position, speed):\n    # Sort by position descending (closest to target first)\n    pairs = sorted(zip(position, speed), reverse=True)\n    stack = []  # arrival times\n    for pos, spd in pairs:\n        time = (target - pos) / spd\n        # If this car is slower (takes more time), it's a new fleet\n        if not stack or time > stack[-1]:\n            stack.append(time)\n    return len(stack)",
         "cpp": "class Solution {\npublic:\n    int carFleet(int target, vector<int>& position, vector<int>& speed) {\n        int n = position.size();\n        vector<pair<int,double>> cars(n);\n        for (int i = 0; i < n; i++)\n            cars[i] = {position[i], (double)(target - position[i]) / speed[i]};\n        sort(cars.begin(), cars.end());\n        int fleets = 0;\n        double curTime = 0;\n        for (int i = n - 1; i >= 0; i--) {\n            if (cars[i].second > curTime) {\n                fleets++;\n                curTime = cars[i].second;\n            }\n        }\n        return fleets;\n    }\n};",
@@ -234,14 +552,47 @@
       },
       "complexity": {
         "time": "O(N log N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "The sort dominates; the single sweep afterwards is O(N). Only the top of the stack is ever consulted, so a running maximum would do just as well — the stack is clearer about intent but not required."
       },
-      "dryRun": null,
+      "dryRun": "target = 12,  position = [10, 8, 0, 5, 3],  speed = [2, 4, 1, 1, 3]\n\nSort by position DESCENDING — closest to the target first:\n\n  (pos, speed):  (10,2)  (8,4)  (5,1)  (3,3)  (0,1)\n\nSolo arrival time = (target - pos) / speed.\nA car is absorbed if it would arrive no later than the fleet ahead.\n\n  pos  speed  time            vs fleet ahead      fleets\n   10    2    (12-10)/2 = 1.0   —                    1   new\n    8    4    (12-8)/4  = 1.0   1.0 <= 1.0           1   absorbed\n    5    1    (12-5)/1  = 7.0   7.0 >  1.0           2   new\n    3    3    (12-3)/3  = 3.0   3.0 <= 7.0           2   absorbed\n    0    1    (12-0)/1  = 12.0  12.0 > 7.0           3   new\n\n  return 3\n\nThe car at position 3 is the instructive one. Its solo time of 3.0 is\nfaster than the car at position 5 (7.0), so it catches up and is\nabsorbed — and it then inherits the fleet's time of 7.0, not its own.\nThat is why the comparison is against the fleet on top of the stack\nand not against the previous car.\n\nThe tie at 1.0 counts as absorbed: arriving at exactly the same\nmoment still means catching up.",
       "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
+      "pitfalls": [
+        "Sorting by position ascending. The logic depends on processing from the target backwards.",
+        "Comparing against the previous *car* rather than the current *fleet's* arrival time. A car absorbed into a fleet takes on the fleet's slower time, so the comparison must use the stack top.",
+        "Using strict versus non-strict comparison carelessly: a car arriving at exactly the same time does merge, so `<=` means absorbed.",
+        "Integer division when computing arrival times — these are fractional and must be floating point, or compared as cross-multiplied fractions to avoid precision loss."
+      ],
+      "edgeCases": [
+        "a single car -> 1 fleet",
+        "all cars at the same speed -> no catching up, so N fleets",
+        "a car already at the target position",
+        "a fast car behind a slow one -> 1 fleet",
+        "cars whose arrival times tie exactly"
+      ],
+      "followUps": [
+        {
+          "q": "Do you actually need a stack?",
+          "a": "No. Only the top is ever read, so a single variable holding the current fleet's arrival time suffices, incrementing a counter when a new fleet forms. O(1) extra space. The stack is useful for explaining the idea, not for implementing it."
+        },
+        {
+          "q": "Return the arrival time of each fleet.",
+          "a": "The stack already holds exactly that — the times remaining at the end are the fleet arrival times, in order of distance from the target. No extra work."
+        },
+        {
+          "q": "What if cars could overtake?",
+          "a": "The whole model collapses, because merging was what made the problem finite. Without merging, every car is independent and the answer is simply N — which is a good sanity check on why the constraint matters."
+        },
+        {
+          "q": "How do you avoid floating-point issues entirely?",
+          "a": "Compare `(target - p1) * s2` against `(target - p2) * s1` instead of dividing. Integer arithmetic, exact, and the standard trick whenever a problem's natural quantity is a ratio."
+        }
+      ],
+      "related": [
+        "daily-temperatures",
+        "merge-intervals",
+        "non-overlapping-intervals"
+      ],
       "core": false
     },
     {
@@ -260,10 +611,27 @@
         "neetcodeVideo": "https://www.youtube.com/watch?v=zx5Sw9mr8FE"
       },
       "pattern": "Monotonic Stack",
-      "patternTriggers": [],
+      "patternTriggers": [
+        "For each element you need how far it can **extend in both directions** before a smaller element blocks it.",
+        "Maximising over all possible ranges, where each range's value is bounded by its minimum.",
+        "A new, shorter element finalises every taller element waiting behind it — the monotonic-stack signal."
+      ],
       "keyInsight": "Maintain an increasing stack of indices. When a shorter bar comes, pop and calculate area using the popped height. Width extends from current position back to new stack top.",
-      "bruteForce": null,
-      "approach": [],
+      "bruteForce": {
+        "idea": "For every bar, expand left and right while bars are at least as tall, then compute height times width.",
+        "time": "O(N^2)",
+        "space": "O(1)",
+        "whyItFails": "Every bar rescans its neighbourhood, and on a flat histogram each scan is the whole array. The stack computes the same left and right boundaries once each: a bar's boundaries are exactly the nearest shorter bar on either side."
+      },
+      "approach": [
+        "Keep a stack of (index, height) pairs with heights increasing from bottom to top.",
+        "Walk the bars left to right.",
+        "While the stack's top is taller than the current bar, pop it — the current position is its right boundary.",
+        "The popped bar's rectangle extends from the index where it *started* to just before the current index, so compute `height * (i - startIndex)`.",
+        "Carry that start index forward: the current bar can extend back to the last popped bar's start, so push the current bar with that index rather than its own.",
+        "After the loop, drain the stack, treating the end of the array as the right boundary for everything left.",
+        "Return the largest area seen."
+      ],
       "code": {
         "python": "def largestRectangleArea(heights):\n    stack = []  # (index, height)\n    max_area = 0\n\n    for i, h in enumerate(heights):\n        start = i\n        while stack and stack[-1][1] > h:\n            idx, height = stack.pop()\n            max_area = max(max_area, height * (i - idx))\n            start = idx  # extend back\n        stack.append((start, h))\n\n    # Remaining bars extend to the end\n    for idx, height in stack:\n        max_area = max(max_area, height * (len(heights) - idx))\n\n    return max_area",
         "cpp": "class Solution {\npublic:\n    int largestRectangleArea(vector<int>& heights) {\n        stack<int> st;\n        int maxArea = 0, n = heights.size();\n        for (int i = 0; i <= n; i++) {\n            int h = (i == n) ? 0 : heights[i];\n            while (!st.empty() && h < heights[st.top()]) {\n                int height = heights[st.top()]; st.pop();\n                int width = st.empty() ? i : i - st.top() - 1;\n                maxArea = max(maxArea, height * width);\n            }\n            st.push(i);\n        }\n        return maxArea;\n    }\n};",
@@ -272,15 +640,74 @@
       },
       "complexity": {
         "time": "O(N)",
-        "space": "O(N)"
+        "space": "O(N)",
+        "note": "Each bar is pushed once and popped once, so the amortised cost is constant despite the inner loop. The stack holds at most N entries, reached on a strictly increasing histogram where nothing is ever resolved early."
       },
-      "dryRun": null,
-      "diagram": null,
-      "pitfalls": [],
-      "edgeCases": [],
-      "followUps": [],
-      "related": [],
-      "core": false
+      "dryRun": "heights = [2, 1, 5, 6, 2, 3]\n index      0  1  2  3  4  5\n\nStack holds (startIndex, height), heights increasing bottom to top.\nThe start index is inherited from the last bar popped, which is how a\ntall bar can still claim a wide rectangle.\n\n  i=0  h=2   push (start=0, h=2)             stack [(0,2)]\n  i=1  h=1   pop (0,2) -> area 2 * (1-0) = 2          best=2\n             push (start=0, h=1)             stack [(0,1)]\n                ^ start inherited from the popped bar, not 1\n  i=2  h=5   push (start=2, h=5)             stack [(0,1), (2,5)]\n  i=3  h=6   push (start=3, h=6)             stack [(0,1), (2,5), (3,6)]\n  i=4  h=2   pop (3,6) -> area 6 * (4-3) = 6          best=6\n             pop (2,5) -> area 5 * (4-2) = 10         best=10   <- answer\n             push (start=2, h=2)             stack [(0,1), (2,2)]\n  i=5  h=3   push (start=5, h=3)             stack [(0,1), (2,2), (5,3)]\n\n  drain (right boundary is the end of the array, index 6):\n             (0,1) -> area 1 * (6-0) = 6             best=10\n             (2,2) -> area 2 * (6-2) = 8             best=10\n             (5,3) -> area 3 * (6-5) = 3             best=10\n\n  return 10\n\nTwo things this trace shows:\n\n  1. The winning rectangle is the 5-high bar extended over indices\n     2 and 3 — width 2, area 10. Its width came from the inherited\n     start index, not from its own position.\n\n  2. The drain phase is not optional. On a strictly increasing\n     histogram nothing is ever popped in the main loop, and the whole\n     answer is produced here.",
+      "diagram": {
+        "kind": "array",
+        "props": {
+          "values": [
+            2,
+            1,
+            5,
+            6,
+            2,
+            3
+          ],
+          "highlight": [
+            2,
+            3
+          ],
+          "pointers": [
+            {
+              "at": 4,
+              "label": "closes 5,6",
+              "tone": "accent"
+            }
+          ]
+        },
+        "caption": "Bar values are heights. When the height-2 bar at index 4 arrives, it pops 6 (area 6x1) and then 5 (area 5x2 = 10) — the answer. The popped bars' widths come from the start index carried on the stack."
+      },
+      "pitfalls": [
+        "Computing the width from the popped bar's own index rather than the start index it inherited. That start is why a tall bar can still claim a wide rectangle.",
+        "Forgetting to drain the stack after the main loop. On an increasing histogram nothing is popped during the walk, so the answer is entirely in the drain phase.",
+        "Not carrying the last popped index forward when pushing the current bar, which under-measures every rectangle that extends leftwards.",
+        "Using `>=` versus `>` inconsistently. Either works if the width logic matches, but mixing them double-counts or skips equal-height runs.",
+        "Appending a sentinel 0 and then forgetting it is there when indexing the original array."
+      ],
+      "edgeCases": [
+        "a single bar -> its own height",
+        "all bars equal -> height times N",
+        "strictly increasing -> the whole stack drains at the end",
+        "strictly decreasing -> every bar is popped immediately",
+        "zero-height bars, which break the histogram into independent pieces",
+        "empty input -> 0"
+      ],
+      "followUps": [
+        {
+          "q": "Largest rectangle of 1s in a binary matrix?",
+          "a": "Treat each row as a histogram whose heights are the counts of consecutive 1s ending at that row, and run this algorithm once per row. O(M * N) overall — that is Maximal Rectangle, and it is the main reason this problem is worth knowing."
+        },
+        {
+          "q": "How does this relate to Trapping Rain Water?",
+          "a": "Both ask, for each index, about the nearest blocking element on either side. Water uses the *maxima* and sums per-index contributions; this uses the *minima* and maximises over ranges. Same skeleton, inverted comparison, different aggregation."
+        },
+        {
+          "q": "Is there a divide-and-conquer solution?",
+          "a": "Yes: the best rectangle either spans the global minimum (height times full width) or lies entirely on one side of it. With a sparse table for range minimum queries that is O(N log N) — elegant, but strictly worse than the stack."
+        },
+        {
+          "q": "Can you add a sentinel to avoid the drain phase?",
+          "a": "Append a bar of height 0, which forces everything to pop inside the main loop. The code gets shorter and the drain logic disappears — a good simplification to mention, as long as you remember the sentinel is not real data."
+        }
+      ],
+      "related": [
+        "daily-temperatures",
+        "trapping-rain-water",
+        "container-with-most-water"
+      ],
+      "core": true
     }
   ]
 }
