@@ -133,6 +133,10 @@ export function ProgressBar({
   );
 }
 
+/** Shared shape for the small link chips under a problem title. */
+const CHIP =
+  "inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-[12px] font-semibold text-ink-dim transition-colors hover:border-line-strong hover:text-ink-bright";
+
 export function ExternalLink({
   href,
   children,
@@ -147,8 +151,25 @@ export function ExternalLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-[12px] font-semibold text-ink-dim transition-colors hover:border-line-strong hover:text-ink-bright ${className}`}
+      className={`${CHIP} ${className}`}
     >
+      {children}
+    </a>
+  );
+}
+
+/** An ExternalLink-shaped chip that jumps to a section of the current page. */
+export function AnchorChip({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <a href={href} className={`${CHIP} ${className}`}>
       {children}
     </a>
   );

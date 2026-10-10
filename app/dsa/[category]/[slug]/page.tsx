@@ -20,12 +20,15 @@ import {
 import { RevealPrompt, ReviewBanner } from "@/components/reveal-gate";
 import { Inline, RichText } from "@/components/rich-text";
 import {
+  AnchorChip,
   Callout,
   DifficultyBadge,
   ExternalLink,
   PatternChip,
   SectionHeading,
 } from "@/components/ui";
+import { VideoEmbed } from "@/components/video-embed";
+import { youtubeId } from "@/lib/youtube";
 
 type Params = { category: string; slug: string };
 
@@ -69,6 +72,7 @@ export default async function ProblemPage({
   const related = problem.related
     .map((s) => resolveSlug(s))
     .filter((p): p is NonNullable<typeof p> => !!p);
+  const videoId = youtubeId(problem.links.neetcodeVideo);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
@@ -110,10 +114,21 @@ export default async function ProblemPage({
           {problem.links.leetcode && (
             <ExternalLink href={problem.links.leetcode}>LeetCode</ExternalLink>
           )}
-          {problem.links.neetcodeVideo && (
-            <ExternalLink href={problem.links.neetcodeVideo}>
-              NeetCode video
-            </ExternalLink>
+          {/* The walkthrough gives the solution away, so it hides in review
+              mode along with the rest of the explanation. */}
+          {videoId ? (
+            <span className="review-gated">
+              <AnchorChip href="#walkthrough">
+                <span aria-hidden="true">&#9654;</span>
+                Watch walkthrough
+              </AnchorChip>
+            </span>
+          ) : (
+            problem.links.neetcodeVideo && (
+              <ExternalLink href={problem.links.neetcodeVideo}>
+                NeetCode video
+              </ExternalLink>
+            )
           )}
         </div>
       </header>
@@ -208,6 +223,15 @@ export default async function ProblemPage({
             <div className="card overflow-hidden p-0">
               <CodeTabs blocks={blocks} />
             </div>
+          </section>
+        )}
+
+        {videoId && (
+          <section id="walkthrough">
+            <SectionHeading hint="NeetCode's explanation, playing here — no tab switch.">
+              Video walkthrough
+            </SectionHeading>
+            <VideoEmbed id={videoId} title={problem.title} />
           </section>
         )}
 
